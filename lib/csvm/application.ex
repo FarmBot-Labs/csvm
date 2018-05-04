@@ -9,7 +9,7 @@ defmodule Csvm.Application do
     # List all child processes to be supervised
     children = [
       # Starts a worker by calling: Csvm.Worker.start_link(arg)
-      # {Csvm.Worker, arg},
+      {Csvm.Server, []},
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

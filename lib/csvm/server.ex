@@ -1,4 +1,4 @@
-defmodule CSVM.Server do
+defmodule Csvm.Server do
   use GenServer
 
   def echo(data) do
