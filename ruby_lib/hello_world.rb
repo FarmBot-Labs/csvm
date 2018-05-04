@@ -1,1 +1,4 @@
-puts("hello world")
+while true
+  str = gets()
+  puts(str)
+end
