@@ -8,6 +8,8 @@ MRuby::Build.new do |conf|
   # include the default GEMs
 
   conf.gembox 'default'
+  conf.gem :github => 'mattn/mruby-json'
+  conf.gem :github => 'mattn/mruby-thread'
 
   # C compiler settings
   conf.cc do |cc|
