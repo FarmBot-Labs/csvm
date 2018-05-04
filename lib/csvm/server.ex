@@ -10,9 +10,10 @@ defmodule Csvm.Server do
   end
 
   def init(_) do
+    sh = Path.join(:code.priv_dir(:csvm), "mruby.sh") |> to_charlist()
     exe = Path.join(:code.priv_dir(:csvm), "mruby") |> to_charlist()
     mrb = Path.join([:code.priv_dir(:csvm), "mrb", "hello_world.mrb"])
-    port = Port.open({:spawn_executable, exe}, [:exit_status, :binary, args: ["-b", mrb]])
+    port = Port.open({:spawn_executable, sh}, [:exit_status, :binary, args: [exe, "-b", mrb]])
     {:ok, port}
   end
 
