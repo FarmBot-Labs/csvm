@@ -20,15 +20,15 @@ HOST_MRBC := $(MRUBY_BUILD_DIR)/host/bin/mrbc
 RB_SRC_DIR := ruby_lib
 RB_SRC_FILES := $(shell find $(RB_SRC_DIR)/ -type f -name '*.rb')
 
+RB_BIN_DIR := priv/mrb
+RB_BIN_FILES := $(patsubst $(RB_SRC_DIR)/%.rb, $(RB_BIN_DIR)/%.mrb, $(RB_SRC_FILES))
+
 ifeq ($(MIX_ENV), test)
 RB_TEST_DIR := ruby_test
 RB_TEST_FILES := $(shell find $(RB_TEST_DIR)/ -type f -name '*.rb')
 RB_TEST_BIN_FILES := $(patsubst $(RB_TEST_DIR)/%.rb, $(RB_BIN_DIR)/%.mrb, $(RB_TEST_FILES))
 $(info Loading tests $(RB_TEST_FILES))
 endif
-
-RB_BIN_DIR := priv/mrb
-RB_BIN_FILES := $(patsubst $(RB_SRC_DIR)/%.rb, $(RB_BIN_DIR)/%.mrb, $(RB_SRC_FILES))
 
 TARGET_MRUBY := priv/mruby
 
