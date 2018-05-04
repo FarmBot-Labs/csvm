@@ -6,12 +6,13 @@ defmodule Csvm.MixProject do
       app: :csvm,
       version: "0.1.0",
       elixir: "~> 1.6",
+      preferred_cli_env: [test: :test, mini_test: :test],
       start_permanent: Mix.env() == :prod,
+      elixirc_paths: ["lib", "test/test_support"],
       compilers: [:elixir_make] ++ Mix.compilers(),
       make_clean: ["clean"],
       make_env: make_env(),
       make_error_message: "",
-      # make_targets: make_targets()
       deps: deps()
     ]
   end
