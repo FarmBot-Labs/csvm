@@ -22,6 +22,8 @@ defmodule Csvm.MixProject do
         %{
           "ERL_EI_INCLUDE_DIR" => "#{:code.root_dir()}/usr/include",
           "ERL_EI_LIBDIR" => "#{:code.root_dir()}/usr/lib",
+          "MIX_TARGET" => System.get_env("MIX_TARGET") || "host",
+          "MIX_ENV" => to_string(Mix.env())
         }
       _ ->
         %{}

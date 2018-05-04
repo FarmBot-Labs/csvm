@@ -1,3 +1,15 @@
+MIX_TARGET := $(MIX_TARGET)
+MIX_ENV := $(MIX_ENV)
+
+ifeq ($(MIX_ENV),)
+$(warning MIX_ENV not set. Invoke via mix)
+MIX_ENV := dev
+endif
+
+ifeq ($(MIX_TARGET),)
+$(warning MIX_TARGET not set. Invoke via mix)
+MIX_TARGET := host
+endif
 MRUBY_SRC_DIR := c_src/mruby
 MRUBY_BUILD_DIR := $(MRUBY_SRC_DIR)/build
 
@@ -23,7 +35,9 @@ $(MRUBY_BUILD_DIR)/host/bin/mruby-strip
 HOST_MRUBY_BUILD_CONFIG := MRUBY_CONFIG=$(PWD)/mruby_build_config.rb \
 CC=$(CC) \
 AR=$(AR) \
-YACC=$(YACC)
+YACC=$(YACC) \
+MIX_TARGET=$(MIX_TARGET) \
+MIX_ENV=$(MIX_ENV)
 
 # Files that aren't real files.
 .PHONY: all clean all-clean host-mruby-clean mruby-src-clean
@@ -52,7 +66,7 @@ $(RB_BIN_DIR)/%.mrb: $(RB_SRC_DIR)/%.rb
 	$(HOST_MRBC) -o $@ $<
 
 $(TARGET_MRUBY):
-	cp $(MRUBY_BUILD_DIR)/host/bin/mruby $@
+	cp $(MRUBY_BUILD_DIR)/$(MIX_TARGET)-$(MIX_ENV)/bin/mruby $@
 
 mruby-src-clean:
 	$(RM) $(RB_BIN_FILES)

@@ -1,12 +1,25 @@
-MIX_ENV = ENV["MIX_ENV"] || "dev"
-MIX_TARGET = ENV["MIX_TARGET"] || "host"
-
+# Host build
 MRuby::Build.new do |conf|
   toolchain :gcc
   enable_debug
 
   # include the default GEMs
 
+  conf.gembox 'default'
+  conf.gem :github => 'mattn/mruby-json'
+  conf.gem :github => 'mattn/mruby-thread'
+end
+
+MIX_ENV = ENV["MIX_ENV"] || raise("NO MIX ENV")
+MIX_TARGET = ENV["MIX_TARGET"] || raise("NO MIX TARGET")
+
+# raise(MIX_TARGET + '-' + MIX_ENV)
+
+# Nerves deploy build. (may be the same as host build.)
+# This one just uses the `make` environment variables.
+MRuby::Build.new(MIX_TARGET + '-' + MIX_ENV) do |conf|
+  toolchain :gcc
+  enable_debug
   conf.gembox 'default'
   conf.gem :github => 'mattn/mruby-json'
   conf.gem :github => 'mattn/mruby-thread'
@@ -25,5 +38,4 @@ MRuby::Build.new do |conf|
   conf.archiver do |archiver|
     archiver.command = ENV['AR'] || raise("Missing archiver.")
   end
-
 end
