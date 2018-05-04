@@ -1,3 +1,3 @@
 [submodule "c_src/mruby"]
 	path = c_src/mruby
-	url = git@github.com:mruby/mruby.git
+	url = https://github.com/mruby/mruby.git

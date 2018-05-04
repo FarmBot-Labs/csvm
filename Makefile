@@ -23,11 +23,12 @@ RB_SRC_FILES := $(shell find $(RB_SRC_DIR)/ -type f -name '*.rb')
 ifeq ($(MIX_ENV), test)
 RB_TEST_DIR := ruby_test
 RB_TEST_FILES := $(shell find $(RB_TEST_DIR)/ -type f -name '*.rb')
+RB_TEST_BIN_FILES := $(patsubst $(RB_TEST_DIR)/%.rb, $(RB_BIN_DIR)/%.mrb, $(RB_TEST_FILES))
 $(info Loading tests $(RB_TEST_FILES))
 endif
 
 RB_BIN_DIR := priv/mrb
-RB_BIN_FILES := $(patsubst $(RB_SRC_DIR)/%.rb, $(RB_BIN_DIR)/%.mrb, $(RB_SRC_FILES) $(RB_TEST_FILES))
+RB_BIN_FILES := $(patsubst $(RB_SRC_DIR)/%.rb, $(RB_BIN_DIR)/%.mrb, $(RB_SRC_FILES))
 
 TARGET_MRUBY := priv/mruby
 
@@ -48,7 +49,7 @@ MIX_ENV=$(MIX_ENV)
 # Files that aren't real files.
 .PHONY: all clean all-clean host-mruby-clean mruby-src-clean
 
-all: $(RB_BIN_DIR) $(HOST_MRUBY_EXES) $(TARGET_MRUBY) $(RB_BIN_FILES)
+all: $(RB_BIN_DIR) $(HOST_MRUBY_EXES) $(TARGET_MRUBY) $(RB_BIN_FILES) $(RB_TEST_BIN_FILES)
 
 # Mruby Host exes.
 $(MRUBY_BUILD_DIR)/host/bin/mirb: .host-mruby
@@ -69,6 +70,9 @@ host-mruby-clean:
 	$(RM) .host-mruby
 
 $(RB_BIN_DIR)/%.mrb: $(RB_SRC_DIR)/%.rb
+	$(HOST_MRBC) -o $@ $<
+
+$(RB_BIN_DIR)/%.mrb: $(RB_TEST_DIR)/%.rb
 	$(HOST_MRBC) -o $@ $<
 
 $(TARGET_MRUBY):
