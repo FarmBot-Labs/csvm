@@ -1,14 +1,14 @@
-# Request Header (16 bytes)
-
+# Request Header
 Requests can travel in either direction:
 
-|Seg|Description |Width   |Notes                   |
-|---|------------|--------|------------------------|
-| 0 |Request ID  | 2 bytes| Uint16, not ASCII      |
-| 1 |Namespace   | 4 bytes| Underscore padded ASCII|
-| 2 |Command     | 6 bytes| Underscore padded ASCII|
-| 3 |Payload size| 2 bytes| Uint16                 |
-| 4 |CLRF        | 2 bytes| Y'know, `\r\n`         |
+|Seg|Description |Width             |Notes                   |
+|---|------------|------------------|------------------------|
+| 0 |Request ID  | 2 bytes          | Uint16, not ASCII      |
+| 1 |Namespace   | 4 bytes          | ASCII command namespace|
+| 2 |Command size| 1 bytes          | Uint8, not ASCII       |
+| 3 |Command     | `cmd_size` bytes | ASCII command name     |
+| 4 |Payload size| 2 bytes          | Uint16                 |
+| 5 |CLRF        | 2 bytes          | Y'know, `\r\n`         |
 
 Followed by a "payload"
 

@@ -7,6 +7,7 @@ defmodule Csvm.MixProject do
       version: "0.1.0",
       elixir: "~> 1.6",
       preferred_cli_env: [test: :test, mini_test: :test],
+      dialyzer: [plt_add_deps: :apps_direct, plt_add_apps: [:mix]],
       start_permanent: Mix.env() == :prod,
       elixirc_paths: ["lib", "test/test_support"],
       compilers: [:elixir_make] ++ Mix.compilers(),
@@ -26,6 +27,7 @@ defmodule Csvm.MixProject do
           "MIX_TARGET" => System.get_env("MIX_TARGET") || "host",
           "MIX_ENV" => to_string(Mix.env())
         }
+
       _ ->
         %{}
     end
@@ -42,7 +44,9 @@ defmodule Csvm.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-       {:elixir_make, "~> 0.4.0", runtime: false},
+      {:elixir_make, "~> 0.4.0", runtime: false},
+      {:dialyxir, "~> 0.5.1", runtime: false},
+      {:ex_doc, "~> 0.16", only: :dev, runtime: false}
     ]
   end
 end

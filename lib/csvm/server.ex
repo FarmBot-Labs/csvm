@@ -18,7 +18,7 @@ defmodule Csvm.Server do
   end
 
   def handle_info({port, {:data, data}}, port) do
-    IO.puts "DATA FROM MRUBY: #{inspect data}"
+    IO.puts("DATA FROM MRUBY: #{inspect(data)}")
     {:noreply, port}
   end
 
@@ -26,5 +26,4 @@ defmodule Csvm.Server do
     Port.command(port, data <> "\n")
     {:reply, :ok, port}
   end
-
 end
