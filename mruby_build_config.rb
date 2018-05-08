@@ -3,11 +3,9 @@ MRuby::Build.new do |conf|
   toolchain :gcc
   enable_debug
 
-  # include the default GEMs
-
   conf.gembox 'default'
-  conf.gem :github => 'mattn/mruby-json'
-  conf.gem :github => 'mattn/mruby-thread'
+  conf.gem github: 'mattn/mruby-json'
+  conf.gem github: 'mattn/mruby-thread'
 end
 
 MIX_ENV = ENV["MIX_ENV"] || raise("NO MIX ENV")
@@ -21,8 +19,9 @@ MRuby::Build.new(MIX_TARGET + '-' + MIX_ENV) do |conf|
   toolchain :gcc
   enable_debug
   conf.gembox 'default'
-  conf.gem :github => 'mattn/mruby-json'
-  conf.gem :github => 'mattn/mruby-thread'
+
+  conf.gem github: 'mattn/mruby-json'
+  conf.gem github: 'mattn/mruby-thread'
 
   # C compiler settings
   conf.cc do |cc|

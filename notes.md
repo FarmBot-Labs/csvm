@@ -1,12 +1,17 @@
+# TODO
+
+  * Error debug messages for Rollbar integration.
+  * Create debugger class for remote debugging over TCP or something.
+  * Set up a rake task for tests like this: https://www.slideshare.net/hsbt/20150525-testing-casualtalks
+
 # Request Header
 Requests can travel in either direction:
 
 |Seg|Description |Width             |Notes                   |
 |---|------------|------------------|------------------------|
-| 0 |Request ID  | 2 bytes          | Uint16, not ASCII      |
+| 0 |Channel Num | 2 bytes          | Uint16, not ASCII      |
 | 1 |Namespace   | 4 bytes          | ASCII command namespace|
-| 2 |Command size| 1 bytes          | Uint8, not ASCII       |
-| 3 |Command     | `cmd_size` bytes | ASCII command name     |
+| 3 |Command     | 4 bytes          | ASCII command name     |
 | 4 |Payload size| 2 bytes          | Uint16                 |
 | 5 |CLRF        | 2 bytes          | Y'know, `\r\n`         |
 
@@ -22,8 +27,9 @@ paramter storage.
 |Seg|Description           |Width   |Notes                                          |
 |---|----------------------|--------|-----------------------------------------------|
 |  0|Initiator's Request ID| 2 bytes| Unique request identifier. Requestor's choice.|
-|  1|Return value          | 2 bytes| Uint16                                        |
-|  2|CLRF                  | 2 bytes|                                               |
+|  1|Return status code    | 2 bytes| Implementation specific                       |
+|  2|Return value          | 2 bytes| Uint16                                        |
+|  3|CLRF                  | 2 bytes|                                               |
 
 # IPC Listing
 

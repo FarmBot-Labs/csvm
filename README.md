@@ -1,6 +1,7 @@
 # Csvm
 
-## Usage
+## Installation
+
 ```bash
 git clone https://github.com/farmbot-labs/csvm-poc --recursive
 mix deps.get
@@ -14,5 +15,12 @@ iex()> Csvm.Server.echo "hey ruby!"
 DATA FROM MRUBY: "hey ruby!\n"
 ```
 
+## Testing
+
+```
+rake test
+```
+
 ## Notes
-`mruby` does not get cleaned up for some reason. 
+
+`mruby` does not get cleaned up for some reason.
