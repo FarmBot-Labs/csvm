@@ -27,3 +27,14 @@ class InputManager < Queue
     @queue.push(data)
   end
 end
+
+if RUBY_ENGINE == "ruby"
+  require "test-unit"
+  require "pry"
+
+  class Test4InputManager < Test::Unit::TestCase
+    def test_this_plz
+      pend("I need to write these")
+    end
+  end
+end
