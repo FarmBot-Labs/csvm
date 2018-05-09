@@ -70,7 +70,7 @@ private
 
   def validate_namespace!
     suspect = self.namespace || MISSING
-    raise BadSegName, suspect if !OPERATIONS.key?(suspect)
+    raise BadNamespace, suspect if !OPERATIONS.key?(suspect)
   end
 
   def validate_operation!
@@ -101,16 +101,23 @@ if RUBY_ENGINE == "ruby"
 
     UINT16 = "S"
 
-    def random_uint16
-      [rand(0..6553)].pack(UINT16)
+    def uint16(number = rand(0..6553))
+      [number].pack(UINT16)
     end
 
-    def random_garbage(size)
-      [*(0..size)].map { (65 + rand(26)).chr }.join
+    def build_string(namespace, operation, payload, channel = 1)
+      [
+        uint16(channel),
+        namespace,
+        operation,
+        uint16(payload.to_s.length),
+        RequestHeader::CRLF,
+        payload.to_s
+      ].join("")
     end
 
     def test_payl_attributes
-      chan_id      = random_uint16
+      chan_id      = uint16()
       namespace    = RequestHeader::OPERATIONS.keys.sample
       operation    = RequestHeader::OPERATIONS[namespace].sample
       payload      = "12345"
@@ -135,25 +142,22 @@ if RUBY_ENGINE == "ruby"
       assert_raise(RequestHeader::TooShort) { RequestHeader.new("X").validate! }
     end
 
-    def test_channel_validation
-      pend("TODO")
-    end
-
     def test_namespace_validation
-      pend("TODO")
+      rh = RequestHeader.new(build_string("FOO", "BAR", "BAZ"))
+      assert_raise(RequestHeader::BadNamespace) { rh.validate! }
     end
 
-    def test_operation_validation
-      pend("TODO")
-    end
+    # def test_operation_validation
+    #   pend("TODO")
+    # end
 
-    def test_payload_size_validation
-      pend("TODO")
-    end
+    # def test_payload_size_validation
+    #   pend("TODO")
+    # end
 
-    def test_payload_validation
-      pend("TODO")
-    end
+    # def test_payload_validation
+    #   pend("TODO")
+    # end
   end
 end
 
