@@ -10,7 +10,7 @@ class App
       current_message = InputManager.current.shift
       if current_message
         message = RequestHeader.new(current_message)
-        MessageHandler.current.execute(message)
+        MessageHandler.current.execute(message, self)
       else
         HyperVisor.current.tick_next_process
       end

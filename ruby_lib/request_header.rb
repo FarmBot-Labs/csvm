@@ -153,13 +153,19 @@ if RUBY_ENGINE == "ruby"
       assert_raise(RequestHeader::BadOpName) { rh.validate! }
     end
 
-    # def test_payload_size_validation
-    #   pend("TODO")
-    # end
+    def test_payload_size_validation
+      string = [
+        uint16(123),
+        "PROC",
+        "START",
+        uint16(1),
+        RequestHeader::CRLF,
+        "123"
+      ].join("")
 
-    # def test_payload_validation
-    #   pend("TODO")
-    # end
+      rh = RequestHeader.new(string)
+      assert_raise(RequestHeader::BadPayload) { rh.validate! }
+    end
   end
 end
 
