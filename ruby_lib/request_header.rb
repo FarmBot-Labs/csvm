@@ -56,7 +56,7 @@ class RequestHeader
     @operation    = input[segm(:OPERATION).start, segm(:OPERATION).width]
     @payload_size = input[segm(:PAYLOAD_SIZE_DECLR).start,
                           segm(:PAYLOAD_SIZE_DECLR).width].unpack(UINT16).first
-    @payload      = input[HEADER_SIZE..-1][0, @payload_size]
+    @payload      = input.split(CRLF).last
   end
 
   # Validates syntax but not semantics.
@@ -109,6 +109,28 @@ if RUBY_ENGINE == "ruby"
       [*(0..size)].map { (65 + rand(26)).chr }.join
     end
 
+    def test_payl_attributes
+      chan_id      = random_uint16
+      namespace    = RequestHeader::OPERATIONS.keys.sample
+      operation    = RequestHeader::OPERATIONS[namespace].sample
+      payload      = "12345"
+      payload_size = [payload.length].pack(UINT16)
+      input        = [chan_id,
+                      namespace,
+                      operation,
+                      payload_size,
+                      RequestHeader::CRLF,
+                      payload].join("")
+      msg          = RequestHeader.new(input)
+
+      assert_equal(msg.channel,        chan_id.unpack(UINT16).first)
+      assert_equal(msg.payload.length, payload_size.unpack(UINT16).first)
+      assert_equal(msg.namespace,      namespace)
+      assert_equal(msg.operation,      operation)
+      assert_equal(msg.payload.length, msg.payload_size)
+      assert_equal(msg.payload,        payload)
+    end
+
     def test_too_short
       assert_raise(RequestHeader::TooShort) { RequestHeader.new("X").validate! }
     end
@@ -131,29 +153,6 @@ if RUBY_ENGINE == "ruby"
 
     def test_payload_validation
       pend("TODO")
-    end
-
-    def test_payl_attributes
-      pend("TODO")
-      chan_id      = random_uint16
-      payload_size = random_uint16
-      namespace    = RequestHeader::OPERATIONS.keys.sample
-      operation    = RequestHeader::OPERATIONS[namespace].sample
-      payload      = random_garbage(payload_size.unpack(UINT16).first)
-      input        = [chan_id,
-                      namespace,
-                      operation,
-                      payload_size,
-                      RequestHeader::CRLF,
-                      payload].join("")
-      msg          = RequestHeader.new(input)
-      msg.validate!
-
-      assert_equal(msg.channel,     chan_id.unpack(UINT16))
-      assert_equal(msg.payload.length, payload_size.unpack(UINT16))
-      assert_equal(msg.namespace,      namespace)
-      assert_equal(msg.operation,      operation)
-      assert_equal(msg.payload,        payload)
     end
   end
 end
