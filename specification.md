@@ -1,8 +1,8 @@
 # TODO
 
   * Error debug messages for Rollbar integration.
-  * Create debugger class for remote debugging over TCP or something.
-  * Set up a rake task for tests like this: https://www.slideshare.net/hsbt/20150525-testing-casualtalks
+  * Create debugger class for remote debugging over TCP or something (can't use
+    STDIO)
 
 # Request Header
 Requests can travel in either direction:

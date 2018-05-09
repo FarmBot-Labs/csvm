@@ -1,11 +1,12 @@
 # Datastructure to encapsulate a single request header, as defined in the spec.
 # Purpose: Eliminates repetition of common parsing operations, such as
 # extracting header names or parsing uint16's into Ruby number types.
-class Message
+class RequestHeader
   attr_reader :input
   class TooShort < Exception; end
   class BadSegName < Exception; end
-
+  class BadNamespace < Exception; end
+  class BadPayload < Exception; end
   # Declares the name, width, and starting index of a segment within a request
   # header. See: specification.md for an overview of segments.
   Segment         = Struct.new(:name, :start, :width)
@@ -25,8 +26,9 @@ class Message
   UINT16          = "S"
   # The size of a request header, excluding the (flexible) payload.
   HEADER_SIZE     = SEGMENTS.values.map { |x| x.width }.reduce(:+)
+  MISSING         = "NONE"
 
-  def self.command_list(*commands) # Pad/shrinktruncate opnames to correct size.
+  def self.command_list(*commands) # Pad / truncate opnames to correct size.
     width = SEGMENTS[:OPERATION].width
     commands.map { |op| op.ljust(width, PAD_CHAR)[0, width] }
   end
@@ -59,9 +61,26 @@ class Message
 
   # Validates syntax but not semantics.
   def validate!
+    validate_namespace!
+    validate_operation!
+    validate_payload!
   end
 
 private
+
+  def validate_namespace!
+    suspect = self.namespace || MISSING
+    raise BadSegName, suspect if !OPERATIONS.key?(suspect)
+  end
+
+  def validate_operation!
+    suspect = self.operation || MISSING
+    raise BadOpName, suspect if !OPERATIONS[self.namespace].include?(suspect)
+  end
+
+  def validate_payload!
+    raise BadPayload unless @payload.length == @payload_size
+  end
 
   # Throw runtime error on malformed segment names (catch typos in test suite)
   def segm(name)
@@ -69,12 +88,16 @@ private
   end
 end
 
+
+
+
+
 # TESTS ==================
 
 if RUBY_ENGINE == "ruby"
   require "test-unit"
   require "pry"
-  class Test4Message < Test::Unit::TestCase
+  class Test4RequestHeader < Test::Unit::TestCase
 
     UINT16 = "S"
 
@@ -87,7 +110,7 @@ if RUBY_ENGINE == "ruby"
     end
 
     def test_too_short
-      assert_raise(Message::TooShort) { Message.new("X").validate! }
+      assert_raise(RequestHeader::TooShort) { RequestHeader.new("X").validate! }
     end
 
     def test_channel_validation
@@ -114,16 +137,16 @@ if RUBY_ENGINE == "ruby"
       pend("TODO")
       chan_id      = random_uint16
       payload_size = random_uint16
-      namespace    = Message::OPERATIONS.keys.sample
-      operation    = Message::OPERATIONS[namespace].sample
+      namespace    = RequestHeader::OPERATIONS.keys.sample
+      operation    = RequestHeader::OPERATIONS[namespace].sample
       payload      = random_garbage(payload_size.unpack(UINT16).first)
       input        = [chan_id,
                       namespace,
                       operation,
                       payload_size,
-                      Message::CRLF,
+                      RequestHeader::CRLF,
                       payload].join("")
-      msg          = Message.new(input)
+      msg          = RequestHeader.new(input)
       msg.validate!
 
       assert_equal(msg.channel,     chan_id.unpack(UINT16))
