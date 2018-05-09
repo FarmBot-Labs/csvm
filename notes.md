@@ -7,13 +7,13 @@
 # Request Header
 Requests can travel in either direction:
 
-|Seg|Description |Width             |Notes                   |
-|---|------------|------------------|------------------------|
-| 0 |Channel Num | 2 bytes          | Uint16, not ASCII      |
-| 1 |Namespace   | 4 bytes          | ASCII command namespace|
-| 3 |Command     | 4 bytes          | ASCII command name     |
-| 4 |Payload size| 2 bytes          | Uint16                 |
-| 5 |CLRF        | 2 bytes          | Y'know, `\r\n`         |
+|Seg|Description |Width             |Notes                     |
+|---|------------|------------------|--------------------------|
+| 0 |Channel Num | 2 bytes          | Uint16, big endian       |
+| 1 |Namespace   | 4 bytes          | ASCII operation namespace|
+| 3 |Operation   | 5 bytes          | ASCII operation name     |
+| 4 |Payload size| 2 bytes          | Uint16, big endian       |
+| 5 |CLRF        | 2 bytes          | Y'know, `\r\n`           |
 
 Followed by a "payload"
 
@@ -24,81 +24,81 @@ paramter storage.
 
 # Response (6 bytes)
 
-|Seg|Description           |Width   |Notes                                          |
-|---|----------------------|--------|-----------------------------------------------|
-|  0|Initiator's Request ID| 2 bytes| Unique request identifier. Requestor's choice.|
-|  1|Return status code    | 2 bytes| Implementation specific                       |
-|  2|Return value          | 2 bytes| Uint16                                        |
-|  3|CLRF                  | 2 bytes|                                               |
+|Seg|Description           |Width   |Notes                       |
+|---|----------------------|--------|----------------------------|
+|  0|Channel Num           | 2 bytes| Originating channel number |
+|  1|Return status code    | 2 bytes| Implementation specific    |
+|  2|Return value          | 2 bytes| Uint16, big endian         |
+|  3|CLRF                  | 2 bytes|                            |
 
-# IPC Listing
+# Operation Listing
 
-|Namespace|Command|Request Payload                                   |Return |
-|---------|-------|--------------------------------------------------|-------|
-|SLICE    |NEW    |Still up for discussion.                          |       |
-|REGISTER |NEW    |Still up for discussion.                          |       |
-|CODE     |CREATE |None                                              |Code ID|
-|CODE     |OPEN   |Code ID                                           |Status |
-|CODE     |WRITE  |CeleryScript JSON                                 |Status |
-|CODE     |CLOSE  |Code ID                                           |Status |
-|CODE     |RM     |Code ID                                           |Status |
-|PROC     |START  |Code ID                                           |Pid    |
-|PROC     |PAUSE  |Process ID                                        |Status |
-|PROC     |KILL   |Process ID                                        |Status |
-|PROC     |RUN    |Process ID                                        |Status |
+|Namespace|Operation|Request Payload          |Return  |
+|---------|---------|-------------------------|--------|
+|SLICE    |NEW      |Still up for discussion. |        |
+|REGISTER |NEW      |Still up for discussion. |        |
+|CODE     |CREATE   |None                     |Code ID |
+|CODE     |OPEN     |Code ID                  |Status  |
+|CODE     |WRITE    |CeleryScript JSON        |Status  |
+|CODE     |CLOSE    |Code ID                  |Status  |
+|CODE     |RM       |Code ID                  |Status  |
+|PROC     |START    |Code ID                  |Pid     |
+|PROC     |PAUSE    |Process ID               |Status  |
+|PROC     |KILL     |Process ID               |Status  |
+|PROC     |RUN      |Process ID               |Status  |
 
 # Hypervisor Calls
 
 ## System control
-|Namespace |Command                      |Request Payload                                   |Return |
-|----------|-----------------------------|--------------------------------------------------|-------|
-|SYS       |CHECK_UPDATES                | NONE                                             |       |
-|SYS       |FACTORY_RESET                | Package                                          |       |
-|SYS       |POWER_OFF                    | NONE                                             |       |
-|SYS       |REBOOT                       | NONE                                             |       |
+|Namespace |Operation     |Request Payload |Return |
+|----------|--------------|----------------|-------|
+|SYS       |CHECK_UPDATES | NONE           |       |
+|SYS       |FACTORY_RESET | Package        |       |
+|SYS       |POWER_OFF     | NONE           |       |
+|SYS       |REBOOT        | NONE           |       |
 
 ## Firmware interaction
-|Namespace |Command                      |Request Payload                                   |Return |
-|----------|-----------------------------|--------------------------------------------------|-------|
-|SYS       |MOVE_ABSOLUTE                | X, Y, Z, Xspeed, Yspeed, Zspeed                  |       |
-|SYS       |MOVE_RELATIVE (?)            | Just forward to Moveabs?                         |       |
-|SYS       |CALIBRATE                    | Axis Enum                                        |       |
-|SYS       |FIND_HOME                    | Axis Enum                                        |       |
-|SYS       |HOME                         | Axis Enum                                        |       |
-|SYS       |ZERO                         | Axis Enum                                        |       |
-|SYS       |SET_SERVO_ANGLE              | Angle                                            |       |
-|SYS       |TOGGLE_PIN                   | Pin                                              |       |
-|SYS       |WRITE_PIN                    | Pin                                              |       |
+|Namespace |Operation         |Request Payload                  |Return |
+|----------|------------------|---------------------------------|-------|
+|SYS       |MOVE_ABSOLUTE     | X, Y, Z, Xspeed, Yspeed, Zspeed |       |
+|SYS       |MOVE_RELATIVE (?) | Just forward to Moveabs?        |       |
+|SYS       |CALIBRATE         | Axis Enum                       |       |
+|SYS       |FIND_HOME         | Axis Enum                       |       |
+|SYS       |HOME              | Axis Enum                       |       |
+|SYS       |ZERO              | Axis Enum                       |       |
+|SYS       |SET_SERVO_ANGLE   | Angle                           |       |
+|SYS       |TOGGLE_PIN        | Pin                             |       |
+|SYS       |WRITE_PIN         | Pin                             |       |
 
 ## Configuration interaction and communication.
-|Namespace |Command                      |Request Payload                                   |Return |
-|----------|-----------------------------|--------------------------------------------------|-------|
-|SYS       |CONFIG_UPDATE                | Package, config, value                           |       |
-|SYS       |SET_USER_ENV                 | config, value                                    |       |
-|SYS       |SEND_MESSAGE                 | Message                                          |       |
+|Namespace |Operation     |Request Payload         |Return |
+|----------|--------------|------------------------|-------|
+|SYS       |CONFIG_UPDATE | Package, config, value |       |
+|SYS       |SET_USER_ENV  | config, value          |       |
+|SYS       |SEND_MESSAGE  | Message                |       |
 
 ## Farmware
-|Namespace |Command                      |Request Payload                                   |Return |
-|----------|-----------------------------|--------------------------------------------------|-------|
-|SYS       |INSTALL_FIRST_PARTY_FARMWARE | NONE                                             |       |
-|SYS       |TAKE_PHOTO                   | NONE                                             |       |
-|SYS       |EXECUTE_SCRIPT               | Package (not really)                             |       |
-|SYS       |INSTALL_FARMWARE             | Package (not really)                             |       |
-|SYS       |REMOVE_FARMWARE              | Package (not really)                             |       |
-|SYS       |UPDATE_FARMWARE              | Package (not really)                             |       |
+|Namespace |Operation                    |Request Payload       |Return |
+|----------|-----------------------------|----------------------|-------|
+|SYS       |INSTALL_FIRST_PARTY_FARMWARE | NONE                 |       |
+|SYS       |TAKE_PHOTO                   | NONE                 |       |
+|SYS       |EXECUTE_SCRIPT               | Package (not really) |       |
+|SYS       |INSTALL_FARMWARE             | Package (not really) |       |
+|SYS       |REMOVE_FARMWARE              | Package (not really) |       |
+|SYS       |UPDATE_FARMWARE              | Package (not really) |       |
 
 ## RPI GPIO
-|Namespace |Command                      |Request Payload                                   |Return |
-|----------|-----------------------------|--------------------------------------------------|-------|
-|SYS       |REGISTER_GPIO                | Depricated?                                      |       |
-|SYS       |UNREGISTER_GPIO              | Depricated?                                      |       |
+|Namespace |Operation       |Request Payload |Return |
+|----------|----------------|----------------|-------|
+|SYS       |REGISTER_GPIO   | Depricated?    |       |
+|SYS       |UNREGISTER_GPIO | Depricated?    |       |
 
 ## Control
-|Namespace |Command                      |Request Payload                                   |Return |
-|----------|-----------------------------|--------------------------------------------------|-------|
-|SYS       |WAIT (possible CPU bound?)   | Milliseconds                                     |       |
-|SYS       |SLEEP                        | WIP?                                             |       |
-|SYS       |EXIT                         | WIP?                                             |       |
+|Namespace |Operation                  |Request Payload |Return |
+|----------|---------------------------|----------------|-------|
+|SYS       |WAIT (possible CPU bound?) | Milliseconds   |       |
+|SYS       |SLEEP                      | WIP?           |       |
+|SYS       |EXIT                       | WIP?           |       |
 
 # Enums
 
