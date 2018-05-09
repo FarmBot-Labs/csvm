@@ -3,10 +3,11 @@
 # extracting header names or parsing uint16's into Ruby number types.
 class RequestHeader
   attr_reader :input
-  class TooShort < Exception; end
-  class BadSegName < Exception; end
+  class TooShort     < Exception; end
+  class BadSegName   < Exception; end
   class BadNamespace < Exception; end
-  class BadPayload < Exception; end
+  class BadOpName    < Exception; end
+  class BadPayload   < Exception; end
   # Declares the name, width, and starting index of a segment within a request
   # header. See: specification.md for an overview of segments.
   Segment         = Struct.new(:name, :start, :width)
@@ -143,13 +144,14 @@ if RUBY_ENGINE == "ruby"
     end
 
     def test_namespace_validation
-      rh = RequestHeader.new(build_string("FOO", "BAR", "BAZ"))
+      rh = RequestHeader.new(build_string("FOO__", "BAR", "BAZ"))
       assert_raise(RequestHeader::BadNamespace) { rh.validate! }
     end
 
-    # def test_operation_validation
-    #   pend("TODO")
-    # end
+    def test_operation_validation
+      rh = RequestHeader.new(build_string("CODE", "BAR", "BAZ"))
+      assert_raise(RequestHeader::BadOpName) { rh.validate! }
+    end
 
     # def test_payload_size_validation
     #   pend("TODO")
