@@ -5,8 +5,6 @@ class RequestHeader
   attr_reader :input
   class TooShort     < Exception; end
   class BadSegName   < Exception; end
-  class BadNamespace < Exception; end
-  class BadOpName    < Exception; end
   class BadPayload   < Exception; end
   # Declares the name, width, and starting index of a segment within a request
   # header. See: specification.md for an overview of segments.
@@ -34,11 +32,6 @@ class RequestHeader
     commands.map { |op| op.ljust(width, PAD_CHAR)[0, width] }
   end
 
-  # List of valid "operation" segment values,
-  # indexed under the respective "namespace"
-  OPERATIONS = {"CODE" => command_list("NEW", "OPEN", "WRITE", "CLOSE", "RM"),
-                "PROC" => command_list("START", "PAUSE", "KILL", "RUN")}
-
   attr_reader :input, # Raw input string, as provided by input stream (usually)
               :channel,
               :namespace,
@@ -62,24 +55,6 @@ class RequestHeader
 
   # Validates syntax but not semantics.
   def validate!
-    validate_namespace!
-    validate_operation!
-    validate_payload!
-  end
-
-private
-
-  def validate_namespace!
-    suspect = self.namespace || MISSING
-    raise BadNamespace, suspect if !OPERATIONS.key?(suspect)
-  end
-
-  def validate_operation!
-    suspect = self.operation || MISSING
-    raise BadOpName, suspect if !OPERATIONS[self.namespace].include?(suspect)
-  end
-
-  def validate_payload!
     raise BadPayload unless @payload.length == @payload_size
   end
 
@@ -119,8 +94,8 @@ if RUBY_ENGINE == "ruby"
 
     def test_payl_attributes
       chan_id      = uint16()
-      namespace    = RequestHeader::OPERATIONS.keys.sample
-      operation    = RequestHeader::OPERATIONS[namespace].sample
+      namespace    = "NS__"
+      operation    = "OP___"
       payload      = "12345"
       payload_size = [payload.length].pack(UINT16)
       input        = [chan_id,
@@ -141,16 +116,6 @@ if RUBY_ENGINE == "ruby"
 
     def test_too_short
       assert_raise(RequestHeader::TooShort) { RequestHeader.new("X").validate! }
-    end
-
-    def test_namespace_validation
-      rh = RequestHeader.new(build_string("FOO__", "BAR", "BAZ"))
-      assert_raise(RequestHeader::BadNamespace) { rh.validate! }
-    end
-
-    def test_operation_validation
-      rh = RequestHeader.new(build_string("CODE", "BAR", "BAZ"))
-      assert_raise(RequestHeader::BadOpName) { rh.validate! }
     end
 
     def test_payload_size_validation

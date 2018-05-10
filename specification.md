@@ -3,7 +3,6 @@
   * Error debug messages for Rollbar integration.
   * Create debugger class for remote debugging over TCP or something (can't use
     STDIO)
-
 # Request Header
 Requests can travel in either direction:
 
