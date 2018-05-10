@@ -1,15 +1,20 @@
 # require: request_header
 # stubs for now
 module Code
-  class Create;end
-  class Open;  end
-  class Write; end
-  class Close; end
-  class Rm;    end
-  class Start; end
-  class Pause; end
-  class Kill;  end
-  class Run;   end
+  class Stub
+    def call(host)
+    end
+  end
+
+  class Create < Stub; end
+  class Open   < Stub; end
+  class Write  < Stub; end
+  class Close  < Stub; end
+  class Rm     < Stub; end
+  class Start  < Stub; end
+  class Pause  < Stub; end
+  class Kill   < Stub; end
+  class Run    < Stub; end
 end
 
 class MessageHandler
@@ -44,9 +49,8 @@ class MessageHandler
   end
 
   def execute(request_header, host)
-    find_dispatcher(request_header)
-    # Validate namespace
-    # Validate op
+    dispatcher = find_dispatcher(request_header)
+    dispatcher[host]
     # pass off control to respective dispatcher class.
   end
 

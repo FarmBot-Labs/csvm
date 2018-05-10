@@ -2,9 +2,9 @@
 # Purpose: Eliminates repetition of common parsing operations, such as
 # extracting header names or parsing uint16's into Ruby number types.
 class RequestHeader
-  class TooShort     < Exception; end
-  class BadSegName   < Exception; end
-  class BadPayload   < Exception; end
+  class TooShort   < Exception; end
+  class BadSegName < Exception; end
+  class BadPayload < Exception; end
   # Declares the name, width, and starting index of a segment within a request
   # header. See: specification.md for an overview of segments.
   Segment         = Struct.new(:name, :start, :width)
