@@ -12,7 +12,16 @@ if RUBY_ENGINE == "ruby"
       assert_equal "HEYO", MessageHandler.namespace("HEYOO")
     end
 
-    def test_find_dispatcher
+    def test_find_dispatcher_no
+      lookup  = ["NO___", "WAY_"]
+      request = RequestHeader.create(*lookup)
+      assert_raise(MessageHandler::NoDispatcher, lookup.join("")) do
+        MessageHandler.current.find_dispatcher(request)
+      end
+    end
+
+    def test_find_dispatcher_ok
+      binding.pry
       lookup  = ["NO___", "WAY_"]
       request = RequestHeader.create(*lookup)
       assert_raise(MessageHandler::NoDispatcher, lookup.join("")) do
