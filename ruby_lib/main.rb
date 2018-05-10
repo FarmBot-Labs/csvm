@@ -1,11 +1,11 @@
 # require: message_handler
 
-class App
+class Main
   def current
     @current ||= self.new
   end
 
-  def run!
+  def run
     # Main run loops
     until STDIN.eof?
       # Check for inbound stuff, esp. signals.
@@ -22,3 +22,4 @@ class App
     end
   end
 end
+Main.run
