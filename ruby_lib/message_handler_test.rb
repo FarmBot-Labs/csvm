@@ -28,5 +28,12 @@ if RUBY_ENGINE == "ruby"
 
       assert_equal(expected_klass, actual_klass)
     end
+
+    def test_execute
+      lookup, klass = MessageHandler::DISPATCH_TABLE.first
+      request       = RequestHeader.create(*lookup)
+      result        = MessageHandler.current.execute request, Hypervisor.current
+      assert_equal(result.class, klass)
+    end
   end
 end

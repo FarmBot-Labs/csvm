@@ -3,6 +3,7 @@
 module Code
   class Stub
     def call(host)
+      self
     end
   end
 
@@ -50,7 +51,7 @@ class MessageHandler
 
   def execute(request_header, host)
     dispatcher = find_dispatcher(request_header)
-    dispatcher[host]
+    dispatcher.new.call(host)
     # pass off control to respective dispatcher class.
   end
 
