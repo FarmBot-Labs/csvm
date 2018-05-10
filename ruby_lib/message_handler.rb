@@ -1,18 +1,20 @@
 # require: request_header
 # stubs for now
 module Code
-  class Create; end
-  class Open;   end
-  class Write;  end
-  class Close;  end
-  class Rm;     end
-  class Start;  end
-  class Pause;  end
-  class Kill;   end
-  class Run;    end
+  class Create;end
+  class Open;  end
+  class Write; end
+  class Close; end
+  class Rm;    end
+  class Start; end
+  class Pause; end
+  class Kill;  end
+  class Run;   end
 end
 
 class MessageHandler
+  class NoDispatcher < Exception; end
+
   OP_WIDTH = RequestHeader::SEGMENTS[:OPERATION].width
   NS_WIDTH = RequestHeader::SEGMENTS[:NAMESPACE].width
   PAD_CHAR = RequestHeader::PAD_CHAR
@@ -26,16 +28,15 @@ class MessageHandler
   end
 
   DISPATCH_TABLE = {
-    namespace("CODE") =>  { op("CREATE") => Code::Create,
-                            op("OPEN")   => Code::Open,
-                            op("WRITE")  => Code::Write,
-                            op("CLOSE")  => Code::Close,
-                            op("RM")     => Code::Rm,
-                            op("START")  => Code::Start,
-                            op("PAUSE")  => Code::Pause,
-                            op("KILL")   => Code::Kill,
-                            op("RUN")    => Code::Run, },
-    namespace("PROC") => {}
+    [namespace("CODE"), op("CLOSE") ] => Code::Close,
+    [namespace("CODE"), op("CREATE")] => Code::Create,
+    [namespace("CODE"), op("KILL")  ] => Code::Kill,
+    [namespace("CODE"), op("OPEN")  ] => Code::Open,
+    [namespace("CODE"), op("PAUSE") ] => Code::Pause,
+    [namespace("CODE"), op("RM")    ] => Code::Rm,
+    [namespace("CODE"), op("RUN")   ] => Code::Run,
+    [namespace("CODE"), op("START") ] => Code::Start,
+    [namespace("CODE"), op("WRITE") ] => Code::Write,
   }
 
   def self.current
@@ -49,25 +50,9 @@ class MessageHandler
     # pass off control to respective dispatcher class.
   end
 
-private
-
   def find_dispatcher(header)
-    raise "NOT IMPL"
-  end
-end
-
-
-if RUBY_ENGINE == "ruby"
-  require "test-unit"
-  require "pry"
-
-  class Test4MessageHandler < Test::Unit::TestCase
-    def test_op
-      assert_equal "RM___", MessageHandler.op("RM")
-    end
-
-    def test_namespace
-      assert_equal "HEYO", MessageHandler.namespace("HEYOO")
-    end
+    lookup_key = [header.namespace, header.operation]
+    klass      = DISPATCH_TABLE[lookup_key]
+    klass or raise NoDispatcher, lookup_key.join("")
   end
 end
