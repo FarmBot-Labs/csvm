@@ -32,12 +32,29 @@ class RequestHeader
     commands.map { |op| op.ljust(width, PAD_CHAR)[0, width] }
   end
 
+  # Convert ruby Fixnum to UInt16 (binary string)
+  def self.uint16(number)
+    [number].pack(UINT16)
+  end
+
   attr_reader :input, # Raw input string, as provided by input stream (usually)
               :channel,
               :namespace,
               :operation,
               :payload_size,
               :payload
+
+  # Create a request header without the need for string typing.
+  def create(namespace, operation, payload, channel = 1)
+    [
+      RequestHeader.uint16(channel),
+      namespace,
+      operation,
+      uint16(payload.to_s.length),
+      RequestHeader::CRLF,
+      payload.to_s
+    ].join("")
+  end
 
   def initialize(input)
     @input        = input
@@ -58,6 +75,8 @@ class RequestHeader
     raise BadPayload unless @payload.length == @payload_size
   end
 
+private
+
   # Throw runtime error on malformed segment names (catch typos in test suite)
   def segm(name)
     SEGMENTS[name] or raise BadSegName, name
@@ -77,23 +96,8 @@ if RUBY_ENGINE == "ruby"
 
     UINT16 = "S"
 
-    def uint16(number = rand(0..6553))
-      [number].pack(UINT16)
-    end
-
-    def build_string(namespace, operation, payload, channel = 1)
-      [
-        uint16(channel),
-        namespace,
-        operation,
-        uint16(payload.to_s.length),
-        RequestHeader::CRLF,
-        payload.to_s
-      ].join("")
-    end
-
     def test_payl_attributes
-      chan_id      = uint16()
+      chan_id      = RequestHeader.uint16(rand(0..128))
       namespace    = "NS__"
       operation    = "OP___"
       payload      = "12345"
@@ -120,10 +124,10 @@ if RUBY_ENGINE == "ruby"
 
     def test_payload_size_validation
       string = [
-        uint16(123),
+        RequestHeader.uint16(123),
         "PROC",
         "START",
-        uint16(1),
+        RequestHeader.uint16(1),
         RequestHeader::CRLF,
         "123"
       ].join("")

@@ -1,10 +1,18 @@
 # require: request_header
+# stubs for now
+module Code
+  class Create; end
+  class Open;   end
+  class Write;  end
+  class Close;  end
+  class Rm;     end
+  class Start;  end
+  class Pause;  end
+  class Kill;   end
+  class Run;    end
+end
 
 class MessageHandler
-  def self.current
-    @current ||= self.new
-  end
-
   OP_WIDTH = RequestHeader::SEGMENTS[:OPERATION].width
   NS_WIDTH = RequestHeader::SEGMENTS[:NAMESPACE].width
   PAD_CHAR = RequestHeader::PAD_CHAR
@@ -13,23 +21,38 @@ class MessageHandler
     name.ljust(NS_WIDTH, PAD_CHAR)[0, NS_WIDTH]
   end
 
-  def self.operation(name)
+  def self.op(name)
     name.ljust(OP_WIDTH, PAD_CHAR)[0, OP_WIDTH]
   end
 
   DISPATCH_TABLE = {
-    "CODE" => {
-
-    },
-    "PROC" => {
-
-    }
+    namespace("CODE") =>  { op("CREATE") => Code::Create,
+                            op("OPEN")   => Code::Open,
+                            op("WRITE")  => Code::Write,
+                            op("CLOSE")  => Code::Close,
+                            op("RM")     => Code::Rm,
+                            op("START")  => Code::Start,
+                            op("PAUSE")  => Code::Pause,
+                            op("KILL")   => Code::Kill,
+                            op("RUN")    => Code::Run, },
+    namespace("PROC") => {}
   }
 
-  def execute(request_header)
+  def self.current
+    @current ||= self.new
+  end
+
+  def execute(request_header, host)
+    find_dispatcher(request_header)
     # Validate namespace
     # Validate op
     # pass off control to respective dispatcher class.
+  end
+
+private
+
+  def find_dispatcher(header)
+    raise "NOT IMPL"
   end
 end
 
@@ -39,8 +62,12 @@ if RUBY_ENGINE == "ruby"
   require "pry"
 
   class Test4MessageHandler < Test::Unit::TestCase
-    def test_this_plz
-      pend("I need to write these")
+    def test_op
+      assert_equal "RM___", MessageHandler.op("RM")
+    end
+
+    def test_namespace
+      assert_equal "HEYO", MessageHandler.namespace("HEYOO")
     end
   end
 end
