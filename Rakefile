@@ -1,6 +1,7 @@
 require "test-unit"
 require "rake/testtask"
 require 'tsort'
+
 # Thanks, @palkan !
 # Original impl: https://github.com/mruby/mruby/pull/3748
 class RbfilesSorter
@@ -50,7 +51,7 @@ end
 LIB_DIR = "./ruby_lib/"
 DEPS    = RbfilesSorter.new(LIB_DIR).sort.reverse
 Rake::TestTask.new do |t|
-  t.test_files = DEPS # FileList["#{LIB_DIR}**/*.rb"]
+  t.test_files = DEPS
   t.verbose    = true
 end
 

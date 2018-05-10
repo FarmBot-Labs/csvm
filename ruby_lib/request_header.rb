@@ -2,7 +2,6 @@
 # Purpose: Eliminates repetition of common parsing operations, such as
 # extracting header names or parsing uint16's into Ruby number types.
 class RequestHeader
-  attr_reader :input
   class TooShort     < Exception; end
   class BadSegName   < Exception; end
   class BadPayload   < Exception; end

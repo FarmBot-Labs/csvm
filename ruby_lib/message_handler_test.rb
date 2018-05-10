@@ -15,18 +15,18 @@ if RUBY_ENGINE == "ruby"
     def test_find_dispatcher_no
       lookup  = ["NO___", "WAY_"]
       request = RequestHeader.create(*lookup)
+
       assert_raise(MessageHandler::NoDispatcher, lookup.join("")) do
         MessageHandler.current.find_dispatcher(request)
       end
     end
 
     def test_find_dispatcher_ok
-      binding.pry
-      lookup  = ["NO___", "WAY_"]
-      request = RequestHeader.create(*lookup)
-      assert_raise(MessageHandler::NoDispatcher, lookup.join("")) do
-        MessageHandler.current.find_dispatcher(request)
-      end
+      lookup, expected_klass = MessageHandler::DISPATCH_TABLE.first
+      request                = RequestHeader.create(*lookup)
+      actual_klass           = MessageHandler.current.find_dispatcher(request)
+
+      assert_equal(expected_klass, actual_klass)
     end
   end
 end
