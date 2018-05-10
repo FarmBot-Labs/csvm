@@ -58,6 +58,5 @@ end
 desc "Resolve dependency order"
 
 task :deps do
-  puts DEPS.join("\n")
+  puts DEPS.join(" ")
 end
-
