@@ -1,3 +1,5 @@
+# require: message_handler
+
 class App
   def current
     @current ||= self.new
