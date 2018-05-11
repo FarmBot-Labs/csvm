@@ -10,14 +10,8 @@ class App
   def run
     # Main run loops
     loop do
-      # Check for inbound messages, esp. signals.
-      current_message = InputManager.current.shift
-      if current_message
-        message = RequestHeader.new(current_message)
-        MessageHandler.current.execute(message, Hypervisor.current)
-      else
-        Hypervisor.current.tick
-      end
+      message = RequestHeader.new(STDIN.gets)
+      MessageHandler.current.execute(message, Hypervisor.current)
     end
   end
 end

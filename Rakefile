@@ -61,17 +61,27 @@ Rake::TestTask.new do |t|
   t.verbose    = true
 end
 
-desc "Resolve dependency for mRuby (no tests, etc)"
+desc "List load order"
+
+task :mrb_deps do
+  puts DEPS
+    .reject { |x| x.include?("_test.rb") }
+    .reverse
+    .join(" ")
+end
+
+desc "Concat all files into one file, in the correct order"
 
 task :link do
-  app = DEPS
+  file = "output.rb"
+  app  = DEPS
     .reject { |x| x.include?("_test.rb") }
     .reverse
     .map { |x| File.read(x) }
     .join("\n")
 
-  File.write("app.rb", app)
-  puts "Successfully built app.rb - You need to compile it next"
+  File.write(file, app)
+  puts "Successfully built #{file} - You need to compile it next"
 end
 
 desc "Resolve developer deps (includes tests, reverse load order for MRI)"
