@@ -1,5 +1,6 @@
 # require: "message_handler"
 # require: "input_manager"
+# require: "hypervisor"
 
 class App
   def self.current
@@ -13,9 +14,9 @@ class App
       current_message = InputManager.current.shift
       if current_message
         message = RequestHeader.new(current_message)
-        MessageHandler.current.execute(message, HyperVisor.current)
+        MessageHandler.current.execute(message, Hypervisor.current)
       else
-        HyperVisor.current.tick
+        Hypervisor.current.tick
       end
     end
   end

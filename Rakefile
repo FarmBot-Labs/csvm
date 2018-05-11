@@ -63,10 +63,14 @@ end
 
 desc "Resolve dependency for mRuby (no tests, etc)"
 
-task :mrb_deps do
-  puts DEPS
+task :link do
+  app = DEPS
     .reject { |x| x.include?("_test.rb") }
+    .reverse
+    .map { |x| File.read(x) }
     .join("\n")
+
+  File.write("app.rb", app)
 end
 
 desc "Resolve developer deps (includes tests, reverse load order for MRI)"
