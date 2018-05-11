@@ -27,7 +27,7 @@ class RequestHeader
   MISSING         = "NONE"
 
   def self.command_list(*commands) # Pad / truncate opnames to correct size.
-    width = SEGMENTS[:OPERATION].width
+    width = segm(:OPERATION).width
     commands.map { |op| op.ljust(width, PAD_CHAR)[0, width] }
   end
 
@@ -43,7 +43,7 @@ class RequestHeader
               :payload_size,
               :payload
 
-  # Create a request header without the need for string typing.
+  # (helper) Create a request header without the need for string typing.
   def self.create(namespace, operation, channel = 1, payload = "")
     payl = [
       RequestHeader.uint16(channel),

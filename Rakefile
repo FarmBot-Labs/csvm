@@ -10,9 +10,9 @@ class RbfilesSorter
   TAG_RXP = /^#\s*require:\s*['"]([\w\.\/]+)["']\s*$/
 
   def initialize(root)
-    @root = root
+    @root  = root
     @files = Dir.glob("#{root}/**/*.rb").sort
-    @deps = {}
+    @deps  = {}
   end
 
   def sort
@@ -55,7 +55,13 @@ Rake::TestTask.new do |t|
   t.verbose    = true
 end
 
-desc "Resolve dependency order"
+desc "Resolve dependency for mRuby (no tests, etc)"
+
+task :mrb_deps do
+  puts DEPS.reject { |x| x.include?("_test.rb") }.reverse.join("\n")
+end
+
+desc "Resolve developer deps (includes tests, reverse load order for MRI)"
 
 task :deps do
   puts DEPS.join("\n")

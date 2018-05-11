@@ -34,17 +34,17 @@ paramter storage.
 
 |Namespace|Operation|Request Payload          |Return  |
 |---------|---------|-------------------------|--------|
-|SLICE    |NEW      |Still up for discussion. |        |
-|REGISTER |NEW      |Still up for discussion. |        |
+|CODE     |CLOSE    |Code ID                  |Status  |
 |CODE     |CREATE   |None                     |Code ID |
 |CODE     |OPEN     |Code ID                  |Status  |
-|CODE     |WRITE    |CeleryScript JSON        |Status  |
-|CODE     |CLOSE    |Code ID                  |Status  |
 |CODE     |RM       |Code ID                  |Status  |
-|PROC     |START    |Code ID                  |Pid     |
-|PROC     |PAUSE    |Process ID               |Status  |
+|CODE     |WRITE    |CeleryScript JSON        |Status  |
 |PROC     |KILL     |Process ID               |Status  |
+|PROC     |PAUSE    |Process ID               |Status  |
 |PROC     |RUN      |Process ID               |Status  |
+|PROC     |START    |Code ID                  |Pid     |
+|REGISTER |NEW      |Still up for discussion. |        |
+|SLICE    |NEW      |Still up for discussion. |        |
 
 # Hypervisor Calls
 

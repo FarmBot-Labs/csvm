@@ -1,24 +1,7 @@
+# require: dispatchers/__main
 # require: request_header
-# stubs for now
-module Code
-  class Stub
-    def call(host)
-      self
-    end
-  end
 
-  class Create < Stub; end
-  class Open   < Stub; end
-  class Write  < Stub; end
-  class Close  < Stub; end
-  class Rm     < Stub; end
-  class Start  < Stub; end
-  class Pause  < Stub; end
-  class Kill   < Stub; end
-  class Run    < Stub; end
-end
-
-class MessageHandler
+class MessageHandler # TODO: Rename to "MessageRouter"
   class NoDispatcher < Exception; end
 
   OP_WIDTH = RequestHeader::SEGMENTS[:OPERATION].width
@@ -34,15 +17,18 @@ class MessageHandler
   end
 
   DISPATCH_TABLE = {
+    # Code Management
     [namespace("CODE"), op("CLOSE") ] => Code::Close,
     [namespace("CODE"), op("CREATE")] => Code::Create,
-    [namespace("CODE"), op("KILL")  ] => Code::Kill,
     [namespace("CODE"), op("OPEN")  ] => Code::Open,
-    [namespace("CODE"), op("PAUSE") ] => Code::Pause,
     [namespace("CODE"), op("RM")    ] => Code::Rm,
-    [namespace("CODE"), op("RUN")   ] => Code::Run,
-    [namespace("CODE"), op("START") ] => Code::Start,
     [namespace("CODE"), op("WRITE") ] => Code::Write,
+
+    # Process management
+    [namespace("PROC"), op("KILL")  ] => Proc::Kill,
+    [namespace("PROC"), op("PAUSE") ] => Proc::Pause,
+    [namespace("PROC"), op("RUN")   ] => Proc::Run,
+    [namespace("PROC"), op("START") ] => Proc::Start
   }
 
   def self.current
@@ -50,9 +36,7 @@ class MessageHandler
   end
 
   def execute(request_header, host)
-    dispatcher = find_dispatcher(request_header)
-    dispatcher.new.call(host)
-    # pass off control to respective dispatcher class.
+    find_dispatcher(request_header).new.call(host)
   end
 
   def find_dispatcher(header)

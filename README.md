@@ -1,4 +1,6 @@
-# Csvm
+# Celery Script Virtual Machine
+
+Work in progress / Proof of concept. Written in mRuby.
 
 ## Installation
 
