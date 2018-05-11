@@ -25,5 +25,9 @@ csvm-*.tar
 .host-mruby
 priv/mruby
 priv/mrb
+<<<<<<< HEAD
 priv/csvm
 app.rb
+=======
+priv/csvm.rbc
+>>>>>>> 2ee3fed696043cbf7fadf4a7d6e55311afef96e6

@@ -71,6 +71,7 @@ task :link do
     .join("\n")
 
   File.write("app.rb", app)
+  puts "Successfully built app.rb - You need to compile it next"
 end
 
 desc "Resolve developer deps (includes tests, reverse load order for MRI)"
