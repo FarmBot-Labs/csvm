@@ -1,6 +1,6 @@
 module Code
   class Write
-    def call
+    def call(request, hypervisor)
       raise "NOT IMPLEMENTED"
     end
   end

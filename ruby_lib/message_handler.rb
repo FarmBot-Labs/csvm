@@ -37,7 +37,10 @@ class MessageHandler # TODO: Rename to "MessageRouter"
   end
 
   def execute(request_header, host)
-    find_dispatcher(request_header).new.call(host)
+    dispatcher = find_dispatcher(request_header).new
+    result     = dispatcher.call(request_header, host)
+    raise "Expected dispatcher to return self" unless result == dispatcher
+    result
   end
 
   def find_dispatcher(header)

@@ -23,6 +23,7 @@ DATA FROM MRUBY: "hey ruby!\n"
 rake test
 ```
 
-## Notes
+## TODOs
 
-`mruby` does not get cleaned up for some reason.
+ * Something like `pry-remote`, maybe.
+ * clean up `mrb` during build (broke right now).

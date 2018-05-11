@@ -1,6 +1,6 @@
 module Code
   class Rm
-    def call
+    def call(request, hypervisor)
       raise "NOT IMPLEMENTED"
     end
   end

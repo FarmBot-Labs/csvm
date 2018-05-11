@@ -1,7 +1,8 @@
 module Code
   class Close
-    def call # THATS A CLOSE CALL!
-      raise "NOT IMPLEMENTED"
+    def call(request, hypervisor) # THATS A CLOSE CALL!
+      # raise "NOT IMPLEMENTED"
+      self
     end
   end
 end
