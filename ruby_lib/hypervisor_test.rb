@@ -1,4 +1,4 @@
-# require: hypervisor
+# require: "hypervisor"
 
 if RUBY_ENGINE == "ruby"
   require "test-unit"

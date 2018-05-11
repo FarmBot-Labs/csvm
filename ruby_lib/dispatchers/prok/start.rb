@@ -1,5 +1,5 @@
-module Proc
-  class Kill
+module Prok
+  class Start
     def call
       raise "NOT IMPLEMENTED"
     end

@@ -1,4 +1,4 @@
-# require: request_header
+# require: "request_header"
 if RUBY_ENGINE == "ruby"
   require "test-unit"
   require "pry"

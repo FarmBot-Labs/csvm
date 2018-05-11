@@ -1,4 +1,4 @@
-# require: message_handler
+# require: "message_handler"
 
 class App
   def self.current
@@ -19,4 +19,3 @@ class App
     end
   end
 end
-Main.run

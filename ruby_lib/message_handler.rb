@@ -1,6 +1,7 @@
-# require: dispatchers/__main
-# require: request_header
+# require: "dispatchers/__main.rb"
+# require: "request_header"
 
+puts ("=" * 10) + "MessageHandler"
 class MessageHandler # TODO: Rename to "MessageRouter"
   class NoDispatcher < Exception; end
 
@@ -25,10 +26,10 @@ class MessageHandler # TODO: Rename to "MessageRouter"
     [namespace("CODE"), op("WRITE") ] => Code::Write,
 
     # Process management
-    [namespace("PROC"), op("KILL")  ] => Proc::Kill,
-    [namespace("PROC"), op("PAUSE") ] => Proc::Pause,
-    [namespace("PROC"), op("RUN")   ] => Proc::Run,
-    [namespace("PROC"), op("START") ] => Proc::Start
+    [namespace("PROC"), op("KILL")  ] => Prok::Kill,
+    [namespace("PROC"), op("PAUSE") ] => Prok::Pause,
+    [namespace("PROC"), op("RUN")   ] => Prok::Run,
+    [namespace("PROC"), op("START") ] => Prok::Start
   }
 
   def self.current

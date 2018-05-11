@@ -1,4 +1,4 @@
-# require: message_handler
+# require: "message_handler"
 if RUBY_ENGINE == "ruby"
   require "test-unit"
   require "pry"

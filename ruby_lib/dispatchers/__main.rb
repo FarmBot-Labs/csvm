@@ -1,2 +1,3 @@
-# require: code/__main
-# require: proc/__main
+# require: "code/__main"
+# require: "prok/__main"
+

@@ -1,4 +1,4 @@
-module Proc
+module Prok
   class Pause
     def call
       raise "NOT IMPLEMENTED"

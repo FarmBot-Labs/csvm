@@ -1,4 +1,4 @@
-# require: input_manager
+# require: "input_manager"
 
 if RUBY_ENGINE == "ruby"
   require "test-unit"

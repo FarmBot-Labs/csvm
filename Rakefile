@@ -1,7 +1,7 @@
 require "test-unit"
 require "rake/testtask"
 require 'tsort'
-
+require "pry"
 # Thanks, @palkan !
 # Original impl: https://github.com/mruby/mruby/pull/3748
 class RbfilesSorter
@@ -42,27 +42,33 @@ class RbfilesSorter
       dep = line.match(TAG_RXP)[1]
 
       dep += ".rb" unless dep.end_with?(".rb")
-      raise "NO! #{dep}" unless File.file?(dep)
-      deps_list << File.expand_path(dep, File.dirname(file))
+      x = File.expand_path(dep, File.dirname(file))
+      deps_list << x
     end
   end
 end
 
-LIB_DIR = "./ruby_lib/"
-DEPS    = RbfilesSorter.new(LIB_DIR).sort.reverse
+LIB_DIR    = "./ruby_lib"
+ENTRY_FILE = "__main.rb"
+ENTRY_PATH = File.expand_path(ENTRY_FILE, LIB_DIR)
+DEPS       = RbfilesSorter.new(LIB_DIR).sort.reverse
+
 Rake::TestTask.new do |t|
-  t.test_files = DEPS
+  t.test_files = RbfilesSorter
+                  .new(LIB_DIR)
+                  .sort
+                  .reject {|x| x == ENTRY_PATH}
   t.verbose    = true
 end
 
 desc "Resolve dependency for mRuby (no tests, etc)"
 
 task :mrb_deps do
-  puts DEPS.reject { |x| x.include?("_test.rb") }.reverse.join("\n")
+  puts DEPS.join("\n")
 end
 
 desc "Resolve developer deps (includes tests, reverse load order for MRI)"
 
 task :deps do
-  puts DEPS.join(" ")
+  puts DEPS.reject { |x| x.include?("_test.rb") }.join(" ")
 end
