@@ -64,7 +64,7 @@ end
 desc "Resolve dependency for mRuby (no tests, etc)"
 
 task :mrb_deps do
-  puts DEPS.join("\n")
+  puts DEPS.join(" ")
 end
 
 desc "Resolve developer deps (includes tests, reverse load order for MRI)"
