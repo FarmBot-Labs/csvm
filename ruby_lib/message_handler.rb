@@ -1,8 +1,7 @@
 # require: "dispatchers/__main.rb"
 # require: "request_header"
 
-puts ("=" * 10) + "MessageHandler"
-class MessageHandler # TODO: Rename to "MessageRouter"
+class MessageHandler
   class NoDispatcher < Exception; end
 
   OP_WIDTH = RequestHeader::SEGMENTS[:OPERATION].width

@@ -25,4 +25,4 @@ csvm-*.tar
 .host-mruby
 priv/mruby
 priv/mrb
-priv/csvm
+priv/csvm.rbc

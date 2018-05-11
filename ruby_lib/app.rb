@@ -1,4 +1,5 @@
 # require: "message_handler"
+# require: "input_manager"
 
 class App
   def self.current
@@ -7,7 +8,7 @@ class App
 
   def run
     # Main run loops
-    until STDIN.eof?
+    loop do
       # Check for inbound messages, esp. signals.
       current_message = InputManager.current.shift
       if current_message

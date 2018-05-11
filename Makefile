@@ -18,11 +18,11 @@ HOST_MRBC := $(MRUBY_BUILD_DIR)/host/bin/mrbc
 
 # Source and output ruby files.
 RB_SRC_DIR := $(PWD)/ruby_lib
-RB_SRC_FILES := $(shell rake deps)
+RB_SRC_FILES := $(shell rake mrb_deps)
 
 RB_BIN_DIR := priv/mrb
 RB_BIN_FILES := $(patsubst $(RB_SRC_DIR)/%.rb, $(RB_BIN_DIR)/%.mrb, $(RB_SRC_FILES))
-FINAL_FILE := priv/csvm
+FINAL_FILE := priv/csvm.rbc
 
 TARGET_MRUBY := priv/mruby
 
@@ -53,6 +53,8 @@ $(MRUBY_BUILD_DIR)/host/bin/mruby-strip: .host-mruby
 
 $(RB_BIN_DIR):
 	mkdir -p $(RB_BIN_DIR)
+	mkdir -p $(RB_BIN_DIR)/dispatchers/code
+	mkdir -p $(RB_BIN_DIR)/dispatchers/prok
 
 .host-mruby:
 	$(MAKE) -s -C $(MRUBY_SRC_DIR) -e $(HOST_MRUBY_BUILD_CONFIG)
@@ -66,10 +68,7 @@ host-mruby-clean:
 $(RB_BIN_DIR)/%.mrb: $(RB_SRC_DIR)/%.rb
 	$(HOST_MRBC) -o $@ $<
 
-$(RB_BIN_DIR)/%.mrb: $(RB_TEST_DIR)/%.rb
-	$(HOST_MRBC) -o $@ $<
-
-$(FINAL_FILE): $(RB_BIN_FILES)
+$(FINAL_FILE): $(RB_SRC_FILES)
 	$(HOST_MRBC) -o $@ $(RB_SRC_FILES)
 
 $(TARGET_MRUBY):
@@ -79,5 +78,6 @@ mruby-src-clean:
 	$(RM) $(RB_BIN_FILES)
 
 clean: mruby-src-clean
+	$(RM) $(FINAL_FILE)
 
 all-clean: clean host-mruby-clean
