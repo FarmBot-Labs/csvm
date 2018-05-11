@@ -64,6 +64,5 @@ end
 desc "Resolve developer deps (includes tests, reverse load order for MRI)"
 
 task :deps do
-  puts DEPS.join("\n")
+  puts DEPS.join(" ")
 end
-

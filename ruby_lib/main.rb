@@ -5,7 +5,7 @@ class App
     @current ||= self.new
   end
 
-  def run!
+  def run
     # Main run loops
     until STDIN.eof?
       # Check for inbound messages, esp. signals.
@@ -19,3 +19,4 @@ class App
     end
   end
 end
+Main.run

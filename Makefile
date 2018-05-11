@@ -17,18 +17,12 @@ MRUBY_BUILD_DIR := $(MRUBY_SRC_DIR)/build
 HOST_MRBC := $(MRUBY_BUILD_DIR)/host/bin/mrbc
 
 # Source and output ruby files.
-RB_SRC_DIR := ruby_lib
-RB_SRC_FILES := $(shell find $(RB_SRC_DIR)/ -type f -name '*.rb')
+RB_SRC_DIR := $(PWD)/ruby_lib
+RB_SRC_FILES := $(shell rake deps)
 
 RB_BIN_DIR := priv/mrb
 RB_BIN_FILES := $(patsubst $(RB_SRC_DIR)/%.rb, $(RB_BIN_DIR)/%.mrb, $(RB_SRC_FILES))
-
-ifeq ($(MIX_ENV), test)
-RB_TEST_DIR := ruby_test
-RB_TEST_FILES := $(shell find $(RB_TEST_DIR)/ -type f -name '*.rb')
-RB_TEST_BIN_FILES := $(patsubst $(RB_TEST_DIR)/%.rb, $(RB_BIN_DIR)/%.mrb, $(RB_TEST_FILES))
-$(info Loading tests $(RB_TEST_FILES))
-endif
+FINAL_FILE := priv/csvm
 
 TARGET_MRUBY := priv/mruby
 
@@ -49,7 +43,7 @@ MIX_ENV=$(MIX_ENV)
 # Files that aren't real files.
 .PHONY: all clean all-clean host-mruby-clean mruby-src-clean
 
-all: $(RB_BIN_DIR) $(HOST_MRUBY_EXES) $(TARGET_MRUBY) $(RB_BIN_FILES) $(RB_TEST_BIN_FILES)
+all: $(RB_BIN_DIR) $(HOST_MRUBY_EXES) $(TARGET_MRUBY) $(FINAL_FILE)
 
 # Mruby Host exes.
 $(MRUBY_BUILD_DIR)/host/bin/mirb: .host-mruby
@@ -74,6 +68,9 @@ $(RB_BIN_DIR)/%.mrb: $(RB_SRC_DIR)/%.rb
 
 $(RB_BIN_DIR)/%.mrb: $(RB_TEST_DIR)/%.rb
 	$(HOST_MRBC) -o $@ $<
+
+$(FINAL_FILE): $(RB_BIN_FILES)
+	$(HOST_MRBC) -o $@ $(RB_SRC_FILES)
 
 $(TARGET_MRUBY):
 	cp $(MRUBY_BUILD_DIR)/$(MIX_TARGET)-$(MIX_ENV)/bin/mruby $@
