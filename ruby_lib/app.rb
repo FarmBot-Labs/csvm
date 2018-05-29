@@ -7,11 +7,17 @@ class App
     @current ||= self.new
   end
 
-  def run
+  def run(input_manager)
     # Main run loops
     loop do
-      message = RequestHeader.new(STDIN.gets)
-      MessageHandler.current.execute(message, Hypervisor.current)
+      data = input_manager.shift
+      if data
+        puts data.inspect
+        message = RequestHeader.new(data)
+        MessageHandler.current.execute(message, Hypervisor.current)
+      else
+        Hypervisor.current.tick
+      end
     end
   end
 end

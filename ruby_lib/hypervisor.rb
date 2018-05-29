@@ -4,6 +4,7 @@ class Hypervisor
   end
 
   def tick
-    raise "NOT IMPL!"
+    sleep 1
+    puts "Ticking VM!!!!"
   end
 end

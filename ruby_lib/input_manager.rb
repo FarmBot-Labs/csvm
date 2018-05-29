@@ -1,20 +1,11 @@
 # The Input Manager provides a queue for non-blocking reads of IO objects such as
 # $stdin.
-class InputManager < Queue
+class InputManager
   attr_reader :input
-  # Crash fast if the following classes are missing.
-  THREAD = Thread
-  QUEUE  = Queue
-  INPUT  = $stdin
 
-  def self.current
-    @current ||= self.new
-  end
-
-  def initialize(input = INPUT)
-    @input  = input
-    @queue  = QUEUE.new
-    @thread = THREAD.new { loop { check_input_io } }
+  def initialize(input, queue)
+    @input = input
+    @queue = queue
   end
 
   def shift
@@ -22,8 +13,7 @@ class InputManager < Queue
   end
 
   def check_input_io
-    data = self.input.gets
-    puts "[STDIN] #{data}"
+    data = self.input.gets.chomp
     @queue.push(data)
   end
 end
