@@ -1,8 +1,9 @@
 -- Setting `maybe` to true allows `nil` values.
-function is_a(kind, maybe)
+local is_a = function (kind, maybe)
   return function (value)
     local t = type(value)
     local expectation = (t == kind)
+
     if maybe and (t == "nil") then
       return
     else
@@ -11,7 +12,12 @@ function is_a(kind, maybe)
   end
 end
 
-is_function = is_a("function")
-is_table    = is_a("table")
-maybe_table = is_a("table", true)
-is_string   = is_a("string")
+local M = {}
+
+M.is_function = is_a("function")
+M.is_string   = is_a("string")
+M.is_table    = is_a("table")
+
+M.maybe_table = is_a("table", true)
+
+return M
