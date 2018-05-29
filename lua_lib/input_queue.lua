@@ -1,19 +1,26 @@
-local type_ = require("lua_lib/util/type_assertion")
+local D = require("lua_lib/util/dispatcher")
+local T = require("lua_lib/util/type_assertion")
 
 local M = {}
 
-local inputQueueState = function ()
+-- Generate a new state object for an `InputQueue` instance.
+local newInputQueueState = function()
   return {
-    get = function ()
+    get = function()
+      error("NOT IMPLEMENTED")
     end
   }
 end
 
-function M.InputQueue ()
+function M.new()
+  local state = newInputQueueState()
+  local dispatch = D.create_dispatcher("InputQueue", state)
 
-  return function (cmd, args)
-    type_.is_string(cmd)
-    type_.maybe_table(args)
+  return function(cmd, args)
+    T.is_string(cmd)
+    T.maybe_table(args)
+
+    return dispatch(cmd, args)
   end
 end
 

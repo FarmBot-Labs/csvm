@@ -19,7 +19,7 @@ function M.new(anything_you_need_here)
   -- Just an example - Does not actually need to be a Function type.
   T.is_function(anything_you_need_here)
 
-  local state = new_____State(input_queue, message_handler, hypervisor)
+  local state = new_____State(anything_you_need_here)
   local dispatch = D.create_dispatcher("_____", state)
 
   return function(cmd, args)
