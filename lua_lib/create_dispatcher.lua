@@ -2,7 +2,7 @@ local pretty = require 'pl.pretty'
 
 function create_dispatcher (dispatcher_name, lookup_table)
   return function (message_name, args)
-    local handler = lookup_table[name]
+    local handler = lookup_table["" .. message_name]
     if (handler) then
       return handler(args)
     else
