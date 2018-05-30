@@ -1,13 +1,15 @@
 local inbox = require "lua_lib/inbox"
-local test = require "pl.test"
-describe(
-  "Busted",
-  function()
-    it(
-      "kind of looks like rspec",
-      function()
-        assert.are.same({table = "great"}, {table = "no!"})
-      end
-    )
-  end
+
+describe("Busted", function()
+  it("grabs the last item", function()
+    local expected = { channel   = "channel",
+                       namespace = "NS",
+                       operation = "OP",
+                       payload   = "payload" }
+    _G.inbox = { index = 1, [1] = expected }
+
+    local result = inbox.fetch()
+    assert.are.same(result, expected)
+  end)
+end
 )
