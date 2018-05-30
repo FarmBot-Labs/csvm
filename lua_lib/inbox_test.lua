@@ -2,7 +2,7 @@ local inbox = require "lua_lib/inbox"
 
 describe("Busted", function()
   it("grabs the last item", function()
-    local expected = { channel   = "channel",
+    local expected = { channel   = 5,
                        namespace = "NS",
                        operation = "OP",
                        payload   = "payload" }

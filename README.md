@@ -1,3 +1,7 @@
+# CeleryScript Runtime Environment
+
+Where CeleryScript code gets executed.
+
 # Deps
 
 1. Install Lua.

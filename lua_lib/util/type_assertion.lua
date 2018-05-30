@@ -7,7 +7,7 @@ local is_a = function(kind, maybe)
     if maybe and (t == "nil") then
       return
     else
-      assert(expectation, "Expected " .. kind .. " variable. See trace.")
+      assert(expectation, "Expected " .. kind .. " type. Got: " .. t .. ". See trace for details.")
     end
   end
 end
@@ -20,5 +20,6 @@ M.is_table = is_a("table")
 M.is_number = is_a("number")
 
 M.maybe_table = is_a("table", true)
+M.maybe_string = is_a("string", true)
 
 return M
