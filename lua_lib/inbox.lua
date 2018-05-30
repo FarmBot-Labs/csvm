@@ -13,6 +13,7 @@ function M.fetch()
     T.is_string(last.operation)
     T.maybe_string(last.payload)
   end
+  i.index = (i.index + 1)
   return last
 end
 
