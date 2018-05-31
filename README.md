@@ -14,6 +14,7 @@ sudo luarocks
 sudo luarocks install busted
 sudo luarocks install luacov
 sudo luarocks install luasocket
+sudo luarocks install lualint
 sudo luarocks install penlight
 ```
 
@@ -21,6 +22,12 @@ sudo luarocks install penlight
 
 ```
 busted .
+```
+
+# Linting
+
+```
+luacheck --std max+busted lua_lib/*.lua
 ```
 
 # Debug / Local Dev
