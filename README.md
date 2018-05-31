@@ -4,7 +4,7 @@
 
 Where CeleryScript code gets executed.
 
-# Deps
+# Installation
 
 1. Install Lua.
 2. Install LuaRocks and Deps:
@@ -18,16 +18,10 @@ sudo luarocks install lualint
 sudo luarocks install penlight
 ```
 
-# Run Tests
+# Tests / Linting
 
 ```
-busted .
-```
-
-# Linting
-
-```
-luacheck --std max+busted lua_lib/*.lua
+./checks.sh
 ```
 
 # Debug / Local Dev

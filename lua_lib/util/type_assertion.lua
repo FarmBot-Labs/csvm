@@ -1,3 +1,5 @@
+local M = {}
+
 -- Setting `maybe` to true allows `nil` values.
 local is_a = function(kind, maybe)
   return function(value)
@@ -7,12 +9,12 @@ local is_a = function(kind, maybe)
     if maybe and (t == "nil") then
       return
     else
-      assert(expectation, "Expected " .. kind .. " type. Got: " .. t .. ". See trace for details.")
+      local err =
+        "Expected " .. kind .. " type. Got: " .. t .. ". See trace for details."
+      assert(expectation, err)
     end
   end
 end
-
-local M = {}
 
 function M.is_function (fn, maybe)
 
