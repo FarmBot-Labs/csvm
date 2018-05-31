@@ -17,7 +17,7 @@ local newHypervisorState = function()
 end
 
 function M.new()
-  local state = newHypervisorState()
+  local state    = newHypervisorState()
   local dispatch = D.create_dispatcher("Hypervisor", state)
 
   return function(cmd, args)
