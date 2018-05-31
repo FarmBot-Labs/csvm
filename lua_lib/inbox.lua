@@ -15,7 +15,7 @@ function M.push_req(namespace, operation, payload)
   local chan       = math.floor(math.random() * 100)
   local next_index = _G.inbox.index + 1
 
-  _G.inbox.index = next_index
+  _G.inbox.index       = next_index
   _G.inbox[next_index] = { channel   = chan,
                            namespace = namespace,
                            operation = operation,

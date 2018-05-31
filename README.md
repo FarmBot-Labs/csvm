@@ -31,10 +31,10 @@ In a web browser, open [http://localhost:8000/](http://localhost:8000/).
 
 Dev mode exposes an `INBOX` global variable which may be useful for debugging VM/host messages.
 
-Example: Running a `CODE.CREATE` call with a `"foobarbaz"` payload:
+Example: Running a `CODE.CREATE` call:
 
 ```
-INBOX.push_req("CODE", "CREATE", "foobarbaz")
+INBOX.push_req("CODE", "CREATE")
 ```
 
 # View Coverage
