@@ -4,10 +4,5 @@ return {
     -- (exclude overrules include, do not include
     -- the .lua extension, path separator is always '/')
     ["include"] = { 'lua_lib' },
-    ["exclude"] = { '_test' },
-    coveralls = {
-      pathcorrect = {
-        {"./lua_lib", ""};
-      }
-    }
+    ["exclude"] = { '_test' }
   }
