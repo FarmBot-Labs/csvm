@@ -1,3 +1,5 @@
+[![Coverage Status](https://coveralls.io/repos/github/RickCarlino/CeleryScript-Runtime/badge.svg?branch=master)](https://coveralls.io/github/RickCarlino/CeleryScript-Runtime?branch=master)
+[![Build Status](https://travis-ci.org/RickCarlino/CeleryScript-Runtime.svg?branch=master)](https://travis-ci.org/RickCarlino/CeleryScript-Runtime)
 # CeleryScript Runtime Environment
 
 Where CeleryScript code gets executed.
