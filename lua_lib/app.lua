@@ -1,32 +1,31 @@
-local D = require("lua_lib/util/dispatcher")
-local T = require("lua_lib/util/type_assertion")
-
-local M = {}
+local D      = require("lua_lib/util/dispatcher")
+local T      = require("lua_lib/util/type_assertion")
+local M      = {}
+local pretty = require "pl.pretty"
 
 -- Generate a new state object for an `App` instance.
-local newAppState = function(anything_you_need_here)
-  return {
-    run = function()
-      print("Starting run() loop...")
-      while true do -- Change this to a tick()able coroutine.
-        message = get_message()
-        if message then
-          print("TODO: Use pl.pretty() here")
-          -- TODO yield here.
-          message_handler(message, hypervisor)
-        else
-          -- TODO yield here.
-          hypervisor("tick")
-        end
+local newAppState = function(get_message, message_handler, hypervisor)
+  -- The main run loop
+  local run = function ()
+    print("Starting run() loop...")
+    while true do -- Change this to a tick()able coroutine.
+      message = get_message()
+      if message then
+        -- print("Processing " .. message ... " message")
+        message_handler(message, hypervisor)
+      else
+        hypervisor("tick")
       end
     end
-  }
+  end
+
+  return { run = run }
 end
 
 function M.new(get_message, message_handler, hypervisor)
-  type_.is_function(get_message)
-  type_.is_function(message_handler)
-  type_.is_function(hypervisor)
+  T.is_function(get_message)
+  T.is_function(message_handler)
+  T.is_function(hypervisor)
 
   local state = newAppState(get_message, message_handler, hypervisor)
   local dispatch = D.create_dispatcher("App", state)

@@ -1,6 +1,10 @@
 local T = require("lua_lib/util/type_assertion")
 local M = {}
 
+function M.setup_local_dev()
+  _G.inbox = { index = 0 }
+end
+
 function M.fetch()
   local i = _G.inbox
   T.is_table(i)
@@ -12,9 +16,9 @@ function M.fetch()
     T.is_string(last.namespace)
     T.is_string(last.operation)
     T.maybe_string(last.payload)
+    i[i.index] = nil
+    i.index = (i.index + 1)
   end
-  i[i.index] = nil
-  i.index = (i.index + 1)
   return last
 end
 
