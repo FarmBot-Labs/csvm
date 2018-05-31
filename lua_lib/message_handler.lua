@@ -3,9 +3,7 @@ local T = require("lua_lib/util/type_assertion")
 
 local M = {}
 
-local wip = function ()
-  error("Work in progress")
-end
+local wip = function () error("Work in progress") end
 
 -- Generate a new state object for a `MessageHandler` instance.
 local newMessageHandlerState = function()
