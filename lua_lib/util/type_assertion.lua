@@ -15,11 +15,12 @@ end
 local M = {}
 
 M.is_function = is_a("function")
-M.is_string = is_a("string")
-M.is_table = is_a("table")
-M.is_number = is_a("number")
+M.is_string   = is_a("string")
+M.is_table    = is_a("table")
+M.is_number   = is_a("number")
 
-M.maybe_table = is_a("table", true)
-M.maybe_string = is_a("string", true)
+M.maybe_table    = is_a("table", true)
+M.maybe_string   = is_a("string", true)
+M.maybe_function = is_a("function", true)
 
 return M

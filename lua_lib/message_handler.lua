@@ -57,8 +57,9 @@ function M.new()
 
   return function(cmd, args)
     T.is_string(cmd)
-    T.maybe_table(args)
-
+    T.is_table(args)
+    T.maybe_string(args.payload)
+    T.maybe_function(args.hypervisor)
     return dispatch(cmd, args)
   end
 end

@@ -12,7 +12,6 @@ local newHypervisorState = function()
   return {
     tick = function()
     require("lovebird").update()
-
       -- print("NOOP")
     end
   }

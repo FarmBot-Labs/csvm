@@ -11,8 +11,10 @@ local newAppState = function(get_message, message_handler, hypervisor)
     while true do -- Change this to a tick()able coroutine.
       message = get_message()
       if message then
-        -- print("Processing " .. message ... " message")
-        message_handler(message, hypervisor)
+        local rpc_name = (message.namespace .. "." .. message.operation)
+        print("Processing " .. rpc_name)
+        message_handler(rpc_name, { payload    = message.payload,
+                                    hypervisor = hypervisor })
       else
         hypervisor("tick")
       end
