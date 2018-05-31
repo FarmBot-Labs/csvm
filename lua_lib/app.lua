@@ -1,34 +1,35 @@
-local D = require("lua_lib/util/dispatcher")
-local T = require("lua_lib/util/type_assertion")
-
-local M = {}
+local D      = require("lua_lib/util/dispatcher")
+local T      = require("lua_lib/util/type_assertion")
+local M      = {}
 
 -- Generate a new state object for an `App` instance.
-local newAppState = function(anything_you_need_here)
-  return {
-    run = function()
-      print("Starting run() loop...")
-      while true do -- Change this to a tick()able coroutine.
-        message = input_queue("get")
-        if message then
-          print("TODO: Use pl.pretty() here")
-          -- TODO yield here.
-          message_handler(message, hypervisor)
-        else
-          -- TODO yield here.
-          hypervisor("tick")
-        end
+local newAppState = function(get_message, message_handler, hypervisor)
+  -- The main run loop
+  local run = coroutine.create(function ()
+    print("Starting run() loop...")
+    while true do -- Change this to a tick()able coroutine.
+      local message = get_message()
+      if message then
+        local rpc_name = (message.namespace .. "." .. message.operation)
+        print("Processing " .. rpc_name)
+        message_handler(rpc_name, { payload    = message.payload,
+                                    hypervisor = hypervisor })
+      else
+        hypervisor("tick")
       end
+      coroutine.yield()
     end
-  }
+  end)
+
+  return { run = run }
 end
 
-function M.new(input_queue, message_handler, hypervisor)
-  type_.is_function(input_queue)
-  type_.is_function(message_handler)
-  type_.is_function(hypervisor)
+function M.new(get_message, message_handler, hypervisor)
+  T.is_function(get_message)
+  T.is_function(message_handler)
+  T.is_function(hypervisor)
 
-  local state = newAppState(input_queue, message_handler, hypervisor)
+  local state = newAppState(get_message, message_handler, hypervisor)
   local dispatch = D.create_dispatcher("App", state)
 
   return function(cmd, args)

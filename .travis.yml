@@ -1,0 +1,31 @@
+# .travis.yml
+# Thanks! http://lua.space/general/ci-with-lua
+# https://travis-ci.org/RickCarlino/CeleryScript-Runtime
+language: python
+sudo: false
+
+env:
+  - LUA="lua=5.3"
+
+before_install:
+  - pip install hererocks
+  - hererocks lua_install -r^ --$LUA
+  - export PATH=$PATH:$PWD/lua_install/bin
+
+install:
+  - luarocks install busted
+  - luarocks install luacheck
+  - luarocks install luacov
+  - luarocks install luacov-coveralls
+  - luarocks install luasocket
+  - luarocks install penlight
+
+script:
+  - busted --verbose --coverage .
+  - luacheck --std max+busted lua_lib/*.lua
+
+after_success:
+  - luacov-coveralls
+
+notifications:
+  email: false
