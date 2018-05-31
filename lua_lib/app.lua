@@ -9,7 +9,7 @@ local newAppState = function(anything_you_need_here)
     run = function()
       print("Starting run() loop...")
       while true do -- Change this to a tick()able coroutine.
-        message = input_queue("get")
+        message = get_message()
         if message then
           print("TODO: Use pl.pretty() here")
           -- TODO yield here.
@@ -23,12 +23,12 @@ local newAppState = function(anything_you_need_here)
   }
 end
 
-function M.new(input_queue, message_handler, hypervisor)
-  type_.is_function(input_queue)
+function M.new(get_message, message_handler, hypervisor)
+  type_.is_function(get_message)
   type_.is_function(message_handler)
   type_.is_function(hypervisor)
 
-  local state = newAppState(input_queue, message_handler, hypervisor)
+  local state = newAppState(get_message, message_handler, hypervisor)
   local dispatch = D.create_dispatcher("App", state)
 
   return function(cmd, args)
