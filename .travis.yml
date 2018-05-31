@@ -22,6 +22,7 @@ install:
 
 script:
   - busted --verbose --coverage .
+  - luacheck --std max+busted lua_lib/*.lua
 
 after_success:
   - luacov-coveralls
