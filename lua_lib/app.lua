@@ -5,7 +5,7 @@ local M      = {}
 -- Generate a new state object for an `App` instance.
 local newAppState = function(get_message, message_handler, hypervisor)
   -- The main run loop
-  local run = function ()
+  local run = coroutine.create(function ()
     print("Starting run() loop...")
     while true do -- Change this to a tick()able coroutine.
       local message = get_message()
@@ -19,7 +19,7 @@ local newAppState = function(get_message, message_handler, hypervisor)
       end
       coroutine.yield()
     end
-  end
+  end)
 
   return { run = run }
 end

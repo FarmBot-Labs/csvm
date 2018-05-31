@@ -10,8 +10,8 @@ local M = {}
 -- Generate a new state object for an `_____` instance.
 local new_____State = function()
   return {
-    foo = function()
-    end
+    foo = coroutine.create(function()
+    end)
   }
 end
 

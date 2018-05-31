@@ -21,12 +21,30 @@ describe("inbox.fetch()", function()
 
   it("Works down the queue, one  item at a time", function ()
     local expected = {
-      { channel = 4, namespace = "FOUR", operation = "CD", payload = nil },
-      { channel = 5, namespace = "FIVE", operation = "OP", payload = "payload" },
-      { channel = 6, namespace = "SIX_", operation = "GH", payload = "payload" },
+      {
+        channel   = 4,
+        namespace = "FOUR",
+        operation = "CD",
+        payload   = nil
+      }, {
+        channel   = 5,
+        namespace = "FIVE",
+        operation = "OP",
+        payload   = "payload"
+      }, {
+        channel   = 6,
+        namespace = "SIX_",
+        operation = "GH",
+        payload   = "payload"
+      },
     }
 
-    _G.inbox = { index = 1, [1] = expected[1], [2] = expected[2], [3] = expected[3] }
+    _G.inbox = {
+      index = 1,
+      [1]   = expected[1],
+      [2]   = expected[2],
+      [3]   = expected[3]
+    }
 
     assert.is_truthy(_G.inbox[1])
     assert.is_truthy(_G.inbox[2])

@@ -10,10 +10,9 @@ local M = {}
 -- Generate a new state object for an `Hypervisor` instance.
 local newHypervisorState = function()
   return {
-    tick = function()
-    require("lovebird").update()
+    tick = coroutine.create(function()
       -- print("NOOP")
-    end
+    end)
   }
 end
 
