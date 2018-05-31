@@ -6,6 +6,18 @@ function M.setup_local_dev()
   _G.inbox = { index = 0 }
 end
 
+function M.new_message(channel, namespace, operation, payload)
+  T.is_number(channel)
+  T.is_string(namespace)
+  T.is_string(operation)
+  T.maybe_string(payload)
+
+  return { channel   = channel,
+           namespace = namespace,
+           operation = operation,
+           payload   = payload }
+end
+
 -- add fake inbox message
 function M.push_req(namespace, operation, payload)
   T.is_string(namespace)
@@ -16,10 +28,7 @@ function M.push_req(namespace, operation, payload)
   local next_index = _G.inbox.index + 1
 
   _G.inbox.index       = next_index
-  _G.inbox[next_index] = { channel   = chan,
-                           namespace = namespace,
-                           operation = operation,
-                           payload   = payload }
+  _G.inbox[next_index] = M.new_message(chan, namespace, operation, payload)
 end
 
 function M.fetch()

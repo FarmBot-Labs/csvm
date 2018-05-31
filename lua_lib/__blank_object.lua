@@ -8,18 +8,18 @@ local M = {}
 -- Replace "_____" with the name of your "class"
 
 -- Generate a new state object for an `_____` instance.
-local new_____State = function(anything_you_need_here)
+local new_____State = function()
   return {
     foo = function()
     end
   }
 end
 
-function M.new(anything_you_need_here)
+function M.new()
   -- Just an example - Does not actually need to be a Function type.
-  T.is_function(anything_you_need_here)
+  T.is_function(function()end)
 
-  local state = new_____State(anything_you_need_here)
+  local state = new_____State()
   local dispatch = D.create_dispatcher("_____", state)
 
   return function(cmd, args)

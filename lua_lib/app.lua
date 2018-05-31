@@ -1,7 +1,6 @@
 local D      = require("lua_lib/util/dispatcher")
 local T      = require("lua_lib/util/type_assertion")
 local M      = {}
-local pretty = require "pl.pretty"
 
 -- Generate a new state object for an `App` instance.
 local newAppState = function(get_message, message_handler, hypervisor)
@@ -9,7 +8,7 @@ local newAppState = function(get_message, message_handler, hypervisor)
   local run = function ()
     print("Starting run() loop...")
     while true do -- Change this to a tick()able coroutine.
-      message = get_message()
+      local message = get_message()
       if message then
         local rpc_name = (message.namespace .. "." .. message.operation)
         print("Processing " .. rpc_name)
@@ -18,6 +17,7 @@ local newAppState = function(get_message, message_handler, hypervisor)
       else
         hypervisor("tick")
       end
+      coroutine.yield()
     end
   end
 

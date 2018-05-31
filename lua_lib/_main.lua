@@ -6,8 +6,7 @@ local main            = require("lua_lib/app").new(get_message, message_handler,
 
 if (os.getenv("CELERY_ENV") == "dev") then
     inbox.setup_local_dev()
-    INBOX = inbox
+    _G.INBOX = inbox
 end
 
 main("run")
-Nprint()

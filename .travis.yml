@@ -21,11 +21,9 @@ install:
   - luarocks install penlight
 
 script:
-  # - luacheck --std max+busted *.lua spec
   - busted --verbose --coverage .
 
 after_success:
-  # - luacov-coveralls -e $TRAVIS_BUILD_DIR/lua_install -i lua_lib/*.lua
   - luacov-coveralls
 
 notifications:
