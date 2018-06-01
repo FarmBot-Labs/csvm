@@ -1,5 +1,10 @@
-require("src/hypervisor")
+local Hypervisor = require("src/hypervisor")
 
 describe("VM", function()
-  it("starts", function() end)
+  local hv = Hypervisor.new()
+  it("runs `tick`", function()
+    assert.has_no.errors(function()
+      hv("SYS.TICK") -- Just a noop right now
+    end)
+  end)
 end)
