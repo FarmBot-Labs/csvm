@@ -2,18 +2,19 @@ local D = require("src/util/object")
 local M = {}
 local json = require("lib/json")
 
-local wip = coroutine.create(function () error("Work in progress") end)
+local wip = function () error("Work in progress") end
 
 -- Generate a new method_table object for a `VM` instance.
 local newVMMethodTable = function()
   local code_counter = 0
   return {
-    ["tick"]                             = wip,
-    ["CODE.WRITE"]                       = coroutine.create(function(s, a)
+    ["tick"]                             = function(_, _)
+    end,
+    ["CODE.WRITE"]                       = function(s, a)
       code_counter         = code_counter + 1
       s.code[code_counter] = json.decode(a.payload)
       print("Hooray! " .. a.payload)
-    end),
+    end,
     ["CODE.RM"]                          = wip,
     ["PROC.KILL"]                        = wip,
     ["PROC.PAUSE"]                       = wip,

@@ -6,7 +6,7 @@ local M      = {}
 local newAppMethodTable = function(get_message, vm)
   -- The main run loop
   return {
-    ["run"] = coroutine.create(function (_, _)
+    ["run"] = coroutine.wrap(function (_, _)
       print("Starting run() loop...")
       while true do -- Change this to a tick()able coroutine.
         local message = get_message()
