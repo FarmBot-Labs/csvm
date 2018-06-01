@@ -4,8 +4,11 @@ local pretty = require("pl.pretty")
 local wip    = function () error("Work in progress") end
 local T      = require("src/util/type_assertion")
 local copy   = require("src/util/deep_copy").deep_copy
+local status = require("src/util/deep_copy")
 
-function M.new(inital_state)
+function M.new(reply, inital_state)
+  T.is_function(reply)
+  T.maybe_table(inital_state)
   local this = inital_state or {
     id   = 0,
     code = {}
@@ -16,10 +19,12 @@ function M.new(inital_state)
       -- TODO: Tick the VM in a round robin.
     end,
     ["CODE.WRITE"]                       = function(a)
+      local m = a.message
       this.id            = this.id + 1
-      this.code[this.id] = json.decode(a.message.payload)
+      this.code[this.id] = json.decode(m.payload)
       print("Registered code under ID " .. this.id .. ":")
       pretty.dump(this.code[this.id])
+      reply(m.channel, status.OK, this.id)
     end,
     ["PROC.RUN"]                         = wip,
     ["PROC.KILL"]                        = wip,

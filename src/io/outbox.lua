@@ -7,8 +7,8 @@ M.raw_write = io.write
 
 function M.reply(channel, status, value)
   T.is_number(channel)
-  T.is_string(status)
-  T.is_string(value)
+  T.is_number(status)
+  T.is_number(value)
 
   M.raw_write("" .. channel .. status .. value .. CLRF)
 end

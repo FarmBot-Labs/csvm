@@ -1,7 +1,8 @@
 local Hypervisor = require("src/hypervisor")
 local inbox      = require("src/io/inbox")
 describe("VM", function()
-  local hv = Hypervisor.new()
+  local reply = spy.new(function () end)
+  local hv    = Hypervisor.new(reply)
 
   it("crashes on typos", function ()
     assert.has_error(function ()
