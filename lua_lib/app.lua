@@ -1,9 +1,9 @@
-local D      = require("lua_lib/util/dispatcher")
+local D      = require("lua_lib/util/object")
 local T      = require("lua_lib/util/type_assertion")
 local M      = {}
 
 -- Generate a new state object for an `App` instance.
-local newAppState = function(get_message, message_handler, hypervisor)
+local newAppMethodTable = function(get_message, message_handler)
   -- The main run loop
   local run = coroutine.create(function ()
     print("Starting run() loop...")
@@ -12,10 +12,9 @@ local newAppState = function(get_message, message_handler, hypervisor)
       if message then
         local rpc_name = (message.namespace .. "." .. message.operation)
         print("Processing " .. rpc_name)
-        message_handler(rpc_name, { payload    = message.payload,
-                                    hypervisor = hypervisor })
+        message_handler(rpc_name, { message = message })
       else
-        hypervisor("tick")
+        message_handler("tick")
       end
       coroutine.yield()
     end
@@ -24,20 +23,13 @@ local newAppState = function(get_message, message_handler, hypervisor)
   return { run = run }
 end
 
-function M.new(get_message, message_handler, hypervisor)
+function M.new(get_message, message_handler)
   T.is_function(get_message)
   T.is_function(message_handler)
-  T.is_function(hypervisor)
 
-  local state = newAppState(get_message, message_handler, hypervisor)
-  local dispatch = D.create_dispatcher("App", state)
-
-  return function(cmd, args)
-    T.is_string(cmd)
-    T.maybe_table(args)
-
-    return dispatch(cmd, args)
-  end
+  local method_table = newAppMethodTable(get_message, message_handler)
+  local state        = {}
+  return D.create_object("App", method_table, state)
 end
 
 return M

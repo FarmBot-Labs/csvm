@@ -1,15 +1,16 @@
-local D = require("lua_lib/util/dispatcher")
-local T = require("lua_lib/util/type_assertion")
-
+local D = require("lua_lib/util/object")
 local M = {}
 
 local wip = coroutine.create(function () error("Work in progress") end)
 
--- Generate a new state object for a `MessageHandler` instance.
-local newMessageHandlerState = function()
+-- Generate a new method_table object for a `MessageHandler` instance.
+local newMessageHandlerMethodTable = function()
   return {
+    ["tick"]                             = wip,
     ["CODE.CLOSE"]                       = wip,
-    ["CODE.CREATE"]                      = wip,
+    ["CODE.CREATE"]                      = coroutine.create(function(_, _)
+      error("TODO")
+    end),
     ["CODE.OPEN"]                        = wip,
     ["CODE.RM"]                          = wip,
     ["CODE.WRITE"]                       = wip,
@@ -50,16 +51,9 @@ local newMessageHandlerState = function()
 end
 
 function M.new()
-  local state = newMessageHandlerState()
-  local dispatch = D.create_dispatcher("MessageHandler", state)
-
-  return function(cmd, args)
-    T.is_string(cmd)
-    T.is_table(args)
-    T.maybe_string(args.payload)
-    T.maybe_function(args.hypervisor)
-    return dispatch(cmd, args)
-  end
+  local methods  = newMessageHandlerMethodTable()
+  local this     = { code = {} }
+  D.create_object("MessageHandler", methods, this)
 end
 
 return M

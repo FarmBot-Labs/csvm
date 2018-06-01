@@ -33,7 +33,8 @@ function M.is_function (fn, maybe)
     return
   end
 
-  assert(false, "Expected function type. Got: " .. t .. ". See trace for details.")
+  assert(false,
+    "Expected function type. Got: " .. t .. ". See trace for details.")
 end
 
 M.is_string = is_a("string")
