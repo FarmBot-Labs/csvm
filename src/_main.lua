@@ -1,14 +1,13 @@
-local inbox           = require("src/io/inbox")
-local get_message     = inbox.fetch
-local vm              = require("src/vm").new()
-local main            = require("src/app").new(get_message, vm)
+local inbox      = require("src/io/inbox")
+local hypervisor = require("src/hypervisor").new()
+local app        = require("src/app")
 
 if (os.getenv("CELERY_ENV") == "dev") then
   inbox.setup_local_dev()
-  _G.INBOX = inbox
+  _G.INBOX = inbox -- Easy to access from `lovebird`.
 end
 
 while true do
   require("lib/lovebird").update()
-  main("run")
+  app.run(inbox.fetch, hypervisor)
 end
