@@ -3,7 +3,7 @@ local O = require("src/util/object")
 describe("object helper", function ()
   it("creates a simple  object", function ()
     local methods = {
-      set = coroutine.create(function(state, args)
+      set = coroutine.wrap(function(state, args)
         state.count = args.value
       end)
     }

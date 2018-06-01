@@ -8,11 +8,10 @@ local newAppMethodTable = function(get_message, vm)
   return {
     ["run"] = coroutine.wrap(function (_, _)
       print("Starting run() loop...")
-      while true do -- Change this to a tick()able coroutine.
+      while true do
         local message = get_message()
         if message then
           local rpc_name = (message.namespace .. "." .. message.operation)
-          print("Processing " .. rpc_name)
           vm(rpc_name, { message = message })
         else
           vm("tick")

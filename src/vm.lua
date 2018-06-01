@@ -1,7 +1,7 @@
 local D = require("src/util/object")
 local M = {}
 local json = require("lib/json")
-
+local pretty = require("pl.pretty")
 local wip = function () error("Work in progress") end
 
 -- Generate a new method_table object for a `VM` instance.
@@ -12,8 +12,8 @@ local newVMMethodTable = function()
     end,
     ["CODE.WRITE"]                       = function(s, a)
       code_counter         = code_counter + 1
-      s.code[code_counter] = json.decode(a.payload)
-      print("Hooray! " .. a.payload)
+      s.code[code_counter] = json.decode(a.message.payload)
+      pretty.dump(s.code[code_counter])
     end,
     ["CODE.RM"]                          = wip,
     ["PROC.KILL"]                        = wip,
