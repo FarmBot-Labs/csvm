@@ -1,10 +1,17 @@
 local Hypervisor = require("src/hypervisor")
-
+local inbox      = require("src/io/inbox")
 describe("VM", function()
   local hv = Hypervisor.new()
-  it("runs `tick`", function()
-    assert.has_no.errors(function()
-      hv("SYS.TICK") -- Just a noop right now
-    end)
+  it("dumps state", function()
+    local copy = hv("SYS.TICK", nil, true) -- Just a noop right now
+    assert.are.same(type(copy.id),   "number")
+    assert.are.same(type(copy.code), "table")
+  end)
+
+  it("saves code for execution later", function()
+    local message = inbox.new_message(0, "CODE", "WRITE", "{}")
+    local copy    = hv("CODE.WRITE", { message = message }, true)
+    assert.are.same(type(copy.id),   "number")
+    assert.are.same(type(copy.code[1]), "table")
   end)
 end)
