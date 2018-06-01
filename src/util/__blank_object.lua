@@ -1,5 +1,5 @@
-local D = require("lua_lib/util/object")
-local T = require("lua_lib/util/type_assertion")
+local D = require("src/util/object")
+local T = require("src/util/type_assertion")
 
 local M = {}
 

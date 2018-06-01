@@ -1,4 +1,4 @@
-local OB = require("lua_lib/io/outbox")
+local OB = require("src/io/outbox")
 
 describe("Outbox", function()
   it("replies to messages", function ()

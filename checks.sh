@@ -1,3 +1,3 @@
 #!/bin/sh
-luacheck --std max+busted lua_lib/*.lua
+luacheck --std max+busted src/*.lua
 busted .

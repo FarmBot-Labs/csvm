@@ -31,11 +31,8 @@ paramter storage.
 
 |Namespace|Operation|Request Payload          |Return  |
 |---------|---------|-------------------------|--------|
-|CODE     |CLOSE    |Code ID                  |Status  |
-|CODE     |CREATE   |None                     |Code ID |
-|CODE     |OPEN     |Code ID                  |Status  |
+|CODE     |WRITE    |CeleryScript JSON        |Code ID |
 |CODE     |RM       |Code ID                  |Status  |
-|CODE     |WRITE    |CeleryScript JSON        |Status  |
 |PROC     |KILL     |Process ID               |Status  |
 |PROC     |PAUSE    |Process ID               |Status  |
 |PROC     |RUN      |Process ID               |Status  |

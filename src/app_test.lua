@@ -1,5 +1,5 @@
-local App   = require("lua_lib/app")
-local Inbox = require("lua_lib/io/inbox")
+local App   = require("src/app")
+local Inbox = require("src/io/inbox")
 
 describe("App", function()
   local stub            = { value = nil }

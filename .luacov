@@ -3,6 +3,6 @@ return {
     -- all will be included if nothing is listed
     -- (exclude overrules include, do not include
     -- the .lua extension, path separator is always '/')
-    ["include"] = { 'lua_lib' },
+    ["include"] = { 'src' },
     ["exclude"] = { '_test' }
   }

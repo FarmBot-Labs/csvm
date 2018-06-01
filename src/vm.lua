@@ -1,19 +1,20 @@
-local D = require("lua_lib/util/object")
+local D = require("src/util/object")
 local M = {}
+local json = require("lib/json")
 
 local wip = coroutine.create(function () error("Work in progress") end)
 
--- Generate a new method_table object for a `MessageHandler` instance.
-local newMessageHandlerMethodTable = function()
+-- Generate a new method_table object for a `VM` instance.
+local newVMMethodTable = function()
+  local code_counter = 0
   return {
     ["tick"]                             = wip,
-    ["CODE.CLOSE"]                       = wip,
-    ["CODE.CREATE"]                      = coroutine.create(function(_, _)
-      error("TODO")
+    ["CODE.WRITE"]                       = coroutine.create(function(s, a)
+      code_counter         = code_counter + 1
+      s.code[code_counter] = json.decode(a.payload)
+      print("Hooray! " .. a.payload)
     end),
-    ["CODE.OPEN"]                        = wip,
     ["CODE.RM"]                          = wip,
-    ["CODE.WRITE"]                       = wip,
     ["PROC.KILL"]                        = wip,
     ["PROC.PAUSE"]                       = wip,
     ["PROC.RUN"]                         = wip,
@@ -51,9 +52,7 @@ local newMessageHandlerMethodTable = function()
 end
 
 function M.new()
-  local methods  = newMessageHandlerMethodTable()
-  local this     = { code = {} }
-  D.create_object("MessageHandler", methods, this)
+  return D.create_object("VM", newVMMethodTable(), { code = {} })
 end
 
 return M

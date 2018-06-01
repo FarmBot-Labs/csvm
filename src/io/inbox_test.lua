@@ -1,4 +1,4 @@
-local inbox = require "lua_lib/io/inbox"
+local inbox = require "src/io/inbox"
 
 describe("inbox.fetch()", function()
   it("grabs the last item", function()

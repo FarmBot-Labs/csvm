@@ -1,4 +1,4 @@
-local T = require("lua_lib/util/type_assertion")
+local T = require("src/util/type_assertion")
 local M = {}
 
 -- Setup a fake inbox.

@@ -27,7 +27,7 @@ sudo luarocks install penlight
 # Debug / Local Dev
 
 ```
-CELERY_ENV=dev lua lua_lib/_main.lua
+CELERY_ENV=dev lua src/_main.lua
 ```
 
 In a web browser, open [http://localhost:8000/](http://localhost:8000/).

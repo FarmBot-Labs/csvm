@@ -1,5 +1,5 @@
 local pretty = require "pl.pretty"
-local T      = require("lua_lib/util/type_assertion")
+local T      = require("src/util/type_assertion")
 local M      = {}
 
 function M.create_object(class_name, lookup_table, initial_state)
@@ -8,20 +8,20 @@ function M.create_object(class_name, lookup_table, initial_state)
   T.is_table(initial_state)
   local state = initial_state
   return function(method, args)
-    local handler = lookup_table["" .. method]
+    T.is_string(method)
+    local handler = lookup_table[method]
     if (handler) then
       T.is_thread(handler)
-      T.is_string(method)
       T.maybe_table(args)
-      state = coroutine.resume(handler, state, args) or state
+      coroutine.resume(handler, state, args)
     else
+      print("BAD METHOD NAME! Pick one of these:")
       pretty.dump(lookup_table)
-      local err = "Unnown method '" ..
-                  method ..
-                  "' sent to '" ..
-                  class_name ..
-                  "'"
-      error(err)
+      error("Unnown method '" ..
+            method ..
+            "' sent to '" ..
+            class_name ..
+            "'")
     end
   end
 end

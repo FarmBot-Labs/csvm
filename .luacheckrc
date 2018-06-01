@@ -1,6 +1,6 @@
 max_line_length = 83
-ignore = {"lovebird"}
-files = {"lua_lib/*.lua"}
+ignore = {"lib/*.lua"}
+files = {"src/*.lua"}
 globals = {
   "files",
   "globals",
