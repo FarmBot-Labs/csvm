@@ -1,18 +1,18 @@
 local List = require("pl.List")
 local M = {}
 
-M.BAD_ADDR       = "Bad node address: "
-M.LINK           = "__"
-M.PARENT         = (M.LINK .. "parent")
-M.BODY           = (M.LINK .. "body")
-M.NEXT           = (M.LINK .. "next")
-M.KIND           = "__KIND__"
-M.COMMENT        = "__COMMENT__"
-M.NULL           = 1
-M.NOTHING        = { [M.KIND  ] = "nothing",
-                     [M.PARENT] = M.NULL,
-                     [M.BODY  ] = M.NULL,
-                     [M.NEXT  ] = M.NULL }
+M.BAD_ADDR = "Bad node address: "
+M.LINK     = "__"
+M.NULL     = 1
+M.PARENT   = M.LINK .. "parent"
+M.BODY     = M.LINK .. "body"
+M.NEXT     = M.LINK .. "next"
+M.KIND     = M.LINK .. "KIND"
+M.COMMENT  = M.LINK .. "COMMENT"
+M.NOTHING  = { [M.KIND  ] = "nothing",
+               [M.PARENT] = M.NULL,
+               [M.BODY  ] = M.NULL,
+               [M.NEXT  ] = M.NULL }
 M.PRIMARY_FIELDS = { M.PARENT, M.BODY, M.KIND, M.NEXT, M.COMMENT }
 
 function M.new ()

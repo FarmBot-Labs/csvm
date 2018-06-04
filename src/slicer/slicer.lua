@@ -10,8 +10,7 @@ function M.new ()
     this.root_node     = node
     local heap = CSHeap.new()
     this.allocate(heap, node, CSHeap.NULL)
-    heap = heap.entries
-    heap:map(function (x)
+    heap.entries:map(function (x)
       if not x[CSHeap.BODY] then
         x[CSHeap.BODY] = CSHeap.NULL
       end
@@ -61,7 +60,7 @@ function M.new ()
     for key, _ in pairs(tbl) do
       local v = s.args[key]
       if this.is_celery_script(v) then
-        local k = CSHeap.LINK + key.to_s
+        local k = CSHeap.LINK .. key
         h.put(parentAddr, k, this.allocate(h, v, parentAddr))
       else
         h.put(parentAddr, key, v)
