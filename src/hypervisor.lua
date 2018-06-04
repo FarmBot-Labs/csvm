@@ -26,7 +26,9 @@ function M.new(reply, inital_state)
       pretty.dump(this.code[this.id])
       reply(m.channel, status.OK, this.id)
     end,
-    ["PROC.RUN"]                         = wip,
+    ["PROC.RUN"]                         = function(_)
+      -- TODO Write slicer
+    end,
     ["PROC.KILL"]                        = wip,
     ["PROC.PAUSE"]                       = wip
   }

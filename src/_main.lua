@@ -1,5 +1,6 @@
 local inbox      = require("src/io/inbox")
-local hypervisor = require("src/hypervisor").new()
+local reply      = require("src/io/outbox").reply
+local hypervisor = require("src/hypervisor").new(reply)
 local app        = require("src/app")
 
 if (os.getenv("CELERY_ENV") == "dev") then
