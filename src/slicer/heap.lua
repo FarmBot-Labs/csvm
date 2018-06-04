@@ -15,10 +15,6 @@ M.NOTHING        = { [M.KIND  ] = "nothing",
                      [M.NEXT  ] = M.NULL }
 M.PRIMARY_FIELDS = { M.PARENT, M.BODY, M.KIND, M.NEXT, M.COMMENT }
 
-function M.BadAddress(val)
-    error(M.BAD_ADDR .. val)
-end
-
 function M.new ()
   local this   = {}
   this.here    = M.NULL
@@ -26,20 +22,19 @@ function M.new ()
 
   this.allot   = function(kind)
     this.here = this.here + 1
-    this.entries:append({ KIND = kind })
+    this.entries:append({ [M.KIND] = kind })
     return this.here
   end
 
+  this.get = function(address)
+    local cell = this.entries[address]
+    if cell then return cell else error(M.BAD_ADDR .. address) end
+  end
+
   this.put = function (address, key, value)
-    --   M.is_address(address)
-      local block = this.entries:index(address)
-      if block then
-        block[key] = value
-        return
-      else
-        M.BadAddress(address.inspect)
-      end
-    end
+    io.write("Hello? " .. this.entries:len())
+    this.get(address)[key] = value
+  end
 
   return this
 end
