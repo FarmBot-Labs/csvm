@@ -1,25 +1,42 @@
 local Hypervisor = require("src/hypervisor")
 local inbox      = require("src/io/inbox")
+local F          = require("src/slicer/fixtures")
+
 describe("VM", function()
   local reply = spy.new(function () end)
-  local hv    = Hypervisor.new(reply)
 
   it("crashes on typos", function ()
+    local hv    = Hypervisor.new(reply)
     assert.has_error(function ()
-      hv("NOPE")
+      hv({message = inbox.new_message(0, "NO", "NO")})
     end)
   end)
 
   it("dumps state", function()
-    local copy = hv("SYS.TICK", nil, true) -- Just a noop right now
+    local hv    = Hypervisor.new(reply)
+    local copy = hv({
+      message = inbox.new_message(0, "SYS", "TICK"),
+      copy    = true
+    }) -- Just a noop right now
     assert.are.same(type(copy.id),   "number")
     assert.are.same(type(copy.code), "table")
   end)
 
   it("saves code for execution later", function()
-    local message = inbox.new_message(0, "CODE", "WRITE", "{}")
-    local copy    = hv("CODE.WRITE", { message = message }, true)
+    local hv    = Hypervisor.new(reply)
+    local copy =
+      hv({ message = inbox.new_message(0, "CODE", "WRITE", "{}"), copy = true })
     assert.are.same(type(copy.id),   "number")
-    assert.are.same(type(copy.code[1]), "table")
+    assert.are.same(type(copy.code["" .. 1]), "table")
+  end)
+
+  it("calls PROC.RUN", function()
+    local hv    = Hypervisor.new(reply)
+    local message1   = inbox.new_message(0, "CODE", "WRITE", F.example1)
+    local program_id = hv({ message = message1, copy = true }).id
+
+    local message2   = inbox.new_message(0, "PROC", "RUN", "" .. (program_id))
+    local result     = hv({ message = message2, copy = true })
+    print(type(result))
   end)
 end)

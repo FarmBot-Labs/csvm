@@ -42,7 +42,8 @@ M.is_thread = is_a("thread")
 M.is_table  = is_a("table")
 M.is_number = is_a("number")
 
-M.maybe_table    = is_a("table", true)
+M.maybe_number   = is_a("number", true)
+M.maybe_table    = is_a("table",  true)
 M.maybe_string   = is_a("string", true)
 M.maybe_function = function(fn) M.is_function(fn, true) end
 
