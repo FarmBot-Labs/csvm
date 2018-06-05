@@ -1,6 +1,7 @@
 local Hypervisor = require("src/hypervisor")
 local inbox      = require("src/io/inbox")
 local F          = require("src/slicer/fixtures")
+local pretty     = require("pl.pretty")
 
 describe("VM", function()
   local reply = spy.new(function () end)
@@ -31,12 +32,24 @@ describe("VM", function()
   end)
 
   it("calls PROC.RUN", function()
-    local hv    = Hypervisor.new(reply)
-    local message1   = inbox.new_message(0, "CODE", "WRITE", F.example1)
-    local program_id = hv({ message = message1, copy = true }).id
-
-    local message2   = inbox.new_message(0, "PROC", "RUN", "" .. (program_id))
-    local result     = hv({ message = message2, copy = true })
-    print(type(result))
+    local state = {
+      proc = {},
+      id = 1,
+      code = { ["1"] = {
+          kind = "sequence",
+          args = {
+            locals = {
+              kind = "scope_declaration",
+              args = { }
+            }
+          },
+          body = {},
+        }
+      }
+    }
+    local hv       = Hypervisor.new(reply, state)
+    local message1 = inbox.new_message(0, "PROC", "RUN", "1")
+    local result   = hv({ message = message1, copy = false })
+    assert.are.same(type(result.proc["2"]), "table")
   end)
 end)

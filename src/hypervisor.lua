@@ -57,6 +57,8 @@ function M.new(reply, inital_state)
 
     if args.copy then
       return copy(this)
+    else
+      return this
     end
   end
 
