@@ -4,7 +4,7 @@ M.example1 =
     {
         "id": 2126,
         "created_at": "2018-05-03T20:03:16.947Z",
-        "updated_at": "2018-06-04T16:01:51.463Z",
+        "updated_at": "2018-06-05T18:55:19.893Z",
         "args": {
             "version": 20180209,
             "locals": {
@@ -13,7 +13,7 @@ M.example1 =
             }
         },
         "color": "gray",
-        "name": "Rick Test Patch",
+        "name": "Deleteme",
         "kind": "sequence",
         "body": [
             {
@@ -93,8 +93,10 @@ M.example1 =
                         "args": {}
                     },
                     "_then": {
-                        "kind": "nothing",
-                        "args": {}
+                        "kind": "execute",
+                        "args": {
+                            "sequence_id": 1183
+                        }
                     }
                 }
             },
