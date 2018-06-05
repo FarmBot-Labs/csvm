@@ -26,6 +26,7 @@ function M.new()
   this.is_celery_script = function(node)
     return (type(node) == "table") and (node.args) and (node.kind)
   end
+
   this.recurse_into_body = function(heap, canonical_list, previous_address, i)
     local index = i or 1
     if canonical_list[index] then

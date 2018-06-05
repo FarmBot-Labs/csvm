@@ -1,3 +1,4 @@
+*.dot
 *.out
 *.ez
 /_build/
