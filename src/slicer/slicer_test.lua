@@ -1,7 +1,6 @@
 local S      = require("src/slicer/slicer")
 local F      = require("src/slicer/fixtures")
-local decode = require("lib/json").decode
-local dump   = require("pl.pretty").dump
+local json   = require("lib/json")
 
 describe("slicer", function()
   it("slices", function ()
@@ -17,9 +16,9 @@ describe("slicer", function()
     -- "execute_script"
     -- "take_photo"
 
-    local seq    = decode(F.example1)
+    local seq    = json.decode(F.example1)
     local s      = S.new()
     local result = s.run(seq)
-    dump(result)
+    print(json.encode(result))
   end)
 end)
