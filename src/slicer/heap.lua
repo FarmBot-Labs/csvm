@@ -32,7 +32,7 @@ function M.new ()
   end
 
   this.put = function (address, key, value)
-    io.write("Hello? " .. this.entries:len())
+    print(this.entries[address][M.KIND] .. "." .. key .. " = " .. value )
     this.get(address)[key] = value
   end
 

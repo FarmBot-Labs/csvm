@@ -22,8 +22,6 @@ function M.new(reply, inital_state)
       local m = a.message
       this.id            = this.id + 1
       this.code[this.id] = json.decode(m.payload)
-      print("Registered code under ID " .. this.id .. ":")
-      pretty.dump(this.code[this.id])
       reply(m.channel, status.OK, this.id)
     end,
     ["PROC.RUN"]                         = function(_)
