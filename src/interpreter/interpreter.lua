@@ -11,7 +11,7 @@ local M = {}
 M.instructions = {
   ["sequence"] = function(proc)
     local cell      = H.get_cell(proc)
-    local body_addr = H.maybe_get_body(cell)
+    local body_addr = H.maybe_get_body_address(cell)
     if body_addr then
       print("This sequence has a body. Entering.")
       H.enter(proc, body_addr)
