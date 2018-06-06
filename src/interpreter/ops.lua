@@ -72,14 +72,16 @@ M.get_pc_addr = function(proc)
   return pc
 end
 
-M.get_param_cell = function(cell, name)
+M.get_param_cell = function(proc, cell, name)
   T.is_table(cell)
   T.is_string(name)
-  local param = cell[Heap.LINK .. name]
-  T.is_number(param)
+  local param_addr = cell[Heap.LINK .. name]
+  M.is_addr(proc, param_addr)
 
-  if param then
-    return param
+  if param_addr then
+    local cell = proc.CODE[param_addr]
+    T.is_table(cell)
+    return cell
   else
     error("BAD PARAM: " .. name)
   end
