@@ -4,7 +4,7 @@ local pretty = require("pl.pretty")
 local wip    = function () error("Work in progress") end
 local T      = require("src/util/type_assertion")
 local copy   = require("src/util/deep_copy").deep_copy
-local status = require("src/util/deep_copy")
+local status = require("src/util/status")
 local Proc   = require("src/process/process")
 
 function M.new(reply, inital_state)
@@ -34,7 +34,7 @@ function M.new(reply, inital_state)
         this.proc["" .. this.id] = Proc.new(p)
         reply(m.channel, status.OK, "" .. this.id)
       else
-        error("Bad code ID")
+        reply(m.channel, status.BAD_CODE_ID, "" .. this.id)
       end
     end,
     ["PROC.KILL"]  = wip,
