@@ -55,8 +55,9 @@ M.maybe_get_next_address = function(cell)
   end
 end
 
-M.get_cell = function(proc)
-  local tbl = proc.CODE[proc.PC]
+M.get_pc_cell = function(proc)
+  local pc_addr = M.get_pc_contents(proc)
+  local tbl = proc.CODE[pc_addr]
   T.is_table(tbl)
   return tbl
 end
@@ -66,10 +67,23 @@ M.push_rs = function(proc, addr)
   proc.RS:push{ address = 1, sequence = -1 }
 end
 
-M.get_pc = function(proc)
+M.get_pc_contents = function(proc)
   local pc = proc.PC
   M.is_addr(proc, pc)
   return pc
+end
+
+M.get_parameter = function(cell, name)
+  T.is_table(cell)
+  T.is_string(name)
+  local param = cell[Heap.LINK .. name]
+  T.is_number(param)
+
+  if param then
+    return param
+  else
+    error("BAD PARAM: " .. name)
+  end
 end
 
 return M
