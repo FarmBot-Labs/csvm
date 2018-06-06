@@ -8,11 +8,11 @@ M.enter = function(proc, addr)
 end
 
 M.exit = function(proc)
-  error("WIP")
+  error("Exit - WIP")
 end
 
 M.next = function(proc)
-  error("WIP")
+  error("Next - WIP")
 end
 
 M.next_or_exit = function(proc)

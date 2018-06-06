@@ -1,6 +1,7 @@
 local M    = {}
 local T    = require("src/util/type_assertion")
 local Heap = require("src/slicer/heap")
+local Ops = require("src/interpreter/ops")
 
 M.extract_vector_from_cell = function (_, cell)
   local kind = cell[Heap.KIND]
@@ -21,15 +22,16 @@ M.extract_vector_from_cell = function (_, cell)
   end
 
   if kind == "point" then
-    error("Not yet impl.")
+    Ops.pretend("x/y/z resolve on point. For now, Stub with 1.2.3")
+    return { x = 1, y = 2, z = 3 }
   end
 
   if kind == "identifier" then
-    error("Not yet impl.")
+    error("Identifier yet impl.")
   end
 
   if kind == "tool" then
-    error("Not yet impl.")
+    error("Tool yet impl.")
   end
   error("Dont know how to create vector from " .. kind .. " yet.")
 end

@@ -25,7 +25,7 @@ local handle_move_absolute = function(proc)
                      y = (location.y + offset.y),
                      z = (location.z + offset.z) }
   Ops.pretend("Move abs", go_to)
-  M.next_or_exit(proc)
+  Ops.next_or_exit(proc)
 end
 
 -- ENTER
