@@ -8,8 +8,7 @@ M.run = coroutine.wrap(function (get_message, vm)
   while true do
     local message = get_message()
     if message then
-      local rpc_name = (message.namespace .. "." .. message.operation)
-      vm(rpc_name, { message = message })
+      vm({ message = message })
     else
       vm("SYS.TICK")
     end
