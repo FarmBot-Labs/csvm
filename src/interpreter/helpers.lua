@@ -60,6 +60,13 @@ M.get_cell = function(proc)
 end
 
 M.push_rs = function(proc, pc)
+  error("WIP")
+end
+
+M.get_pc = function(proc)
+  local pc = proc.PC
+  T.is_number(pc)
+  return pc
 end
 
 return M
