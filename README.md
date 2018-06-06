@@ -12,9 +12,10 @@ Where CeleryScript code gets executed.
 ```
 sudo luarocks
 sudo luarocks install busted
+sudo luarocks install luacheck
 sudo luarocks install luacov
-sudo luarocks install luasocket
 sudo luarocks install lualint
+sudo luarocks install luasocket
 sudo luarocks install penlight
 ```
 
@@ -27,7 +28,7 @@ sudo luarocks install penlight
 # Debug / Local Dev
 
 ```
-CELERY_ENV=dev lua src/_main.lua
+./run.sh
 ```
 
 In a web browser, open [http://localhost:8000/](http://localhost:8000/).

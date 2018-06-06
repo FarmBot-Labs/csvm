@@ -1,75 +1,39 @@
-local Heap = require("src/slicer/heap")
-local T    = require("src/util/type_assertion")
 local M    = {}
+local T    = require("src/util/type_assertion")
+local Heap = require("src/slicer/heap")
+local Ops = require("src/interpreter/ops")
 
-M.enter = function(proc, addr)
-  local pc = M.get_pc(proc)
-  M.push_rs(proc, pc)
-  M.set_pc(proc, addr)
-end
-
-M.exit = function(proc)
-  error("WIP")
-end
-
-M.next = function(proc)
-  error("WIP")
-end
-
-M.next_or_exit = function(proc)
-  local addr = M.maybe_get_next_address(proc)
-  if addr then
-    M.next(proc)
-  else
-    M.exit(proc)
-  end
-end
-
-M.is_addr = function(proc, addr)
-  T.is_number(addr)
-  T.is_table(proc.CODE[addr])
-end
-
-M.set_pc = function(proc, addr)
-  proc.PC = addr
-  return proc
-end
-
-M.get_kind = function(cell)
+M.extract_vector_from_cell = function (_, cell)
   local kind = cell[Heap.KIND]
-  T.is_string(kind)
-  return kind
-end
 
-M.maybe_get_body_address = function(cell)
-  local addr = cell[Heap.BODY]
-  if addr and addr ~= Heap.NULL then
-    return addr
+  if kind == "nothing" then return { x = 0, y = 0, z = 0 } end
+
+  if kind == "coordinate" then
+    local x = cell.x
+    T.is_number(x)
+
+    local y = cell.y
+    T.is_number(y)
+
+    local z = cell.z
+    T.is_number(z)
+
+    return { x = x, y = y, z = z }
   end
-end
 
-M.maybe_get_next_address = function(cell)
-  local addr = cell[Heap.NEXT]
-  if addr and addr ~= Heap.NULL then
-    return addr
+  if kind == "point" then
+    Ops.pretend("x/y/z resolve on point. For now, Stub with 1.2.3")
+    return { x = 1, y = 2, z = 3 }
   end
-end
 
-M.get_cell = function(proc)
-  local tbl = proc.CODE[proc.PC]
-  T.is_table(tbl)
-  return tbl
-end
+  if kind == "identifier" then
+    error("Identifier yet impl.")
+  end
 
-M.push_rs = function(proc, addr)
-  M.is_addr(proc, addr)
-  proc.RS:push{ address = 1, sequence = -1 }
-end
-
-M.get_pc = function(proc)
-  local pc = proc.PC
-  M.is_addr(proc, pc)
-  return pc
+  if kind == "tool" then
+    error("Tool yet impl.")
+  end
+  error("Dont know how to create vector from " .. kind .. " yet.")
 end
 
 return M

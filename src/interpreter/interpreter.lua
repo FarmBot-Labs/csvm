@@ -1,29 +1,45 @@
-local T = require("src/util/type_assertion")
-local H = require("src/interpreter/helpers")
-local M = {}
+local T   = require("src/util/type_assertion")
+local Ops = require("src/interpreter/ops")
+local H   = require("src/interpreter/helpers")
+local M   = {}
 
+local handle_sequnece = function(proc)
+  local cell      = Ops.get_pc_cell(proc)
+  local body_addr = Ops.maybe_get_body_address(cell)
+  if body_addr then
+    print("This sequence has a body. Entering.")
+    Ops.enter(proc, body_addr)
+  else
+    print("This sequence has no body. Exiting.")
+    Ops.exit(proc)
+  end
+end
+
+local handle_move_absolute = function(proc)
+  local cell     = Ops.get_pc_cell(proc)
+  local off_cell = Ops.get_param_cell(proc, cell, "offset")
+  local loc_cell = Ops.get_param_cell(proc, cell, "location")
+  local offset   = H.extract_vector_from_cell(proc, off_cell)
+  local location = H.extract_vector_from_cell(proc, loc_cell)
+  local go_to    = { x = (location.x + offset.x),
+                     y = (location.y + offset.y),
+                     z = (location.z + offset.z) }
+  Ops.pretend("Move abs", go_to)
+  Ops.next_or_exit(proc, cell)
+end
 
 -- ENTER
 -- NEXT
 -- EXIT
--- NEXT_OR_EXIT ( __next == NULL ? EXIT : NEXT )
+-- NEXT_OR_EXIT
 
 M.instructions = {
-  ["sequence"] = function(proc)
-    local cell      = H.get_cell(proc)
-    local body_addr = H.maybe_get_body_address(cell)
-    if body_addr then
-      print("This sequence has a body. Entering.")
-      H.enter(proc, body_addr)
-    else
-      print("This sequence has no body. Exiting.")
-      H.exit(proc)
-    end
-  end
+  ["sequence"]      = handle_sequnece,
+  ["move_absolute"] = handle_move_absolute
 }
 
 M.fetch = function(proc)
-  return H.get_kind(H.get_cell(proc))
+  return Ops.get_kind(Ops.get_pc_cell(proc))
 end
 
 M.decode = function(kind)
