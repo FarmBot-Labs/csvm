@@ -1,7 +1,5 @@
 local Hypervisor = require("src/hypervisor")
 local inbox      = require("src/io/inbox")
-local F          = require("src/slicer/fixtures")
-local pretty     = require("pl.pretty")
 
 describe("VM", function()
   local reply = spy.new(function () end)
@@ -18,7 +16,7 @@ describe("VM", function()
     local copy = hv({
       message = inbox.new_message(0, "SYS", "TICK"),
       copy    = true
-    }) -- Just a noop right now
+    })
     assert.are.same(type(copy.id),   "number")
     assert.are.same(type(copy.code), "table")
   end)
