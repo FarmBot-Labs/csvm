@@ -12,11 +12,18 @@ M.exit = function(proc)
 end
 
 M.next = function(proc)
-  error("Next - WIP")
+  local this_cell = M.get_pc_cell(proc)
+  local next_addr = this_cell[Heap.NEXT]
+  if next_addr then
+    M.set_pc(proc, next_addr)
+  else
+    print(next_addr)
+    error("HOW!?")
+  end
 end
 
-M.next_or_exit = function(proc)
-  local addr = M.maybe_get_next_address(proc)
+M.next_or_exit = function(proc, cell)
+  local addr = M.maybe_get_next_address(cell)
   if addr then
     M.next(proc)
   else
@@ -48,10 +55,11 @@ M.maybe_get_body_address = function(cell)
 end
 
 M.maybe_get_next_address = function(cell)
-  local addr = cell[Heap.NEXT]
-  if addr and addr ~= Heap.NULL then
-    return addr
-  end
+  T.is_table(cell)
+  local addr = cell.__next
+  T.maybe_number(addr)
+  local null = (addr == Heap.NULL)
+  if (not null) and addr then return addr end
 end
 
 M.get_pc_cell = function(proc)
