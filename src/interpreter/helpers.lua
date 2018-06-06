@@ -6,7 +6,6 @@ M.enter = function(proc, addr)
   local pc = M.get_pc(proc)
   M.push_rs(proc, pc)
   M.set_pc(proc, addr)
-  error("WIP")
 end
 
 M.exit = function(proc)
@@ -26,9 +25,12 @@ M.next_or_exit = function(proc)
   end
 end
 
-M.set_pc = function(proc, addr)
+M.is_addr = function(proc, addr)
   T.is_number(addr)
   T.is_table(proc.CODE[addr])
+end
+
+M.set_pc = function(proc, addr)
   proc.PC = addr
   return proc
 end
@@ -59,13 +61,14 @@ M.get_cell = function(proc)
   return tbl
 end
 
-M.push_rs = function(proc, pc)
-  error("WIP")
+M.push_rs = function(proc, addr)
+  M.is_addr(proc, addr)
+  proc.RS:push{ address = 1, sequence = -1 }
 end
 
 M.get_pc = function(proc)
   local pc = proc.PC
-  T.is_number(pc)
+  M.is_addr(proc, pc)
   return pc
 end
 
