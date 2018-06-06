@@ -16,10 +16,10 @@ end
 
 local handle_move_absolute = function(proc)
   local cell     = Ops.get_pc_cell(proc)
-  local offset   = Ops.get_param(proc, "offset")
-  local location = Ops.get_param(proc, "location")
-  local go_to  = { x = 0, y = 0, z = 0 }
-  Ops.pretend("Move abs.")
+  local offset   = Ops.get_param_cell(cell, "offset")
+  local location = Ops.get_param_cell(cell, "location")
+  local go_to    = { x = 0, y = 0, z = 0 }
+  Ops.pretend("Move abs")
   M.next_or_exit(proc)
 end
 

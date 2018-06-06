@@ -1,9 +1,8 @@
 local Heap = require("src/slicer/heap")
 local T    = require("src/util/type_assertion")
 local M    = {}
-
 M.enter = function(proc, addr)
-  local pc = M.get_pc(proc)
+  local pc = M.get_pc_addr(proc)
   M.push_rs(proc, pc)
   M.set_pc(proc, addr)
 end
@@ -56,7 +55,7 @@ M.maybe_get_next_address = function(cell)
 end
 
 M.get_pc_cell = function(proc)
-  local pc_addr = M.get_pc_contents(proc)
+  local pc_addr = M.get_pc_addr(proc)
   local tbl = proc.CODE[pc_addr]
   T.is_table(tbl)
   return tbl
@@ -67,13 +66,13 @@ M.push_rs = function(proc, addr)
   proc.RS:push{ address = 1, sequence = -1 }
 end
 
-M.get_pc_contents = function(proc)
+M.get_pc_addr = function(proc)
   local pc = proc.PC
   M.is_addr(proc, pc)
   return pc
 end
 
-M.get_parameter = function(cell, name)
+M.get_param_cell = function(cell, name)
   T.is_table(cell)
   T.is_string(name)
   local param = cell[Heap.LINK .. name]
@@ -86,4 +85,7 @@ M.get_parameter = function(cell, name)
   end
 end
 
+M.pretend = function(label)
+  print("Pretending to perfom " .. label)
+end
 return M
