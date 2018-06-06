@@ -1,5 +1,6 @@
 local T   = require("src/util/type_assertion")
 local Ops = require("src/interpreter/ops")
+local H   = require("src/interpreter/ops")
 local M   = {}
 
 local handle_sequnece = function(proc)
@@ -16,10 +17,14 @@ end
 
 local handle_move_absolute = function(proc)
   local cell     = Ops.get_pc_cell(proc)
-  local offset   = Ops.get_param_cell(cell, "offset")
-  local location = Ops.get_param_cell(cell, "location")
-  local go_to    = { x = 0, y = 0, z = 0 }
-  Ops.pretend("Move abs")
+  local off_cell = Ops.get_param_cell(cell, "offset")
+  local loc_cell = Ops.get_param_cell(cell, "location")
+  local offset   = H.extract_vector_from_cell(proc, off_cell)
+  local location = H.extract_vector_from_cell(proc, loc_cell)
+  local go_to    = { x = (location.x + offset.x),
+                     y = (location.y + offset.y),
+                     z = (location.z + offset.z) }
+  Ops.pretend("Move abs", go_to)
   M.next_or_exit(proc)
 end
 
