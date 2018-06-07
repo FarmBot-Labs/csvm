@@ -1,41 +1,21 @@
-local T   = require("src/util/type_assertion")
-local Ops = require("src/interpreter/ops")
-local H   = require("src/interpreter/helpers")
+local I   = require("src/interpreter/instructions")
 local M   = {}
-
-local handle_sequnece = function(proc)
-  local cell      = Ops.get_pc_cell(proc)
-  local body_addr = Ops.maybe_get_body_address(cell)
-  if body_addr then
-    print("This sequence has a body. Entering.")
-    Ops.enter(proc, body_addr)
-  else
-    print("This sequence has no body. Exiting.")
-    Ops.exit(proc)
-  end
-end
-
-local handle_move_absolute = function(proc)
-  local cell     = Ops.get_pc_cell(proc)
-  local off_cell = Ops.get_param_cell(proc, cell, "offset")
-  local loc_cell = Ops.get_param_cell(proc, cell, "location")
-  local offset   = H.extract_vector_from_cell(proc, off_cell)
-  local location = H.extract_vector_from_cell(proc, loc_cell)
-  local go_to    = { x = (location.x + offset.x),
-                     y = (location.y + offset.y),
-                     z = (location.z + offset.z) }
-  Ops.pretend("Move abs", go_to)
-  Ops.next_or_exit(proc, cell)
-end
-
--- ENTER
--- NEXT
--- EXIT
--- NEXT_OR_EXIT
+local Ops = require("src/interpreter/ops")
+local T   = require("src/util/type_assertion")
 
 M.instructions = {
-  ["sequence"]      = handle_sequnece,
-  ["move_absolute"] = handle_move_absolute
+  ["sequence"]       = I.sequnece,
+  ["move_absolute"]  = I.move_absolute,
+  ["move_relative"]  = I.move_relative,
+  ["write_pin"]      = I.write_pin,
+  ["read_pin"]       = I.read_pin,
+  ["wait"]           = I.wait,
+  ["send_message"]   = I.send_message,
+  ["find_home"]      = I.find_home,
+  ["_if"]            = I._if,
+  ["execute"]        = I.execute,
+  ["execute_script"] = I.execute_script,
+  ["take_photo"]     = I.take_photo,
 }
 
 M.fetch = function(proc)
@@ -56,6 +36,7 @@ M.tick = function(proc)
   T.is_table(proc)
   T.is_table(proc.CODE)
   T.is_number(proc.PC)
+  -- TODO: Maybe add pause / resume in here.
   local next_instruction = M.fetch(proc)
   local executor         = M.decode(next_instruction)
   executor(proc)

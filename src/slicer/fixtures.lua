@@ -122,13 +122,13 @@ M.example1 =
 ]]
 
 M.sliced_example1 = {
-  {
+  { -- 1
     __next = 1,
     __parent = 1,
     __body = 1,
     __KIND = "nothing"
   },
-  {
+  { -- 2
     __KIND = "sequence",
     __parent = 1,
     __body = 3,
@@ -136,7 +136,7 @@ M.sliced_example1 = {
     __next = 1,
     version = 20180209
   },
-  {
+  { -- 3
     __KIND = "move_absolute",
     __location = 5,
     __parent = 2,
@@ -145,7 +145,7 @@ M.sliced_example1 = {
     speed = 100,
     __next = 6
   },
-  {
+  { -- 4
     __KIND = "coordinate",
     __next = 1,
     __parent = 3,
@@ -154,7 +154,7 @@ M.sliced_example1 = {
     y = 0,
     z = 0
   },
-  {
+  { -- 5
     __KIND = "point",
     __parent = 3,
     __body = 1,
@@ -162,7 +162,7 @@ M.sliced_example1 = {
     pointer_type = "Plant",
     pointer_id = 20246
   },
-  {
+  { -- 6
     __KIND = "move_relative",
     __body = 1,
     __next = 7,
@@ -172,7 +172,7 @@ M.sliced_example1 = {
     y = 0,
     z = 0
   },
-  {
+  { -- 7
     __KIND = "write_pin",
     __body = 1,
     __next = 8,
@@ -181,7 +181,7 @@ M.sliced_example1 = {
     pin_number = 0,
     pin_value = 0
   },
-  {
+  { -- 8
     __KIND = "read_pin",
     __body = 1,
     __next = 9,
@@ -190,22 +190,22 @@ M.sliced_example1 = {
     pin_mode = 0,
     pin_number = 0,
   },
-  {
+  { -- 9
     milliseconds = 0,
     __KIND = "wait",
     __body = 1,
     __parent = 8,
     __next = 10
   },
-  {
+  { -- 10
     __parent = 9,
     __KIND = "send_message",
-    message = "Hello, world!",
     __body = 1,
+    __next = 11,
+    message = "Hello, world!",
     message_type = "success",
-    __next = 11
   },
-  {
+  { -- 11
     __parent = 10,
     speed = 100,
     __KIND = "find_home",
@@ -213,7 +213,7 @@ M.sliced_example1 = {
     __body = 1,
     __next = 12
   },
-  {
+  { -- 12
     ___then = 14,
     __KIND = "_if",
     __body = 1,
@@ -224,40 +224,40 @@ M.sliced_example1 = {
     __next = 15,
     rhs = 0
   },
-  {
+  { -- 13
     __next = 1,
     __parent = 12,
     __body = 1,
     __KIND = "nothing"
   },
-  {
+  { -- 14
     __parent = 12,
     __KIND = "execute",
     __body = 1,
     __next = 1,
     sequence_id = 1183
   },
-  {
+  { -- 15
     __parent = 12,
     __KIND = "execute",
     __body = 1,
     __next = 16,
     sequence_id = 754
   },
-  {
+  { -- 16
     __parent = 15,
     __KIND = "execute_script",
     label = "plant-detection",
     __body = 1,
     __next = 17
   },
-  {
+  { -- 17
     __next = 1,
     __parent = 16,
     __body = 1,
     __KIND = "take_photo"
   },
-  {
+  { -- 18
     __next = 1,
     __parent = 2,
     __body = 1,
