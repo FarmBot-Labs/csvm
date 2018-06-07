@@ -13,9 +13,13 @@ M.new = function (celery_script)
   T.is_table(celery_script)
 
   return {
+    -- The status of the process
     STAT = M.status.OK,
-    RS = List.new({ address = 1, sequence = celery_script.id }),
-    PC = 2,
+    -- Return stack
+    RS   = List.new({ address = 1, sequence = celery_script.id }),
+    -- Program Counter (next instruction to execute)
+    PC   = 2,
+    -- Program Memory
     CODE = S.new().run(celery_script)
   }
 end

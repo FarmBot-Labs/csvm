@@ -16,22 +16,19 @@ description = {
    homepage   = "https://github.com/FarmBot-Labs/CeleryScript-Runtime",
    license    = "MIT",
    maintainer = "Rick Carlino; FarmBot, Inc.",
-   labels     = { "farmbot" }
+   -- labels     = { "farmbot" }
 }
 
-build_dependencies = {
+
+dependencies = {
   "busted",
   "luacheck",
   "luacov",
-  "lualint",
-  "lovebird"
-}
-
-dependencies = {
+  "lovebird",
    "lua >= 5.1, < 5.4",
    "penlight",
 }
 
 build = {
-   -- We'll start here.
+  type = "make"
 }

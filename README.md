@@ -14,7 +14,6 @@ sudo luarocks
 sudo luarocks install busted
 sudo luarocks install luacheck
 sudo luarocks install luacov
-sudo luarocks install lualint
 sudo luarocks install luasocket
 sudo luarocks install penlight
 ```
