@@ -1,42 +1,42 @@
 local Heap = require("src/slicer/heap")
 local T    = require("src/util/type_assertion")
 local M    = {}
-M.enter = function(proc, addr)
-  local pc = M.get_pc_addr(proc)
-  M.push_rs(proc, pc)
+
+M.call = function(proc, addr)
+  local pc_addr = M.get_pc_addr(proc)
+  M.push_rs(proc, pc_addr)
   M.set_pc(proc, addr)
 end
 
-M.exit = function(proc)
-  error("Exit - WIP")
-end
-
-M.next = function(proc)
+M.step = function(proc)
   local this_cell = M.get_pc_cell(proc)
   local next_addr = this_cell[Heap.NEXT]
-  if next_addr then
-    M.set_pc(proc, next_addr)
-  else
-    print(next_addr)
-    error("HOW!?")
-  end
+  M.set_pc(proc, next_addr)
 end
 
-M.next_or_exit = function(proc, cell)
+M.return_ = function(proc)
+  local caller_addr = M.pop_rs(proc)
+  M.set_pc(proc, caller_addr) -- Go back to caller
+  M.step(proc)                -- Step to next node
+end
+
+M.step_or_return = function(proc, cell)
   local addr = M.maybe_get_next_address(cell)
   if addr then
-    M.next(proc)
+    M.step(proc)
   else
-    M.exit(proc)
+    M.return_(proc)
   end
 end
 
 M.is_addr = function(proc, addr)
+  T.is_table(proc)
   T.is_number(addr)
   T.is_table(proc.CODE[addr])
 end
 
 M.set_pc = function(proc, addr)
+  M.is_addr(proc, addr)
   proc.PC = addr
   return proc
 end
@@ -71,7 +71,16 @@ end
 
 M.push_rs = function(proc, addr)
   M.is_addr(proc, addr)
-  proc.RS:push{ address = 1, sequence = -1 }
+  proc.RS:push{ address = addr, sequence = -1 }
+end
+
+M.pop_rs = function(proc)
+  local stack_frame = proc.RS:pop()
+  T.is_table(stack_frame)
+  local return_address = stack_frame.address
+  print("return_address is " .. return_address)
+  M.is_addr(proc, return_address)
+  return return_address
 end
 
 M.get_pc_addr = function(proc)
