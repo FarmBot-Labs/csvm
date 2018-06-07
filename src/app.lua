@@ -1,5 +1,6 @@
-local T      = require("src/util/type_assertion")
-local M      = {}
+local T  = require("src/util/type_assertion")
+local IB = require("src/io/inbox")
+local M  = {}
 
 M.run = coroutine.wrap(function (get_message, vm)
   T.is_function(get_message)
@@ -8,9 +9,11 @@ M.run = coroutine.wrap(function (get_message, vm)
   while true do
     local message = get_message()
     if message then
+      print("X")
       vm({ message = message })
     else
-      vm("SYS.TICK")
+      print("Y")
+      vm({ message = IB.new_message(0, "SYS", "TICK") })
     end
     coroutine.yield()
   end
