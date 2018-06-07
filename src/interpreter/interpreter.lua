@@ -16,6 +16,7 @@ M.instructions = {
   ["execute"]        = I.execute,
   ["execute_script"] = I.execute_script,
   ["take_photo"]     = I.take_photo,
+  ["nothing"]        = I.nothing,
 }
 
 M.fetch = function(proc)

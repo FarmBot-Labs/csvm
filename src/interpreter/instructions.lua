@@ -2,16 +2,17 @@ local H   = require("src/interpreter/helpers")
 local M   = {}
 local Ops = require("src/interpreter/ops")
 local T   = require("src/util/type_assertion")
+local P   = require("src/process/process")
 
 M.sequnece = function(proc)
   local cell      = Ops.get_pc_cell(proc)
   local body_addr = Ops.maybe_get_body_address(cell)
   if body_addr then
     print("This sequence has a body. Entering.")
-    Ops.enter(proc, body_addr)
+    Ops.call(proc, body_addr)
   else
     print("This sequence has no body. Exiting.")
-    Ops.exit(proc)
+    Ops.return_(proc)
   end
 end
 
@@ -25,7 +26,7 @@ M.move_absolute = function(proc)
                      y = (location.y + offset.y),
                      z = (location.z + offset.z) }
   Ops.pretend("Move abs", go_to)
-  Ops.next_or_exit(proc, cell)
+  Ops.step_or_return(proc, cell)
 end
 
 M.move_relative = function(proc)
@@ -35,7 +36,7 @@ M.move_relative = function(proc)
   local z = cell["z"]; T.is_number(z)
   local go_to    = { x = x , y = y , z = z }
   Ops.pretend("Move relative", go_to)
-  Ops.next_or_exit(proc, cell)
+  Ops.step_or_return(proc, cell)
 end
 
 M.write_pin = function(proc)
@@ -47,7 +48,7 @@ M.write_pin = function(proc)
 
   Ops.pretend("write pin")
 
-  Ops.next_or_exit(proc, cell)
+  Ops.step_or_return(proc, cell)
 end
 
 M.read_pin = function(proc)
@@ -59,7 +60,7 @@ M.read_pin = function(proc)
 
   Ops.pretend("Read a pin")
 
-  Ops.next_or_exit(proc, cell)
+  Ops.step_or_return(proc, cell)
 end
 
 M.wait = function(proc)
@@ -69,7 +70,7 @@ M.wait = function(proc)
 
   Ops.pretend("wait (in ms) ")
 
-  Ops.next_or_exit(proc, cell)
+  Ops.step_or_return(proc, cell)
 
 end
 
@@ -80,7 +81,7 @@ M.send_message = function(proc)
   print("TODO: Collect channels")
   Ops.pretend("send message")
 
-  Ops.next_or_exit(proc, cell)
+  Ops.step_or_return(proc, cell)
 end
 
 M.find_home = function(proc)
@@ -88,7 +89,7 @@ M.find_home = function(proc)
   local axis = cell["axis"]; T.is_string(axis)
   Ops.pretend("find home")
 
-  Ops.next_or_exit(proc, cell)
+  Ops.step_or_return(proc, cell)
 end
 
 M._if = function(proc)
@@ -102,7 +103,7 @@ M._if = function(proc)
   T.is_table(else_cell) -- Remove after implementing real I/O
 
   Ops.pretend("do an _if")
-  Ops.next_or_exit(proc, cell)
+  Ops.step_or_return(proc, cell)
 end
 
 
@@ -112,7 +113,7 @@ M._if = function(proc)
   local rhs  = cell["rhs"]; T.is_number(rhs)
 
   Ops.pretend("do an _if")
-  Ops.next_or_exit(proc, cell)
+  Ops.step_or_return(proc, cell)
 end
 
 M.execute = function(proc)
@@ -120,7 +121,7 @@ M.execute = function(proc)
   local sequence_id = cell["sequence_id"]; T.is_number(sequence_id)
 
   Ops.pretend("execute another sequence")
-  Ops.next_or_exit(proc, cell)
+  Ops.step_or_return(proc, cell)
 end
 
 M.execute_script = function(proc)
@@ -128,13 +129,17 @@ M.execute_script = function(proc)
   local label = cell["label"]; T.is_string(label)
   print("TODO: Collect pairs")
   Ops.pretend("execute a farmware")
-  Ops.next_or_exit(proc, cell)
+  Ops.step_or_return(proc, cell)
 end
 
 M.take_photo = function(proc)
   local cell  = Ops.get_pc_cell(proc)
   Ops.pretend("take a photo")
-  Ops.next_or_exit(proc, cell)
+  Ops.step_or_return(proc, cell)
+end
+
+M.nothing = function(proc)
+  proc.STAT = P.status.DONE
 end
 
 return M
