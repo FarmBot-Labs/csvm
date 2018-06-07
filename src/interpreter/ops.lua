@@ -104,7 +104,4 @@ M.get_param_cell = function(proc, cell, name)
   end
 end
 
-M.pretend = function(label)
-  print("Pretending to perfom " .. label)
-end
 return M
