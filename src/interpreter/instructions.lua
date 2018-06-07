@@ -3,6 +3,7 @@ local M   = {}
 local Ops = require("src/interpreter/ops")
 local T   = require("src/util/type_assertion")
 local P   = require("src/process/process")
+local IO  = require("src/interpreter/io")
 
 M.sequnece = function(proc)
   local cell      = Ops.get_pc_cell(proc)
@@ -25,7 +26,7 @@ M.move_absolute = function(proc)
   local go_to    = { x = (location.x + offset.x),
                      y = (location.y + offset.y),
                      z = (location.z + offset.z) }
-  Ops.pretend("Move abs", go_to)
+  IO.pretend("Move abs", go_to)
   Ops.step_or_return(proc, cell)
 end
 
@@ -35,7 +36,7 @@ M.move_relative = function(proc)
   local y = cell["y"]; T.is_number(y)
   local z = cell["z"]; T.is_number(z)
   local go_to    = { x = x , y = y , z = z }
-  Ops.pretend("Move relative", go_to)
+  IO.pretend("Move relative", go_to)
   Ops.step_or_return(proc, cell)
 end
 
@@ -46,7 +47,7 @@ M.write_pin = function(proc)
   local pin_mode   = cell["pin_mode"];   T.is_number(pin_mode)
   local pin_number = cell["pin_number"]; T.is_number(pin_number)
 
-  Ops.pretend("write pin")
+  IO.pretend("write pin")
 
   Ops.step_or_return(proc, cell)
 end
@@ -58,7 +59,7 @@ M.read_pin = function(proc)
   local pin_mode   = cell["pin_mode"];   T.is_number(pin_mode)
   local pin_number = cell["pin_number"]; T.is_number(pin_number)
 
-  Ops.pretend("Read a pin")
+  IO.pretend("Read a pin")
 
   Ops.step_or_return(proc, cell)
 end
@@ -68,7 +69,7 @@ M.wait = function(proc)
 
   local milliseconds = cell["milliseconds"]; T.is_number(milliseconds)
 
-  Ops.pretend("wait (in ms) ")
+  IO.pretend("wait (in ms) ")
 
   Ops.step_or_return(proc, cell)
 
@@ -79,7 +80,7 @@ M.send_message = function(proc)
   local message      = cell["message"];      T.is_string(message)
   local message_type = cell["message_type"]; T.is_string(message_type)
   print("TODO: Collect channels")
-  Ops.pretend("send message")
+  IO.pretend("send message")
 
   Ops.step_or_return(proc, cell)
 end
@@ -87,7 +88,7 @@ end
 M.find_home = function(proc)
   local cell     = Ops.get_pc_cell(proc)
   local axis = cell["axis"]; T.is_string(axis)
-  Ops.pretend("find home")
+  IO.pretend("find home")
 
   Ops.step_or_return(proc, cell)
 end
@@ -102,7 +103,7 @@ M._if = function(proc)
   T.is_table(then_cell) -- Remove after implementing real I/O
   T.is_table(else_cell) -- Remove after implementing real I/O
 
-  Ops.pretend("do an _if")
+  IO.pretend("do an _if")
   Ops.step_or_return(proc, cell)
 end
 
@@ -112,7 +113,7 @@ M._if = function(proc)
   local op   = cell["op"];  T.is_string(op)
   local rhs  = cell["rhs"]; T.is_number(rhs)
 
-  Ops.pretend("do an _if")
+  IO.pretend("do an _if")
   Ops.step_or_return(proc, cell)
 end
 
@@ -120,7 +121,7 @@ M.execute = function(proc)
   local cell        = Ops.get_pc_cell(proc)
   local sequence_id = cell["sequence_id"]; T.is_number(sequence_id)
 
-  Ops.pretend("execute another sequence")
+  IO.pretend("execute another sequence")
   Ops.step_or_return(proc, cell)
 end
 
@@ -128,13 +129,13 @@ M.execute_script = function(proc)
   local cell  = Ops.get_pc_cell(proc)
   local label = cell["label"]; T.is_string(label)
   print("TODO: Collect pairs")
-  Ops.pretend("execute a farmware")
+  IO.pretend("execute a farmware")
   Ops.step_or_return(proc, cell)
 end
 
 M.take_photo = function(proc)
   local cell  = Ops.get_pc_cell(proc)
-  Ops.pretend("take a photo")
+  IO.pretend("take a photo")
   Ops.step_or_return(proc, cell)
 end
 
