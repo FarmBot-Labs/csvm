@@ -9,6 +9,7 @@ globals = {
   "it",
   "assert",
   "spy",
+  "pending",
   "match",
   "max_line_length"
 }
