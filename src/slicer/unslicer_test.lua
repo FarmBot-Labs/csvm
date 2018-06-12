@@ -1,24 +1,10 @@
 local U = require("src/slicer/unslicer")
 local F = require("src/slicer/fixtures")
-local inspect = require("pl.pretty")
 
 describe("unslicer", function()
   it("unslices move_abs", function ()
-      -- args:
-      --   offset:
-      --     kind: "coordinate"
-      --     args:
-      --       z: 0,
-      --       y: 0,
-      --       x: 0
-      --     location:
-      --       kind: "point",
-      --       args
-      --         pointer_id:   20246,
-      --         pointer_type: "Plant"
-
     local results = U.unslice(F.sliced_example1, 3)
-    inspect.dump(results)
+
     assert.are.same(type(results),      "table")
     assert.are.same(results.kind,       "move_absolute")
     assert.are.same(results.body,       nil)
