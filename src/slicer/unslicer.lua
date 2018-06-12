@@ -1,14 +1,14 @@
 local Heap    = require("src/slicer/heap")
-local inspect = require("pl.pretty")
 local List    = require("pl.List")
 local M       = {}
 
 local handlers = {
   [Heap.BODY]    = function(heap, _, output, value)
-    output.body      = List.new()
-    local next_addr  = value
-    local n          = heap[next_addr]
-    local count      = 0
+    if (heap[value][Heap.KIND] == "nothing") then return nil end
+    output.body     = List.new()
+    local next_addr = value
+    local n         = heap[next_addr]
+    local count     = 0
     while n and (n[Heap.KIND] ~= "nothing") do
       count = count + 1
       if (count > 1000) then error("Runaway loop") end
@@ -18,7 +18,7 @@ local handlers = {
       n         = heap[next_addr]
     end
   end,
-  [Heap.KIND]    = function(heap, address, output, value)
+  [Heap.KIND]    = function(_, _, output, value)
     output.kind = value
   end,
   [Heap.PARENT]  = function() end,
@@ -28,7 +28,7 @@ local handlers = {
 }
 
 local default_handler = function(heap, _, output, value, key)
-  output.args[key:sub(2, -1)] = M.unslice(heap, value)
+  output.args[key:gsub("__", "")] = M.unslice(heap, value)
 end
 
 M.unslice = function (heap, address)
@@ -43,7 +43,6 @@ M.unslice = function (heap, address)
       output.args[k] = value
     end
   end
-  inspect.dump(output)
   return output
 end
 
