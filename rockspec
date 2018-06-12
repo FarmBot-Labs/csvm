@@ -25,8 +25,8 @@ dependencies = {
   "luacheck",
   "luacov",
   "lovebird",
-   "lua >= 5.1, < 5.4",
-   "penlight",
+  "lua >= 5.1, < 5.4",
+  "penlight",
 }
 
 build = {

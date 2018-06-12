@@ -9,10 +9,8 @@ M.run = coroutine.wrap(function (get_message, vm)
   while true do
     local message = get_message()
     if message then
-      print("X")
       vm({ message = message })
     else
-      print("Y")
       vm({ message = IB.new_message(0, "SYS", "TICK") })
     end
     coroutine.yield()
