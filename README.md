@@ -1,48 +1,21 @@
-[![Coverage Status](https://coveralls.io/repos/github/RickCarlino/CeleryScript-Runtime/badge.svg?branch=master)](https://coveralls.io/github/RickCarlino/CeleryScript-Runtime?branch=master)
-[![Build Status](https://travis-ci.org/RickCarlino/CeleryScript-Runtime.svg?branch=master)](https://travis-ci.org/RickCarlino/CeleryScript-Runtime)
-# CeleryScript Runtime Environment
+# Whatever
 
-Where CeleryScript code gets executed.
+**TODO: Add description**
 
-# Installation
+## Installation
 
-1. Install Lua.
-2. Install LuaRocks and Deps:
+If [available in Hex](https://hex.pm/docs/publish), the package can be installed
+by adding `whatever` to your list of dependencies in `mix.exs`:
 
-```
-sudo luarocks
-sudo luarocks install busted
-sudo luarocks install luacheck
-sudo luarocks install luacov
-sudo luarocks install luasocket
-sudo luarocks install penlight
+```elixir
+def deps do
+  [
+    {:whatever, "~> 0.1.0"}
+  ]
+end
 ```
 
-# Tests / Linting
+Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
+and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
+be found at [https://hexdocs.pm/whatever](https://hexdocs.pm/whatever).
 
-```
-./checks.sh
-```
-
-# Debug / Local Dev
-
-```
-./run.sh
-```
-
-In a web browser, open [http://localhost:8000/](http://localhost:8000/).
-
-Dev mode exposes an `INBOX` global variable which may be useful for debugging VM/host messages.
-
-Example: Running a `CODE.CREATE` call:
-
-```
-INBOX.push_req("CODE", "CREATE")
-```
-
-# View Coverage
-
-```
-luacov
-cat luacov.report.out
-```
