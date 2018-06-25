@@ -30,5 +30,7 @@ dependencies = {
 }
 
 build = {
-  type = "make"
+  type = "builtin",
+  modules = {
+  }
 }
