@@ -10,11 +10,11 @@ use Mix.Config
 
 # You can configure your application as:
 #
-#     config :whatever, key: :value
+#     config :csvm, key: :value
 #
 # and access this configuration in your application as:
 #
-#     Application.get_env(:whatever, :key)
+#     Application.get_env(:csvm, :key)
 #
 # You can also configure a 3rd-party app:
 #
