@@ -35,7 +35,8 @@ defmodule Csvm.MixProject do
     [
       {:excoveralls, "~> 0.8", only: [:test]},
       {:dialyxir, "~> 1.0.0-rc.2", only: [:dev], runtime: false},
-      {:ex_doc, "~> 0.16", only: [:dev], runtime: false}
+      {:ex_doc, "~> 0.16", only: [:dev], runtime: false},
+      {:jason, "~> 1.0", only: [:test, :dev]}
     ]
   end
 end

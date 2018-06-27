@@ -15,6 +15,8 @@ defmodule Csvm.AST.Heap do
 
     defstruct [:value]
 
+    @type t :: %__MODULE__{value: integer}
+
     @doc "New heap address."
     def new(num) when is_integer(num) do
       %__MODULE__{value: num}
@@ -37,7 +39,7 @@ defmodule Csvm.AST.Heap do
 
   # Constants and key names.
 
-  @link "🔗"
+  @link "__"
   @body String.to_atom(@link <> "body")
   @next String.to_atom(@link <> "next")
   @parent String.to_atom(@link <> "parent")

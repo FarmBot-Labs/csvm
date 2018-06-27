@@ -39,7 +39,8 @@ defmodule Csvm do
   end
 
   @spec tick(Csvm.t()) :: Csvm.t()
-  def tick(%Csvm{}) do
+  def tick(%Csvm{} = fixme) do
+    fixme
   end
 
   @doc "Increment the counter."
