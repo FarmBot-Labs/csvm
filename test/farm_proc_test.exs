@@ -5,6 +5,11 @@ defmodule Csvm.FarmProcTest do
   alias Csvm.AST.Heap
   alias Csvm.AST.Heap.Address
 
+  setup do
+    {:ok, ih} = StubbedInteractionHandler.start_link()
+    %{ih: ih}
+  end
+
   test "init a new farm_proc" do
     heap = heap()
     farm_proc = FarmProc.new(StubbedInteractionHandler, heap)
@@ -14,9 +19,12 @@ defmodule Csvm.FarmProcTest do
     assert FarmProc.get_kind(farm_proc, FarmProc.get_pc_ptr(farm_proc)) == :sequence
   end
 
-  test "single step" do
-    farm_proc = FarmProc.new(StubbedInteractionHandler, heap())
-
+  test "single step", %{ih: ih} do
+    this = self()
+    fun = fn() -> 
+      raise("fixme")
+    end
+    farm_proc = FarmProc.new(fun, heap())
     assert FarmProc.get_kind(farm_proc, FarmProc.get_pc_ptr(farm_proc)) == :sequence
     %FarmProc{} = next = FarmProc.step(farm_proc)
     assert Enum.count(FarmProc.get_return_stack(next)) == 1

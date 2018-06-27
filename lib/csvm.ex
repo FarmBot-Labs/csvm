@@ -5,37 +5,22 @@ defmodule Csvm do
 
   alias Csvm.{AST, FarmProc}
 
-  defstruct interaction_handler: nil,
-            private: nil,
+  defstruct sys_call_fun: nil,
             counter: 0,
             codez: %{},
             farm_procs: %{}
 
-  @typedoc """
-  Data to be passed straight through to the `interaction_handler`
-  function calls.
-  """
-  @opaque private_data :: map | nil
-
   @type t :: %Csvm{
-          interaction_handler: module,
-          private: private_data,
+          sys_call_fun: Csvm.SysCallHandler.sys_call_fun(),
           counter: integer,
           codez: %{integer => AST.t()},
           farm_procs: %{integer => FarmProc.t()}
         }
 
   @doc "initialize a new Csvm structure."
-  @spec new(module) :: Csvm.t()
-  def new(interaction_handler) do
-    # TODO(Conoor) Check the interaction_handler handler's behaviour.
-    struct(Csvm, interaction_handler: interaction_handler)
-  end
-
-  @doc "Assign private data to the vm."
-  @spec assign(Csvm.t(), private_data) :: Csvm.t()
-  def assign(%Csvm{} = csvm, %{} = private) do
-    %Csvm{csvm | private: private}
+  @spec new(Csvm.SysCallHandler.sys_call_fun()) :: Csvm.t()
+  def new(sys_call_fun) do
+    struct(Csvm, sys_call_fun: sys_call_fun)
   end
 
   @spec tick(Csvm.t()) :: Csvm.t()

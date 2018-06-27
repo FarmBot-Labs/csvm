@@ -3,7 +3,10 @@ defmodule Csvm.ASTTest do
   alias Csvm.AST
 
   @nothing_json "{\"kind\": \"nothing\", \"args\": {}}" |> Jason.decode!()
-  @nothing_json_with_body "{\"kind\": \"nothing\", \"args\": {}, \"body\":[#{Jason.encode!(@nothing_json)}]}" |> Jason.decode!()
+  @nothing_json_with_body "{\"kind\": \"nothing\", \"args\": {}, \"body\":[#{
+                            Jason.encode!(@nothing_json)
+                          }]}"
+                          |> Jason.decode!()
   @bad_json "{\"whoops\": "
 
   test "parses ast from json" do

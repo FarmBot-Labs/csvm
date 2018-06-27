@@ -1,7 +1,7 @@
 defmodule Csvm.InstructionSet do
   alias Csvm.FarmProc
 
-  @spec sequence(FarmProc.t) :: FarmProc.t
+  @spec sequence(FarmProc.t()) :: FarmProc.t()
   def sequence(%FarmProc{} = fp) do
   end
 
