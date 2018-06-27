@@ -50,7 +50,7 @@ defmodule Csvm.FarmProc do
     pc_ptr = get_pc_ptr(farm_proc)
     kind = get_kind(farm_proc, pc_ptr)
 
-    unless function_exported?(@instruction_set, kind, 1) do
+    unless Code.ensure_loaded?(@instruction_set) and function_exported?(@instruction_set, kind, 1) do
       raise("No implementation for: #{kind}")
     end
 
@@ -58,9 +58,7 @@ defmodule Csvm.FarmProc do
   end
 
   @spec get_pc_ptr(FarmProc.t()) :: Pointer.t()
-  def get_pc_ptr(%FarmProc{pc: pc}) do
-    pc
-  end
+  def get_pc_ptr(%FarmProc{pc: pc}), do: pc
 
   @spec get_heap_by_page_addr(FarmProc.t(), par) :: Heap.t() | no_return
   def get_heap_by_page_addr(%FarmProc{heap: heap}, index) do
@@ -81,12 +79,24 @@ defmodule Csvm.FarmProc do
   #   get_cell_by_address(farm_proc, par, pc)
   # end
 
-  @spec maybe_get_body_address(FarmProc.t(), Pointer.t()) :: Pointer.t() | nil
-  def maybe_get_body_address(fp, here_address) do
-    cell = get_heap_by_page_addr(fp, here_address.par)[here_address.pc]
+  @spec maybe_get_body_address(FarmProc.t(), Pointer.t()) :: HeapAddress.t() | nil
+  def maybe_get_body_address(%FarmProc{} = farm_proc, %Pointer{} = here_address) do
+    cell = get_heap_by_page_addr(farm_proc, here_address.par)[here_address.pc]
     if cell do
-      cell[Heap.body]
+      cell[Heap.body] || raise("#{inspect cell} has no body pointer")
     end
+  end
+
+  @spec push_ptr(FarmProc.t, Pointer.t) :: FarmProc.t
+  def push_ptr(%FarmProc{} = farm_proc, %Pointer{} = ptr) do
+    new_rs = [ ptr | FarmProc.get_return_stack(farm_proc) ]
+    %FarmProc{ farm_proc | rs: new_rs }
+  end
+
+  @spec set_pc(FarmProc.t, HeapAddress.t) :: FarmProc.t
+  def set_pc(%FarmProc{} = farm_proc, %HeapAddress{} = _ha) do
+    IO.puts "BROKE"
+    farm_proc
   end
 
   # Private

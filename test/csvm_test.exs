@@ -3,13 +3,11 @@ defmodule CsvmTest do
   doctest Csvm
 
   setup do
-    {:ok, ih} = StubbedInteractionHandler.start_link()
     csvm = Csvm.new(StubbedInteractionHandler)
-    Csvm.asign(csvm, %{interaction_handler: ih})
-    %{csvm: csvm, interaction_handler: ih}
+    %{csvm: csvm}
   end
 
-  # test "one tick", %{csvm: csvm, interaction_handler: ih} do
+  # test "one tick", %{csvm: csvm} do
   #   huge_example = %{
   #     id: 123,
   #     kind: "sequence",

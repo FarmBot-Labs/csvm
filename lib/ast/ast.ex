@@ -4,8 +4,6 @@ defmodule Csvm.AST do
   Ast nodes.
   """
 
-  alias Csvm.AST
-
   @typedoc "Arguments to a Node."
   @type args :: map
 
