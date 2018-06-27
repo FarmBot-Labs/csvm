@@ -75,8 +75,21 @@ defmodule Csvm.FarmProc do
     get_cell_by_address(farm_proc, par, pc)[Heap.kind()]
   end
 
-  # Private
+  # @spec get_pc_cell(FarmProc.t()) :: map | no_return
+  # def get_pc_cell(%FarmProc{} = farm_proc) do
+  #   %Point{pc: pc, par: par} = get_pc_ptr(farm_proc)
+  #   get_cell_by_address(farm_proc, par, pc)
+  # end
 
+  @spec maybe_get_body_address(FarmProc.t(), Pointer.t()) :: Pointer.t() | nil
+  def maybe_get_body_address(fp, here_address) do
+    cell = get_heap_by_page_addr(fp, here_address.par)[here_address.pc]
+    if cell do
+      cell[Heap.body]
+    end
+  end
+
+  # Private
   @spec get_cell_by_address(FarmProc.t(), par, pc) :: map | no_return
   defp get_cell_by_address(%FarmProc{} = farm_proc, par, pc) when is_integer(par) do
     get_heap_by_page_addr(farm_proc, par)[pc] || raise("bad address")

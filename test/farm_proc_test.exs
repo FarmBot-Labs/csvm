@@ -21,13 +21,16 @@ defmodule Csvm.FarmProcTest do
 
   test "single step", %{ih: ih} do
     this = self()
-    fun = fn() -> 
-      raise("fixme")
+    fun = fn() ->
+      IO.puts("FIXME")
+      # raise("fixme")
     end
     farm_proc = FarmProc.new(fun, heap())
     assert FarmProc.get_kind(farm_proc, FarmProc.get_pc_ptr(farm_proc)) == :sequence
     %FarmProc{} = next = FarmProc.step(farm_proc)
     assert Enum.count(FarmProc.get_return_stack(next)) == 1
+    # Next step is a "move_absolute"
+    # Next step has a "speed" of 100
   end
 
   defp heap do
