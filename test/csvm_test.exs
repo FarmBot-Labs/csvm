@@ -4,7 +4,7 @@ defmodule CsvmTest do
 
   setup do
     {:ok, ih} = StubbedInteractionHandler.start_link()
-    csvm      = Csvm.new(StubbedInteractionHandler)
+    csvm = Csvm.new(StubbedInteractionHandler)
     Csvm.asign(csvm, %{interaction_handler: ih})
     %{csvm: csvm, interaction_handler: ih}
   end
@@ -15,7 +15,7 @@ defmodule CsvmTest do
       kind: "sequence",
       args: %{},
       body: [
-        %{ kind: "take_photo", args: %{} }
+        %{kind: "take_photo", args: %{}}
       ]
     }
 

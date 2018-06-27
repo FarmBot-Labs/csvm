@@ -37,11 +37,11 @@ defmodule Csvm.AST.Heap do
 
   # Constants and key names.
 
-  @link   "🔗"
-  @body   String.to_atom(@link <> "body")
-  @next   String.to_atom(@link <> "next")
+  @link "🔗"
+  @body String.to_atom(@link <> "body")
+  @next String.to_atom(@link <> "next")
   @parent String.to_atom(@link <> "parent")
-  @kind   String.to_atom(@link <> "kind")
+  @kind String.to_atom(@link <> "kind")
 
   @primary_fields [@parent, @body, @kind, @next]
 
@@ -53,20 +53,20 @@ defmodule Csvm.AST.Heap do
     @next => @null
   }
 
-  def link,           do: @link
-  def parent,         do: @parent
-  def body,           do: @body
-  def next,           do: @next
-  def kind,           do: @kind
+  def link, do: @link
+  def parent, do: @parent
+  def body, do: @body
+  def next, do: @next
+  def kind, do: @kind
   def primary_fields, do: @primary_fields
-  def null,           do: @null
+  def null, do: @null
 
   defstruct [:entries, :here]
 
   @type t :: %Heap{
-    entries: map,
-    here: integer
-  }
+          entries: map,
+          here: integer
+        }
 
   @doc "Initialize a new heap."
   def new do
@@ -87,8 +87,8 @@ defmodule Csvm.AST.Heap do
 
   @doc "Puts a key/value pair at an arbitrary address on the heap."
   def put(%Heap{} = heap, %Address{} = addr, key, value) do
-    block       = heap[addr] || raise "Bad node address: #{inspect addr}"
-    new_block   = Map.put(block, String.to_atom(to_string(key)), value)
+    block = heap[addr] || raise "Bad node address: #{inspect(addr)}"
+    new_block = Map.put(block, String.to_atom(to_string(key)), value)
     new_entries = Map.put(heap.entries, addr, new_block)
     %{heap | entries: new_entries}
   end

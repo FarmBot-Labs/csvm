@@ -5,13 +5,11 @@ defmodule Csvm do
 
   alias Csvm.{AST, FarmProc}
 
-  defstruct [
-    interaction_handler: nil,
-    private: nil,
-    counter: 0,
-    codez: %{},
-    farm_procs: %{}
-  ]
+  defstruct interaction_handler: nil,
+            private: nil,
+            counter: 0,
+            codez: %{},
+            farm_procs: %{}
 
   @typedoc """
   Data to be passed straight through to the `interaction_handler`
@@ -20,17 +18,17 @@ defmodule Csvm do
   @opaque private_data :: map | nil
 
   @type t :: %Csvm{
-    interaction_handler: module,
-    private: private_data,
-    counter: integer,
-    codez: %{integer => AST.t},
-    farm_procs: %{integer => FarmProc.t},
-  }
+          interaction_handler: module,
+          private: private_data,
+          counter: integer,
+          codez: %{integer => AST.t()},
+          farm_procs: %{integer => FarmProc.t()}
+        }
 
   @doc "initialize a new Csvm structure."
   def new(interaction_handler) do
-    #TODO(Conoor) Check the interaction_handler handler's behaviour.
-    struct(Csvm, [interaction_handler: interaction_handler])
+    # TODO(Conoor) Check the interaction_handler handler's behaviour.
+    struct(Csvm, interaction_handler: interaction_handler)
   end
 
   @doc "Assign private data to the vm."
@@ -39,12 +37,11 @@ defmodule Csvm do
   end
 
   def tick(csvm) do
-
   end
 
   @doc "Increment the counter."
   def incr_count(csvm) do
-    %{csvm | counter: csvm.counter + 1 }
+    %{csvm | counter: csvm.counter + 1}
   end
 
   @doc "Sets code from ast."

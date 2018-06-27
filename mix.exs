@@ -10,7 +10,13 @@ defmodule Csvm.MixProject do
       elixirc_paths: elixirc_paths(Mix.env()),
       deps: deps(),
       test_coverage: [tool: ExCoveralls],
-      preferred_cli_env: ["test": :test, "coveralls": :test, "coveralls.detail": :test, "coveralls.post": :test, "coveralls.html": :test]
+      preferred_cli_env: [
+        test: :test,
+        coveralls: :test,
+        "coveralls.detail": :test,
+        "coveralls.post": :test,
+        "coveralls.html": :test
+      ]
     ]
   end
 
@@ -27,8 +33,9 @@ defmodule Csvm.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:excoveralls, "~> 0.8", only: :test},
-      {:dialyxir, "~> 1.0.0-rc.2", only: [:dev], runtime: false}
+      {:excoveralls, "~> 0.8", only: [:test]},
+      {:dialyxir, "~> 1.0.0-rc.2", only: [:dev], runtime: false},
+      {:ex_doc, "~> 0.16", only: [:dev], runtime: false}
     ]
   end
 end

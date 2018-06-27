@@ -15,11 +15,11 @@ defmodule Csvm.AST do
 
   @typedoc "AST node."
   @type t :: %__MODULE__{
-    kind: kind,
-    args: args,
-    body: body,
-    comment: binary
-  }
+          kind: kind,
+          args: args,
+          body: body,
+          comment: binary
+        }
 
   # AST struct.
   defstruct [:kind, :args, :body, :comment]

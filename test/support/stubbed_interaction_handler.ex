@@ -4,7 +4,7 @@ defmodule StubbedInteractionHandler do
 
   def take_photo(priv_data) do
     GenServer.call(priv_data.pid, {:last_call, :take_photo, []})
-    {:ok, priv_data }
+    {:ok, priv_data}
   end
 
   def start_link() do
@@ -20,7 +20,7 @@ defmodule StubbedInteractionHandler do
   end
 
   def handle_call({:last_call, fn_name, args}, _from, state) do
-    call_data  = %{ fn_name: fn_name, fn_args: args }
+    call_data = %{fn_name: fn_name, fn_args: args}
     next_state = Map.put(state, :last_call, call_data)
     {:reply, call_data, next_state}
   end
