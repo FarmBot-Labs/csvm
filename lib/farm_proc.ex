@@ -8,10 +8,10 @@ defmodule Csvm.FarmProc do
             rs: [],
             heap: %{}
 
-  @typedoc ~s(Program counter)
+  @typedoc "Program counter"
   @type pc :: integer
 
-  @typedoc ~s(Page address register)
+  @typedoc "Page address register"
   @type par :: integer
 
   @type t :: %FarmProc{
