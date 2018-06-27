@@ -63,6 +63,11 @@ defmodule Csvm.AST.Heap do
 
   defstruct [:entries, :here]
 
+  @type t :: %Heap{
+    entries: map,
+    here: integer
+  }
+
   @doc "Initialize a new heap."
   def new do
     %{struct(Heap) | here: @null, entries: %{@null => @nothing}}

@@ -3,13 +3,13 @@ defmodule CsvmTest do
   doctest Csvm
 
   setup do
-    {:ok, ih  } = StubbedInteractionHandler.start_link()
-    {:ok, csvm} = Csvm.start_link(StubbedInteractionHandler)
-
+    {:ok, ih} = StubbedInteractionHandler.start_link()
+    csvm      = Csvm.new(StubbedInteractionHandler)
+    Csvm.asign(csvm, %{interaction_handler: ih})
     %{csvm: csvm, interaction_handler: ih}
   end
 
-  test "schedule", %{csvm: csvm, interaction_handler: ih} do
+  test "one tick", %{csvm: csvm, interaction_handler: ih} do
     huge_example = %{
       id: 123,
       kind: "sequence",
@@ -19,15 +19,10 @@ defmodule CsvmTest do
       ]
     }
 
-    Csvm.interpret(csvm, huge_example)
+    new_vm = Csvm.tick(csvm, huge_example)
+    assert Csvm.get_pc(new_vm) == 1
     call_data = StubbedInteractionHandler.get_last_call(ih)
     assert call_data.fn_name == :take_photo
     assert call_data.fn_args == []
-  end
-
-  test "async_schedule", ctx do
-  end
-
-  test "await", ctx do
   end
 end
