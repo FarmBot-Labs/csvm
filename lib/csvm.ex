@@ -1,7 +1,10 @@
 defmodule Csvm do
   use GenServer
-  alias __MODULE__, as: State
-  defstruct [:interaction_handler]
+  alias Csvm.State
+  import State, only: [
+    {:incr_count, 1}
+    {:add_code, 2}
+  ]
 
   def interpret(pid \\ __MODULE__, ast) do
     GenServer.call(pid, {:interpret, ast})
@@ -20,12 +23,20 @@ defmodule Csvm do
   end
 
   def init(interaction_handler_module) do
-    {:ok, %State{interaction_handler: interaction_handler_module}}
+    {:ok, %State{
+      counter:             0,
+      code_pointer:        2,
+      instr_pointer:       6,
+      interaction_handler: interaction_handler_module,
+      code: %{}
+    }}
   end
 
   def handle_call({:interpret, ast}, _from, state) do
     IO.puts("Hey :wave:")
-    {:reply, 123, state}
+    next_state1 = state |> incr_count() |> add_code(ast)
+    next_state2 = jump(next_state1, next_state1.counter)
+    {:reply, 123, next_state}
   end
 
   def handle_call({:async_interpret, ast}, from, state) do

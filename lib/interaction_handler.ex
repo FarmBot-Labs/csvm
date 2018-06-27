@@ -1,5 +1,7 @@
 defmodule Csvm.InteractionHandler do
-  @type return_value :: :ok | {:error, reason :: String.t }
+  @type priv_data    :: Map.t
+  @type return_value :: {:ok, priv_data} | {:error, reason :: String.t }
+
   @doc "Requests that the host take a photo with the camera"
-  @callback take_photo() :: return_value
+  @callback take_photo(priv_data) :: return_value
 end
