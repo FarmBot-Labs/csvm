@@ -26,26 +26,32 @@ defmodule Csvm do
         }
 
   @doc "initialize a new Csvm structure."
+  @spec new(module) :: Csvm.t()
   def new(interaction_handler) do
     # TODO(Conoor) Check the interaction_handler handler's behaviour.
     struct(Csvm, interaction_handler: interaction_handler)
   end
 
   @doc "Assign private data to the vm."
-  def asign(csvm, %{} = private) do
-    %{csvm | private: private}
+  @spec assign(Csvm.t(), private_data) :: Csvm.t()
+  def assign(%Csvm{} = csvm, %{} = private) do
+    %Csvm{csvm | private: private}
   end
 
-  def tick(csvm) do
+  @spec tick(Csvm.t()) :: Csvm.t()
+  def tick(%Csvm{}) do
   end
 
   @doc "Increment the counter."
-  def incr_count(csvm) do
-    %{csvm | counter: csvm.counter + 1}
+  @spec incr_count(Csvm.t()) :: Csvm.t()
+  def incr_count(%Csvm{counter: counter} = csvm) do
+    %Csvm{csvm | counter: counter + 1}
   end
 
   @doc "Sets code from ast."
-  def set_code(csvm, location, %AST{} = ast) do
-    %{csvm | code: Map.put(csvm.code, location, ast)}
+  @spec set_code(Csvm.t(), integer, AST.t()) :: Csvm.t()
+  def set_code(%Csvm{codez: code} = csvm, location, %AST{} = ast)
+      when is_integer(location) do
+    %Csvm{csvm | codez: Map.put(code, location, ast)}
   end
 end

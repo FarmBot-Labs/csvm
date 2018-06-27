@@ -22,6 +22,7 @@ defmodule Csvm.FarmProc do
           heap: %{par => Heap.t()}
         }
 
+  @spec new(module, Heap.t()) :: FarmProc.t()
   def new(interaction_handler, heap) do
     struct(
       FarmProc,
@@ -30,6 +31,12 @@ defmodule Csvm.FarmProc do
     )
   end
 
-  def tick(farm_proc) do
+  @spec tick(FarmProc.t()) :: FarmProc.t()
+  def tick(%FarmProc{}) do
+  end
+
+  @spec get_pc(FarmProc.t()) :: FarmProc.pc()
+  def get_pc(%FarmProc{pc: pc}) do
+    pc
   end
 end
