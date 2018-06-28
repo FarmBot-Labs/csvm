@@ -79,16 +79,17 @@ defmodule Csvm.FarmProc do
   #   get_cell_by_address(farm_proc, par, pc)
   # end
 
-  @spec maybe_get_body_address(FarmProc.t(), Pointer.t()) :: HeapAddress.t() | nil
+  @spec maybe_get_body_address(FarmProc.t(), Pointer.t()) :: Pointer.t() | nil
   def maybe_get_body_address(%FarmProc{} = farm_proc, %Pointer{} = here_address) do
     cell = get_heap_by_page_addr(farm_proc, here_address.par)[here_address.pc]
     if cell do
-      cell[Heap.body] || raise("#{inspect cell} has no body pointer")
+      body_heap_address = cell[Heap.body] || raise("#{inspect cell} has no body pointer")
+      Pointer.new(here_address.par, body_heap_address)
     end
   end
 
-  @spec push_ptr(FarmProc.t, Pointer.t) :: FarmProc.t
-  def push_ptr(%FarmProc{} = farm_proc, %Pointer{} = ptr) do
+  @spec push_rs(FarmProc.t, Pointer.t) :: FarmProc.t
+  def push_rs(%FarmProc{} = farm_proc, %Pointer{} = ptr) do
     new_rs = [ ptr | FarmProc.get_return_stack(farm_proc) ]
     %FarmProc{ farm_proc | rs: new_rs }
   end

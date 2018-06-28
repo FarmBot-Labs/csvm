@@ -11,7 +11,7 @@ defmodule Csvm.InstructionSet do
       # %FarmProc{ proc | rs: new_rs, pc: address }
 
       farm_proc
-      |> FarmProc.push_ptr(FarmProc.get_pc_ptr(farm_proc))
+      |> FarmProc.push_rs(FarmProc.get_pc_ptr(farm_proc))
       |> FarmProc.set_pc(address)
     end
 
