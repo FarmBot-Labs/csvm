@@ -17,8 +17,25 @@ defmodule Csvm.InstructionSet do
     end
 
     @spec next(FarmProc.t()) :: FarmProc.t()
-    def next(%FarmProc{} = _farm_proc) do
-      raise "PC = current.next"
+    def next(%FarmProc{} = farm_proc) do
+      current_pc = FarmProc.get_pc_ptr(farm_proc)
+      next_ptr   = FarmProc.get_next_address(farm_proc, current_pc)
+      FarmProc.set_pc_ptr(farm_proc, next_ptr)
+    end
+
+    @spec next_or_return(FarmProc.t()) :: FarmProc.t()
+    def next_or_return(farm_proc) do
+      pc_ptr = FarmProc.get_pc_ptr(farm_proc)
+      addr   = FarmProc.get_next_address(farm_proc, pc_ptr)
+      if FarmProc.is_null_address?(addr) do
+        Ops.return(farm_proc)
+      else
+        Ops.next(farm_proc)
+      end
+    end
+
+    def crash(farm_proc, reason) do
+      raise("VM Crashed: " <> reason )
     end
   end
 
@@ -38,7 +55,16 @@ defmodule Csvm.InstructionSet do
 
   @spec move_absolute(FarmProc.t()) :: FarmProc.t()
   def move_absolute(%FarmProc{} = farm_proc) do
-    farm_proc
+    pc       = FarmProc.get_pc_ptr(farm_proc)
+    heap     = FarmProc.get_heap_by_page_index(farm_proc, pc.page)
+    location = Csvm.DataResolver.resolve(heap, pc, :location)
+    offset   = Csvm.DataResolver.resolve(heap, pc, :offset)
+    args     = %{ location: location, offset: offset }
+    result   = Csvm.SysCallHandler.apply_sys_call_fun(farm_proc.sys_call_fun,
+                                                      :move_absoloute,
+                                                      args)
+    new_farm_proc = handle_io_result(farm_proc, result)
+    Ops.next_or_return(new_farm_proc)
   end
 
   # TODO(Connor) -  Fix this in the Heap/Slicer mods.
@@ -46,4 +72,9 @@ defmodule Csvm.InstructionSet do
     IO.puts("Sequence complete.")
     %FarmProc{farm_proc | status: :done}
   end
+
+  defp handle_io_result(farm_proc, :ok), do: farm_proc
+
+  defp handle_io_result(farm_proc, {:error, reason}),
+    do: Ops.crash(farm_proc, reason)
 end
