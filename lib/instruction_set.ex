@@ -36,6 +36,7 @@ defmodule Csvm.InstructionSet do
     end
   end
 
+  # TODO(Connor) -  Fix this in the Heap/Slicer mods. 
   def unquote(:"Elixir.Csvm.AST.Node.Nothing")(%FarmProc{} = farm_proc) do
     IO.puts("Sequence complete.")
     %FarmProc{farm_proc | status: :done}
