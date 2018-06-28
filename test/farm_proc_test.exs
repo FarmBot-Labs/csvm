@@ -82,16 +82,105 @@ defmodule Csvm.FarmProcTest do
     }
 
     # Make sure that `Ops.next` is moving correctly.
-    %FarmProc{} = _step3 = FarmProc.step(step2)
+    %FarmProc{} = step3 = FarmProc.step(step2)
 
     assert_receive %Csvm.AST{
-      kind: :move_absolute,
+      kind: :move_relative,
       comment: nil,
       args: %{
         x: 10,
         y: 20,
         z: 30,
         speed: 50
+      }
+    }
+
+    %FarmProc{} = step4 = FarmProc.step(step3)
+
+    assert_receive %Csvm.AST{
+      kind: :write_pin,
+      args: %{
+        pin_number: 0,
+        pin_value: 0,
+        pin_mode: 0
+      }
+    }
+
+    %FarmProc{} = step5 = FarmProc.step(step4)
+
+    assert_receive %Csvm.AST{
+      kind: :write_pin,
+      args: %{
+        pin_mode: 0,
+        pin_value: 1,
+        pin_number: %Csvm.AST{
+          kind: :named_pin,
+          args: %{
+            pin_type: "Peripheral",
+            pin_id: 5
+          }
+        }
+      }
+    }
+
+    %FarmProc{} = step6 = FarmProc.step(step5)
+
+    assert_receive %Csvm.AST{
+      kind: :read_pin,
+      args: %{
+        pin_mode: 0,
+        label: "---",
+        pin_number: 0
+      }
+    }
+
+    %FarmProc{} = step7 = FarmProc.step(step6)
+
+    assert_receive %Csvm.AST{
+      kind: :read_pin,
+      args: %{
+        pin_mode: 1,
+        label: "---",
+        pin_number: %Csvm.AST{
+          kind: :named_pin,
+          args: %{
+            pin_type: "Sensor",
+            pin_id: 1
+          }
+        }
+      }
+    }
+
+    %FarmProc{} = step8 = FarmProc.step(step7)
+
+    assert_receive %Csvm.AST{
+      kind: :wait,
+      args: %{
+        milliseconds: 100
+      }
+    }
+
+    %FarmProc{} = step9 = FarmProc.step(step8)
+
+    assert_receive %Csvm.AST{
+      kind: :send_message,
+      args: %{
+        message: "FarmBot is at position {{ x }}, {{ y }}, {{ z }}.",
+        message_type: "success"
+      },
+      body: [
+        %Csvm.AST{kind: :channel, args: %{channel_name: "toast"}},
+        %Csvm.AST{kind: :channel, args: %{channel_name: "email"}},
+        %Csvm.AST{kind: :channel, args: %{channel_name: "espeak"}}
+      ]
+    }
+
+    %FarmProc{} = step10 = FarmProc.step(step9)
+    assert_receive %Csvm.AST{
+      kind: :find_home,
+      args: %{
+        speed: 100,
+        axis: "all"
       }
     }
   end

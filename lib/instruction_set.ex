@@ -1,7 +1,7 @@
 defmodule Csvm.InstructionSet do
   alias Csvm.FarmProc
   alias Csvm.FarmProc.Pointer
-  import Csvm.SysCallHandler, only: [apply_sys_call_fun: 2]
+  import Csvm.Instruction, only: [simple_io_instruction: 1]
 
   defmodule Ops do
     @spec call(FarmProc.t(), Pointer.t()) :: FarmProc.t()
@@ -36,10 +36,18 @@ defmodule Csvm.InstructionSet do
       end
     end
 
-    def crash(farm_proc, reason) do
+    def crash(_farm_proc, reason) do
       raise("VM Crashed: " <> reason)
     end
   end
+
+  simple_io_instruction(:move_absolute)
+  simple_io_instruction(:move_relative)
+  simple_io_instruction(:write_pin)
+  simple_io_instruction(:read_pin)
+  simple_io_instruction(:wait)
+  simple_io_instruction(:send_message)
+  simple_io_instruction(:find_home)
 
   @spec sequence(FarmProc.t()) :: FarmProc.t()
   def sequence(%FarmProc{} = farm_proc) do
@@ -52,16 +60,6 @@ defmodule Csvm.InstructionSet do
       IO.puts("This sequence has a body. Entering: #{inspect(body_addr)}")
       Ops.call(farm_proc, body_addr)
     end
-  end
-
-  @spec move_absolute(FarmProc.t()) :: FarmProc.t()
-  def move_absolute(%FarmProc{} = farm_proc) do
-    pc = FarmProc.get_pc_ptr(farm_proc)
-    heap = FarmProc.get_heap_by_page_index(farm_proc, pc.page)
-    data = Csvm.AST.Unslicer.run(heap, pc.heap_address)
-    result = apply_sys_call_fun(farm_proc.sys_call_fun, data)
-    new_farm_proc = handle_io_result(farm_proc, result)
-    Ops.next_or_return(new_farm_proc)
   end
 
   # TODO(Connor) -  Fix this in the Heap/Slicer mods.
