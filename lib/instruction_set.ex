@@ -29,6 +29,7 @@ defmodule Csvm.InstructionSet do
   @spec sequence(FarmProc.t()) :: FarmProc.t()
   def sequence(%FarmProc{} = farm_proc) do
     body_addr = FarmProc.maybe_get_body_address(farm_proc, FarmProc.get_pc_ptr(farm_proc))
+
     if body_addr do
       IO.puts("This sequence has a body. Entering.")
       Ops.call(farm_proc, body_addr)

@@ -6,9 +6,10 @@ defmodule Csvm.FarmProcTest do
   alias Csvm.AST.Heap.Address
 
   test "init a new farm_proc" do
-    fun = fn(_kind, _args) ->
+    fun = fn _kind, _args ->
       :ok
     end
+
     heap = heap()
     farm_proc = FarmProc.new(fun, heap)
     assert FarmProc.get_pc_ptr(farm_proc) == Pointer.new(0, Address.new(1))
@@ -18,9 +19,10 @@ defmodule Csvm.FarmProcTest do
   end
 
   test "single step" do
-    fun = fn(_kind, _args) ->
+    fun = fn _kind, _args ->
       :ok
     end
+
     farm_proc = FarmProc.new(fun, heap())
     assert FarmProc.get_kind(farm_proc, FarmProc.get_pc_ptr(farm_proc)) == :sequence
     %FarmProc{} = next = FarmProc.step(farm_proc)
