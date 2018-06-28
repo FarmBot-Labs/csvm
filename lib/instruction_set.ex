@@ -36,7 +36,12 @@ defmodule Csvm.InstructionSet do
     end
   end
 
-  # TODO(Connor) -  Fix this in the Heap/Slicer mods. 
+  @spec move_absolute(FarmProc.t()) :: FarmProc.t()
+  def move_absolute(%FarmProc{} = farm_proc) do
+    farm_proc
+  end
+
+  # TODO(Connor) -  Fix this in the Heap/Slicer mods.
   def unquote(:"Elixir.Csvm.AST.Node.Nothing")(%FarmProc{} = farm_proc) do
     IO.puts("Sequence complete.")
     %FarmProc{farm_proc | status: :done}

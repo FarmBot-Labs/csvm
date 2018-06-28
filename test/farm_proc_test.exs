@@ -39,16 +39,30 @@ defmodule Csvm.FarmProcTest do
       :ok
     end
 
-    farm_proc = FarmProc.new(fun, heap())
-    assert FarmProc.get_kind(farm_proc, FarmProc.get_pc_ptr(farm_proc)) == :sequence
-    %FarmProc{} = next = FarmProc.step(farm_proc)
-    assert Enum.count(FarmProc.get_return_stack(next)) == 1
+    step0 = FarmProc.new(fun, heap())
+    assert FarmProc.get_kind(step0, FarmProc.get_pc_ptr(step0)) == :sequence
+    %FarmProc{} = step1 = FarmProc.step(step0)
+    assert Enum.count(FarmProc.get_return_stack(step1)) == 1
 
-    pc_pointer  = FarmProc.get_pc_ptr(next)
-    actual_kind = FarmProc.get_kind(next, pc_pointer)
+    pc_pointer  = FarmProc.get_pc_ptr(step1)
+    actual_kind = FarmProc.get_kind(step1, pc_pointer)
+    step1_cell  = FarmProc.get_cell_by_address(step1, pc_pointer)
     assert actual_kind == :move_absolute
-    next_cell = FarmProc.get_cell_by_address(next, pc_pointer)
-    assert next_cell[:speed] == 100
+    assert step1_cell[:speed] == 100
+
+    # Perform "move_abs"
+    %FarmProc{} = step2 = FarmProc.step(step1)
+    IO.inspect(step2)
+    # Make sure side effects are called
+    pc_pointer  = FarmProc.get_pc_ptr(step2)
+    actual_kind = FarmProc.get_kind(step2, pc_pointer)
+    step2_cell  = FarmProc.get_cell_by_address(step2, pc_pointer)
+    assert actual_kind        == :move_relative
+    assert step2_cell[:y]     == 20
+    assert step2_cell[:x]     == 10
+    assert step2_cell[:z]     == 30
+    assert step2_cell[:speed] == 50
+    # Make sure that `Ops.next` is moving correctly.
   end
 
   test "sequence with no body halts" do
