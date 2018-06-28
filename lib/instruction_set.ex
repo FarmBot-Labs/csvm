@@ -1,11 +1,11 @@
 defmodule Csvm.InstructionSet do
   alias Csvm.FarmProc
-  # alias Csvm.FarmProc.Pointer
-  alias Csvm.AST.Heap.Address, as: HeapAddress
+  alias Csvm.FarmProc.Pointer
+  # alias Csvm.AST.Heap.Address, as: HeapAddress
 
   defmodule Ops do
-    @spec call(FarmProc.t(), HeapAddress.t()) :: FarmProc.t()
-    def call(%FarmProc{} = farm_proc, %HeapAddress{} = address) do
+    @spec call(FarmProc.t(), Pointer.t()) :: FarmProc.t()
+    def call(%FarmProc{} = farm_proc, %Pointer{} = address) do
       # old_rs = FarmProc.get_return_stack(proc)
       # new_rs = [ FarmProc.get_pc_ptr(proc) | old_rs ]
       # %FarmProc{ proc | rs: new_rs, pc: address }

@@ -95,10 +95,9 @@ defmodule Csvm.FarmProc do
     %FarmProc{farm_proc | rs: new_rs}
   end
 
-  @spec set_pc(FarmProc.t(), HeapAddress.t()) :: FarmProc.t()
-  def set_pc(%FarmProc{} = farm_proc, %HeapAddress{} = _ha) do
-    IO.puts("BROKE")
-    farm_proc
+  @spec set_pc(FarmProc.t(), Pointer.t()) :: FarmProc.t()
+  def set_pc(%FarmProc{} = farm_proc, %Pointer{} = pc) do
+    %{farm_proc | pc: pc}
   end
 
   # Private
