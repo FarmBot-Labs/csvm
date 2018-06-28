@@ -25,6 +25,10 @@ defmodule Csvm.AST do
 
   def parse(map_or_json_map)
 
+  def parse(%{__struct__: _} = thing) do
+    thing |> Map.from_struct() |> parse
+  end
+
   def parse(%{"kind" => kind, "args" => args} = thing) do
     body = thing["body"] || []
     comment = thing["comment"]
@@ -37,9 +41,7 @@ defmodule Csvm.AST do
     }
   end
 
-  def parse(%{__struct__: _} = thing) do
-    thing |> Map.from_struct() |> parse
-  end
+
 
   def parse(%{kind: kind, args: args} = thing) do
     body = thing[:body] || []

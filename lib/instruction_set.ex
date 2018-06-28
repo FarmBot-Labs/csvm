@@ -19,14 +19,15 @@ defmodule Csvm.InstructionSet do
     @spec next(FarmProc.t()) :: FarmProc.t()
     def next(%FarmProc{} = farm_proc) do
       current_pc = FarmProc.get_pc_ptr(farm_proc)
-      next_ptr   = FarmProc.get_next_address(farm_proc, current_pc)
+      next_ptr = FarmProc.get_next_address(farm_proc, current_pc)
       FarmProc.set_pc_ptr(farm_proc, next_ptr)
     end
 
     @spec next_or_return(FarmProc.t()) :: FarmProc.t()
     def next_or_return(farm_proc) do
       pc_ptr = FarmProc.get_pc_ptr(farm_proc)
-      addr   = FarmProc.get_next_address(farm_proc, pc_ptr)
+      addr = FarmProc.get_next_address(farm_proc, pc_ptr)
+
       if FarmProc.is_null_address?(addr) do
         Ops.return(farm_proc)
       else
@@ -35,7 +36,7 @@ defmodule Csvm.InstructionSet do
     end
 
     def crash(farm_proc, reason) do
-      raise("VM Crashed: " <> reason )
+      raise("VM Crashed: " <> reason)
     end
   end
 
@@ -55,15 +56,20 @@ defmodule Csvm.InstructionSet do
 
   @spec move_absolute(FarmProc.t()) :: FarmProc.t()
   def move_absolute(%FarmProc{} = farm_proc) do
-    pc       = FarmProc.get_pc_ptr(farm_proc)
-    heap     = FarmProc.get_heap_by_page_index(farm_proc, pc.page)
+    pc = FarmProc.get_pc_ptr(farm_proc)
+    heap = FarmProc.get_heap_by_page_index(farm_proc, pc.page)
     location = Csvm.DataResolver.resolve(heap, pc, :location)
-    offset   = Csvm.DataResolver.resolve(heap, pc, :offset)
-    speed    = Csvm.DataResolver.resolve(heap, pc, :speed)
-    args     = %{ location: location, offset: offset, speed: speed }
-    result   = Csvm.SysCallHandler.apply_sys_call_fun(farm_proc.sys_call_fun,
-                                                      :move_absoloute,
-                                                      args)
+    offset = Csvm.DataResolver.resolve(heap, pc, :offset)
+    speed = Csvm.DataResolver.resolve(heap, pc, :speed)
+    args = %{location: location, offset: offset, speed: speed}
+
+    result =
+      Csvm.SysCallHandler.apply_sys_call_fun(
+        farm_proc.sys_call_fun,
+        :move_absoloute,
+        args
+      )
+
     new_farm_proc = handle_io_result(farm_proc, result)
     Ops.next_or_return(new_farm_proc)
   end

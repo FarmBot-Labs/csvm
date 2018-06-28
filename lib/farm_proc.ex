@@ -109,8 +109,7 @@ defmodule Csvm.FarmProc do
   @spec get_next_address(FarmProc.t(), Pointer.t()) :: Pointer.t() | no_return
   def get_next_address(%FarmProc{} = farm_proc, %Pointer{} = here_address) do
     cell = get_cell_by_address(farm_proc, here_address)
-    next_heap_address =
-      cell[Heap.next()] || raise("#{inspect(cell)} has no `next` pointer")
+    next_heap_address = cell[Heap.next()] || raise("#{inspect(cell)} has no `next` pointer")
     Pointer.new(here_address.page, next_heap_address)
   end
 
@@ -138,8 +137,10 @@ defmodule Csvm.FarmProc do
   def is_null_address?(%Pointer{}), do: false
 
   @spec get_cell_by_address(FarmProc.t(), Pointer.t()) :: map | no_return
-  def get_cell_by_address(%FarmProc{} = farm_proc,
-                          %Pointer{page: page, heap_address: %HeapAddress{} = ha}) do
+  def get_cell_by_address(
+        %FarmProc{} = farm_proc,
+        %Pointer{page: page, heap_address: %HeapAddress{} = ha}
+      ) do
     get_heap_by_page_index(farm_proc, page)[ha] || raise("bad address")
   end
 end

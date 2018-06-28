@@ -36,6 +36,7 @@ defmodule Csvm.FarmProcTest do
 
   test "performs steps" do
     this = self()
+
     fun = fn kind, args ->
       send(this, {kind, args})
       :ok
@@ -46,9 +47,9 @@ defmodule Csvm.FarmProcTest do
     %FarmProc{} = step1 = FarmProc.step(step0)
     assert Enum.count(FarmProc.get_return_stack(step1)) == 1
 
-    pc_pointer  = FarmProc.get_pc_ptr(step1)
+    pc_pointer = FarmProc.get_pc_ptr(step1)
     actual_kind = FarmProc.get_kind(step1, pc_pointer)
-    step1_cell  = FarmProc.get_cell_by_address(step1, pc_pointer)
+    step1_cell = FarmProc.get_cell_by_address(step1, pc_pointer)
     assert actual_kind == :move_absolute
     assert step1_cell[:speed] == 100
 
@@ -56,23 +57,29 @@ defmodule Csvm.FarmProcTest do
     %FarmProc{} = step2 = FarmProc.step(step1)
     IO.inspect(step2)
     # Make sure side effects are called
-    pc_pointer  = FarmProc.get_pc_ptr(step2)
+    pc_pointer = FarmProc.get_pc_ptr(step2)
     actual_kind = FarmProc.get_kind(step2, pc_pointer)
-    step2_cell  = FarmProc.get_cell_by_address(step2, pc_pointer)
-    assert actual_kind        == :move_relative
-    assert step2_cell[:x]     == 10
-    assert step2_cell[:y]     == 20
-    assert step2_cell[:z]     == 30
+    step2_cell = FarmProc.get_cell_by_address(step2, pc_pointer)
+    assert actual_kind == :move_relative
+    assert step2_cell[:x] == 10
+    assert step2_cell[:y] == 20
+    assert step2_cell[:z] == 30
     assert step2_cell[:speed] == 50
     # Test side effects.
     xpected = {
       :move_absoloute,
       %{
-          speed: 50,
-          location: %{ x: 10, y: 20, z: 30 },
-          offset: %{ x: 0, y: 0, z: 0 }
+        location: %{
+          kind: "point",
+          args: %{
+            pointer_type: "Plant",
+            pointer_id: 1
+          }},
+        speed: 50,
+        offset: %{x: 0, y: 0, z: 0}
       }
     }
+
     assert_receive ^xpected
     # Make sure that `Ops.next` is moving correctly.
     %FarmProc{} = _step3 = FarmProc.step(step2)
@@ -104,11 +111,5 @@ defmodule Csvm.FarmProcTest do
     assert FarmProc.get_pc_ptr(next3) == Pointer.null()
     assert FarmProc.get_return_stack(next3) == []
     assert FarmProc.get_status(next3) == :done
-  end
-
-  defp heap do
-    {:ok, map} = Csvm.TestSupport.Fixtures.master_sequence()
-    ast = Csvm.AST.parse(map)
-    Csvm.AST.Slicer.run(ast)
   end
 end
