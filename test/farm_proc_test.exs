@@ -10,7 +10,7 @@ defmodule Csvm.FarmProcTest do
       :ok
     end
 
-    heap = heap()
+    heap = Csvm.TestSupport.Fixtures.heap()
     farm_proc = FarmProc.new(fun, heap)
     assert FarmProc.get_pc_ptr(farm_proc) == Pointer.new(0, Address.new(1))
     assert FarmProc.get_heap_by_page_index(farm_proc, 0) == heap
@@ -19,7 +19,7 @@ defmodule Csvm.FarmProcTest do
   end
 
   test "get_body_address" do
-    farm_proc = FarmProc.new(fn _, _ -> :ok end, heap())
+    farm_proc = FarmProc.new(fn _, _ -> :ok end, Csvm.TestSupport.Fixtures.heap())
     data = FarmProc.get_body_address(farm_proc, Pointer.new(0, Address.new(1)))
     refute FarmProc.is_null_address?(data)
   end
@@ -37,12 +37,12 @@ defmodule Csvm.FarmProcTest do
   test "performs steps" do
     this = self()
 
-    fun = fn kind, args ->
-      send(this, {kind, args})
+    fun = fn ast ->
+      send(this, ast)
       :ok
     end
 
-    step0 = FarmProc.new(fun, heap())
+    step0 = FarmProc.new(fun, Csvm.TestSupport.Fixtures.heap())
     assert FarmProc.get_kind(step0, FarmProc.get_pc_ptr(step0)) == :sequence
     %FarmProc{} = step1 = FarmProc.step(step0)
     assert Enum.count(FarmProc.get_return_stack(step1)) == 1
@@ -55,7 +55,6 @@ defmodule Csvm.FarmProcTest do
 
     # Perform "move_abs"
     %FarmProc{} = step2 = FarmProc.step(step1)
-    IO.inspect(step2)
     # Make sure side effects are called
     pc_pointer = FarmProc.get_pc_ptr(step2)
     actual_kind = FarmProc.get_kind(step2, pc_pointer)
@@ -66,23 +65,35 @@ defmodule Csvm.FarmProcTest do
     assert step2_cell[:z] == 30
     assert step2_cell[:speed] == 50
     # Test side effects.
-    xpected = {
-      :move_absoloute,
-      %{
-        location: %{
-          kind: "point",
-          args: %{
-            pointer_type: "Plant",
-            pointer_id: 1
-          }},
-        speed: 50,
-        offset: %{x: 0, y: 0, z: 0}
-      }
+
+    assert_receive %Csvm.AST{
+      args: %{
+        location: %Csvm.AST{
+          args: %{pointer_id: 1, pointer_type: "Plant"},
+          kind: :point
+        },
+        offset: %Csvm.AST{
+          args: %{x: 10, y: 20, z: -30},
+          kind: :coordinate
+        },
+        speed: 100
+      },
+      kind: :move_absolute
     }
 
-    assert_receive ^xpected
     # Make sure that `Ops.next` is moving correctly.
     %FarmProc{} = _step3 = FarmProc.step(step2)
+
+    assert_receive %Csvm.AST{
+      kind: :move_absolute,
+      comment: nil,
+      args: %{
+        x: 10,
+        y: 20,
+        z: 30,
+        speed: 50
+      }
+    }
   end
 
   test "sequence with no body halts" do

@@ -1,6 +1,7 @@
 defmodule Csvm.InstructionSet do
   alias Csvm.FarmProc
   alias Csvm.FarmProc.Pointer
+  import Csvm.SysCallHandler, only: [apply_sys_call_fun: 2]
 
   defmodule Ops do
     @spec call(FarmProc.t(), Pointer.t()) :: FarmProc.t()
@@ -43,7 +44,6 @@ defmodule Csvm.InstructionSet do
   @spec sequence(FarmProc.t()) :: FarmProc.t()
   def sequence(%FarmProc{} = farm_proc) do
     body_addr = FarmProc.get_body_address(farm_proc, FarmProc.get_pc_ptr(farm_proc))
-    IO.inspect(body_addr)
 
     if FarmProc.is_null_address?(body_addr) do
       IO.puts("This sequence has no body. Exiting.")
@@ -58,18 +58,8 @@ defmodule Csvm.InstructionSet do
   def move_absolute(%FarmProc{} = farm_proc) do
     pc = FarmProc.get_pc_ptr(farm_proc)
     heap = FarmProc.get_heap_by_page_index(farm_proc, pc.page)
-    location = Csvm.DataResolver.resolve(heap, pc, :location)
-    offset = Csvm.DataResolver.resolve(heap, pc, :offset)
-    speed = Csvm.DataResolver.resolve(heap, pc, :speed)
-    args = %{location: location, offset: offset, speed: speed}
-
-    result =
-      Csvm.SysCallHandler.apply_sys_call_fun(
-        farm_proc.sys_call_fun,
-        :move_absoloute,
-        args
-      )
-
+    data = Csvm.AST.Unslicer.run(heap, pc.heap_address)
+    result = apply_sys_call_fun(farm_proc.sys_call_fun, data)
     new_farm_proc = handle_io_result(farm_proc, result)
     Ops.next_or_return(new_farm_proc)
   end

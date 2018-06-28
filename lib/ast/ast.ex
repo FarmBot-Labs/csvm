@@ -41,8 +41,6 @@ defmodule Csvm.AST do
     }
   end
 
-
-
   def parse(%{kind: kind, args: args} = thing) do
     body = thing[:body] || []
     comment = thing[:comment]
