@@ -34,7 +34,7 @@ defmodule Csvm.FarmProcTest do
     refute FarmProc.is_null_address?(Address.new(99))
   end
 
-  test "single step" do
+  test "performs steps" do
     fun = fn _kind, _args ->
       :ok
     end
@@ -43,8 +43,12 @@ defmodule Csvm.FarmProcTest do
     assert FarmProc.get_kind(farm_proc, FarmProc.get_pc_ptr(farm_proc)) == :sequence
     %FarmProc{} = next = FarmProc.step(farm_proc)
     assert Enum.count(FarmProc.get_return_stack(next)) == 1
-    # Next step is a "move_absolute"
-    # Next step has a "speed" of 100
+
+    pc_pointer  = FarmProc.get_pc_ptr(next)
+    actual_kind = FarmProc.get_kind(next, pc_pointer)
+    assert actual_kind == :move_absolute
+    next_cell = FarmProc.get_cell_by_address(next, pc_pointer)
+    assert next_cell[:speed] == 100
   end
 
   test "sequence with no body halts" do

@@ -86,22 +86,22 @@ defmodule Csvm.FarmProc do
   def get_return_stack(%FarmProc{rs: rs}), do: rs
 
   @spec get_kind(FarmProc.t(), Pointer.t()) :: atom
-  def get_kind(%FarmProc{} = farm_proc, %Pointer{heap_address: ha, page: page}) do
-    get_cell_by_address(farm_proc, page, ha)[Heap.kind()]
+  def get_kind(%FarmProc{} = farm_proc, %Pointer{} = ptr) do
+    get_cell_by_address(farm_proc, ptr)[Heap.kind()]
   end
 
   @spec get_status(FarmProc.t()) :: status_enum()
   def get_status(%FarmProc{status: status}), do: status
 
-  # @spec get_pc_cell(FarmProc.t()) :: map | no_return
-  # def get_pc_cell(%FarmProc{} = farm_proc) do
-  #   %Point{pc: pc, par: par} = get_pc_ptr(farm_proc)
-  #   get_cell_by_address(farm_proc, par, pc)
-  # end
+  # TODO(Rick): Use `cell` type, not `map`. - 28 JUN 18
+  @spec get_pc_cell(FarmProc.t()) :: map | no_return
+  def get_pc_cell(%FarmProc{} = farm_proc) do
+    get_cell_by_address(farm_proc, get_pc_ptr(farm_proc))
+  end
 
   @spec get_body_address(FarmProc.t(), Pointer.t()) :: Pointer.t() | no_return
   def get_body_address(%FarmProc{} = farm_proc, %Pointer{} = here_address) do
-    cell = get_cell_by_address(farm_proc, here_address.page, here_address.heap_address)
+    cell = get_cell_by_address(farm_proc, here_address)
     body_heap_address = cell[Heap.body()] || raise("#{inspect(cell)} has no body pointer")
     Pointer.new(here_address.page, body_heap_address)
   end
@@ -130,9 +130,9 @@ defmodule Csvm.FarmProc do
   def is_null_address?(%Pointer{}), do: false
 
   # Private
-  @spec get_cell_by_address(FarmProc.t(), page, heap_address) :: map | no_return
-  defp get_cell_by_address(%FarmProc{} = farm_proc, page, %HeapAddress{} = ha)
-       when is_integer(page) do
+  @spec get_cell_by_address(FarmProc.t(), Pointer.t()) :: map | no_return
+  def get_cell_by_address(%FarmProc{} = farm_proc,
+                          %Pointer{page: page, heap_address: %HeapAddress{} = ha}) do
     get_heap_by_page_index(farm_proc, page)[ha] || raise("bad address")
   end
 end
