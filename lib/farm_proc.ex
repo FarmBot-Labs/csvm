@@ -6,39 +6,52 @@ defmodule Csvm.FarmProc do
   @instruction_set Csvm.InstructionSet
 
   defstruct sys_call_fun: nil,
-            pc: 0,
+            pc: nil,
             rs: [],
+            status: :ok,
             heap: %{}
 
   @typedoc "Program counter"
-  @type pc :: HeapAddress.t()
+  @type heap_address :: HeapAddress.t()
 
   @typedoc "Page address register"
-  @type par :: integer
+  @type page :: integer
+
+  @type status_enum :: :ok | :done
 
   defmodule Pointer do
-    defstruct [:pc, :par]
-    @type t :: %__MODULE__{pc: FarmProc.pc(), par: FarmProc.par()}
-    @spec new(FarmProc.par(), FarmProc.pc()) :: t
-    def new(par, %HeapAddress{} = pc) when is_integer(par) do
+    defstruct [:heap_address, :page]
+    @type t :: %__MODULE__{heap_address: FarmProc.heap_address(), page: FarmProc.page()}
+    @spec new(FarmProc.page(), FarmProc.heap_address()) :: t
+    def new(page, %HeapAddress{} = ha) when is_integer(page) do
       %Pointer{
-        pc: pc,
-        par: par
+        heap_address: ha,
+        page: page
+      }
+    end
+
+    @spec null :: t
+    def null do
+      %Pointer{
+        heap_address: HeapAddress.new(0),
+        page: 0
       }
     end
   end
 
   @type t :: %FarmProc{
           sys_call_fun: Csvm.SysCallHandler.sys_call_fun(),
+          status: status_enum(),
           pc: Pointer.t(),
           rs: [Pointer.t()],
-          heap: %{par => Heap.t()}
+          heap: %{page => Heap.t()}
         }
 
   @spec new(Csvm.SysCallHandler.sys_call_fun(), Heap.t()) :: FarmProc.t()
   def new(sys_call_fun, heap) do
     struct(
       FarmProc,
+      status: :ok,
       pc: Pointer.new(0, HeapAddress.new(1)),
       sys_call_fun: sys_call_fun,
       heap: %{0 => heap}
@@ -60,18 +73,25 @@ defmodule Csvm.FarmProc do
   @spec get_pc_ptr(FarmProc.t()) :: Pointer.t()
   def get_pc_ptr(%FarmProc{pc: pc}), do: pc
 
-  @spec get_heap_by_page_addr(FarmProc.t(), par) :: Heap.t() | no_return
-  def get_heap_by_page_addr(%FarmProc{heap: heap}, index) do
-    heap[index] || raise("no page")
+  @spec set_pc_ptr(FarmProc.t(), Pointer.t()) :: FarmProc.t()
+  def set_pc_ptr(%FarmProc{} = farm_proc, %Pointer{} = pc),
+    do: %FarmProc{farm_proc | pc: pc}
+
+  @spec get_heap_by_page_index(FarmProc.t(), page) :: Heap.t() | no_return
+  def get_heap_by_page_index(%FarmProc{heap: heap}, page) do
+    heap[page] || raise("no page")
   end
 
   @spec get_return_stack(FarmProc.t()) :: [Pointer.t()]
   def get_return_stack(%FarmProc{rs: rs}), do: rs
 
   @spec get_kind(FarmProc.t(), Pointer.t()) :: atom
-  def get_kind(%FarmProc{} = farm_proc, %Pointer{pc: pc, par: par}) do
-    get_cell_by_address(farm_proc, par, pc)[Heap.kind()]
+  def get_kind(%FarmProc{} = farm_proc, %Pointer{heap_address: ha, page: page}) do
+    get_cell_by_address(farm_proc, page, ha)[Heap.kind()]
   end
+
+  @spec get_status(FarmProc.t()) :: status_enum()
+  def get_status(%FarmProc{status: status}), do: status
 
   # @spec get_pc_cell(FarmProc.t()) :: map | no_return
   # def get_pc_cell(%FarmProc{} = farm_proc) do
@@ -79,14 +99,11 @@ defmodule Csvm.FarmProc do
   #   get_cell_by_address(farm_proc, par, pc)
   # end
 
-  @spec maybe_get_body_address(FarmProc.t(), Pointer.t()) :: Pointer.t() | nil
-  def maybe_get_body_address(%FarmProc{} = farm_proc, %Pointer{} = here_address) do
-    cell = get_heap_by_page_addr(farm_proc, here_address.par)[here_address.pc]
-
-    if cell do
-      body_heap_address = cell[Heap.body()] || raise("#{inspect(cell)} has no body pointer")
-      Pointer.new(here_address.par, body_heap_address)
-    end
+  @spec get_body_address(FarmProc.t(), Pointer.t()) :: Pointer.t() | no_return
+  def get_body_address(%FarmProc{} = farm_proc, %Pointer{} = here_address) do
+    cell = get_cell_by_address(farm_proc, here_address.page, here_address.heap_address)
+    body_heap_address = cell[Heap.body()] || raise("#{inspect(cell)} has no body pointer")
+    Pointer.new(here_address.page, body_heap_address)
   end
 
   @spec push_rs(FarmProc.t(), Pointer.t()) :: FarmProc.t()
@@ -95,14 +112,25 @@ defmodule Csvm.FarmProc do
     %FarmProc{farm_proc | rs: new_rs}
   end
 
-  @spec set_pc(FarmProc.t(), Pointer.t()) :: FarmProc.t()
-  def set_pc(%FarmProc{} = farm_proc, %Pointer{} = pc) do
-    %{farm_proc | pc: pc}
+  @spec pop_rs(FarmProc.t()) :: {Pointer.t(), FarmProc.t()}
+  def pop_rs(%FarmProc{rs: rs} = farm_proc) do
+    case rs do
+      [hd | new_rs] -> {hd, %FarmProc{farm_proc | rs: new_rs}}
+      [] -> {Pointer.null, farm_proc}
+    end
   end
 
+  @spec is_null_address?(HeapAddress.t() | Pointer.t()) :: boolean()
+  def is_null_address?(%HeapAddress{value: 0}), do: true
+  def is_null_address?(%HeapAddress{}), do: false
+  def is_null_address?(%Pointer{heap_address: %HeapAddress{value: 0}}),
+    do: true
+  def is_null_address?(%Pointer{}), do: false
+
   # Private
-  @spec get_cell_by_address(FarmProc.t(), par, pc) :: map | no_return
-  defp get_cell_by_address(%FarmProc{} = farm_proc, par, pc) when is_integer(par) do
-    get_heap_by_page_addr(farm_proc, par)[pc] || raise("bad address")
+  @spec get_cell_by_address(FarmProc.t(), page, heap_address) :: map | no_return
+  defp get_cell_by_address(%FarmProc{} = farm_proc, page, %HeapAddress{} = ha)
+       when is_integer(page) do
+    get_heap_by_page_index(farm_proc, page)[ha] || raise("bad address")
   end
 end

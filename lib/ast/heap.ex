@@ -22,6 +22,10 @@ defmodule Csvm.AST.Heap do
       %__MODULE__{value: num}
     end
 
+    def null do
+      %__MODULE__{value: 0}
+    end
+
     @doc "Increment an address."
     def inc(%__MODULE__{value: num}) do
       %__MODULE__{value: num + 1}
@@ -65,8 +69,10 @@ defmodule Csvm.AST.Heap do
 
   defstruct [:entries, :here]
 
+  @type cell :: map
+
   @type t :: %Heap{
-          entries: map,
+          entries: Heap.cell(),
           here: integer
         }
 

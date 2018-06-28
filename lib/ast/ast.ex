@@ -68,7 +68,7 @@ defmodule Csvm.AST do
     end)
   end
 
-  def create(kind, args, body) when is_map(args) and is_list(body) do
+  def new(kind, args, body) when is_map(args) and is_list(body) do
     %__MODULE__{kind: String.to_atom(to_string(kind)), args: args, body: body}
   end
 end
