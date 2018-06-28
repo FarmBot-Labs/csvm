@@ -1,7 +1,6 @@
 defmodule Csvm.InstructionSet do
   alias Csvm.FarmProc
   alias Csvm.FarmProc.Pointer
-  alias Csvm.AST.Heap.Address, as: HeapAddress
 
   defmodule Ops do
     @spec call(FarmProc.t(), Pointer.t()) :: FarmProc.t()
@@ -26,7 +25,8 @@ defmodule Csvm.InstructionSet do
   @spec sequence(FarmProc.t()) :: FarmProc.t()
   def sequence(%FarmProc{} = farm_proc) do
     body_addr = FarmProc.get_body_address(farm_proc, FarmProc.get_pc_ptr(farm_proc))
-    IO.inspect body_addr
+    IO.inspect(body_addr)
+
     if FarmProc.is_null_address?(body_addr) do
       IO.puts("This sequence has no body. Exiting.")
       Ops.return(farm_proc)

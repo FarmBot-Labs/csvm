@@ -116,15 +116,17 @@ defmodule Csvm.FarmProc do
   def pop_rs(%FarmProc{rs: rs} = farm_proc) do
     case rs do
       [hd | new_rs] -> {hd, %FarmProc{farm_proc | rs: new_rs}}
-      [] -> {Pointer.null, farm_proc}
+      [] -> {Pointer.null(), farm_proc}
     end
   end
 
   @spec is_null_address?(HeapAddress.t() | Pointer.t()) :: boolean()
   def is_null_address?(%HeapAddress{value: 0}), do: true
   def is_null_address?(%HeapAddress{}), do: false
+
   def is_null_address?(%Pointer{heap_address: %HeapAddress{value: 0}}),
     do: true
+
   def is_null_address?(%Pointer{}), do: false
 
   # Private

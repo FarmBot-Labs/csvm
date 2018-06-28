@@ -19,7 +19,7 @@ defmodule Csvm.FarmProcTest do
   end
 
   test "get_body_address" do
-    farm_proc = FarmProc.new(fn(_, _) -> :ok end, heap())
+    farm_proc = FarmProc.new(fn _, _ -> :ok end, heap())
     data = FarmProc.get_body_address(farm_proc, Pointer.new(0, Address.new(1)))
     refute FarmProc.is_null_address?(data)
   end
