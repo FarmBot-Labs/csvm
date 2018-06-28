@@ -59,7 +59,8 @@ defmodule Csvm.InstructionSet do
     heap     = FarmProc.get_heap_by_page_index(farm_proc, pc.page)
     location = Csvm.DataResolver.resolve(heap, pc, :location)
     offset   = Csvm.DataResolver.resolve(heap, pc, :offset)
-    args     = %{ location: location, offset: offset }
+    speed    = Csvm.DataResolver.resolve(heap, pc, :speed)
+    args     = %{ location: location, offset: offset, speed: speed }
     result   = Csvm.SysCallHandler.apply_sys_call_fun(farm_proc.sys_call_fun,
                                                       :move_absoloute,
                                                       args)

@@ -35,7 +35,9 @@ defmodule Csvm.FarmProcTest do
   end
 
   test "performs steps" do
-    fun = fn _kind, _args ->
+    this = self()
+    fun = fn kind, args ->
+      send(this, {kind, args})
       :ok
     end
 
@@ -58,11 +60,22 @@ defmodule Csvm.FarmProcTest do
     actual_kind = FarmProc.get_kind(step2, pc_pointer)
     step2_cell  = FarmProc.get_cell_by_address(step2, pc_pointer)
     assert actual_kind        == :move_relative
-    assert step2_cell[:y]     == 20
     assert step2_cell[:x]     == 10
+    assert step2_cell[:y]     == 20
     assert step2_cell[:z]     == 30
     assert step2_cell[:speed] == 50
+    # Test side effects.
+    xpected = {
+      :move_absoloute,
+      %{
+          speed: 50,
+          location: %{ x: 10, y: 20, z: 30 },
+          offset: %{ x: 0, y: 0, z: 0 }
+      }
+    }
+    assert_receive ^xpected
     # Make sure that `Ops.next` is moving correctly.
+    %FarmProc{} = _step3 = FarmProc.step(step2)
   end
 
   test "sequence with no body halts" do
