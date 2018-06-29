@@ -29,6 +29,7 @@ defmodule Csvm.InstructionSetTest do
     farm_proc = FarmProc.new(fun, 1, heap)
 
     assert_raise RuntimeError, "Bad _if implementation.", fn ->
+      %{status: waiting} = farm_proc = FarmProc.step(farm_proc)
       FarmProc.step(farm_proc)
     end
   end
@@ -40,6 +41,7 @@ defmodule Csvm.InstructionSetTest do
     farm_proc = FarmProc.new(fun, 1, heap)
 
     assert_raise RuntimeError, "Bad execute implementation.", fn ->
+      %{status: waiting} = farm_proc = FarmProc.step(farm_proc)
       FarmProc.step(farm_proc)
     end
   end

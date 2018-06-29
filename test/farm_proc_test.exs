@@ -23,8 +23,10 @@ defmodule Csvm.FarmProcTest do
     step0 = FarmProc.new(fun, 0, heap)
     step1 = FarmProc.step(step0)
     assert FarmProc.get_pc_ptr(step1).page == 0
-    assert FarmProc.get_status(step1) == :crashed
-    assert FarmProc.get_pc_ptr(step1) == Pointer.null(step1)
+    assert FarmProc.get_status(step1) == :waiting
+    step2 = FarmProc.step(step1)
+    assert FarmProc.get_status(step2) == :crashed
+    assert FarmProc.get_pc_ptr(step2) == Pointer.null(step1)
   end
 
   test "io functions bad return values raise runtime exception" do
@@ -35,12 +37,12 @@ defmodule Csvm.FarmProcTest do
     assert FarmProc.get_status(step1) == :waiting
     assert Process.alive?(step1.io_latch)
     # require IEx; IEx.pry
-    FarmProc.step(step1)
+    # FarmProc.step(step1)
 
-    # assert_raise RuntimeError, "Bad return value: {:eroror, 100}", fn ->
-    #   Process.alive?(step1.io_latch)
-    #   FarmProc.step(step1)
-    # end
+    assert_raise RuntimeError, "Bad return value: {:eroror, 100}", fn ->
+      Process.alive?(step1.io_latch)
+      FarmProc.step(step1)
+    end
   end
 
   test "get_body_address" do
@@ -93,6 +95,7 @@ defmodule Csvm.FarmProcTest do
     assert step1_cell[:speed] == 100
 
     # Perform "move_abs"
+    %FarmProc{} = %{status: :waiting} = step1 = FarmProc.step(step1)
     %FarmProc{} = step2 = FarmProc.step(step1)
     # Make sure side effects are called
     pc_pointer = FarmProc.get_pc_ptr(step2)
@@ -257,6 +260,7 @@ defmodule Csvm.FarmProcTest do
     end
 
     step1 = FarmProc.step(step0)
+    %{status: :waiting} = step1 = FarmProc.step(step1)
     step2 = FarmProc.step(step1)
     assert FarmProc.get_heap_by_page_index(step2, 2)
     [ptr1, ptr2] = FarmProc.get_return_stack(step2)
@@ -279,7 +283,8 @@ defmodule Csvm.FarmProcTest do
     heap = AST.new(:execute, %{sequence_id: 100}, []) |> AST.Slicer.run()
     fun = fn _ -> {:error, "could not find sequence"} end
     step0 = FarmProc.new(fun, 1, heap)
-    crashed = FarmProc.step(step0)
+    waiting = FarmProc.step(step0)
+    crashed = FarmProc.step(waiting)
     assert FarmProc.get_status(crashed) == :crashed
 
     assert_raise RuntimeError, "Tried to step with crashed process!", fn ->

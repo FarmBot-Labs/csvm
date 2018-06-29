@@ -15,8 +15,9 @@ defmodule Csvm.Instruction do
             FarmProc.set_status(farm_proc, :waiting)
             |> FarmProc.set_io_latch(latch)
           :ok -> Csvm.InstructionSet.Ops.next_or_return(farm_proc)
-          {:ok, result} -> raise "Cant handle results..."
+          {:ok, result} -> raise "Cant handle results: #{inspect {:ok, result}}"
           {:error, reason} -> Csvm.InstructionSet.Ops.crash(farm_proc, reason)
+          other -> raise "Bad return value: #{inspect other}"
         end
       end
     end

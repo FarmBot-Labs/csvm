@@ -97,6 +97,7 @@ defmodule Csvm.FarmProc do
     case Csvm.SysCallHandler.get_status(farm_proc.io_latch) do
       :ok -> farm_proc
       :complete ->
+        IO.puts "getting IO"
         FarmProc.set_status(farm_proc, :ok)
         |> FarmProc.set_io_latch_result(Csvm.SysCallHandler.get_results(farm_proc.io_latch))
         |> FarmProc.remove_io_latch()
@@ -125,18 +126,16 @@ defmodule Csvm.FarmProc do
     %FarmProc{farm_proc | pc: pc}
   end
 
-  def set_io_latch(farm_proc, pid) do
-    %{farm_proc | io_latch: pid}
+  def set_io_latch(%FarmProc{} = farm_proc, pid) when is_pid(pid) do
+    %FarmProc{farm_proc | io_latch: pid}
   end
 
-  def set_io_latch_result(farm_proc, result) do
-    %{farm_proc | io_result: result}
+  def set_io_latch_result(%FarmProc{} = farm_proc, result) do
+    %FarmProc{farm_proc | io_result: result}
   end
 
-  def remove_io_latch(farm_proc) do
-    # Csvm.SysCallHandler.stop(farm_proc.io_latch)
-    # %{farm_proc | io_latch: nil}
-    farm_proc
+  def remove_io_latch(%FarmProc{} = farm_proc) do
+    %FarmProc{farm_proc | io_latch: nil}
   end
 
   @spec get_heap_by_page_index(FarmProc.t(), page) :: Heap.t() | no_return
