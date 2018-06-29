@@ -240,7 +240,7 @@ defmodule Csvm.FarmProcTest do
     end
     %FarmProc{} = step12 = replace_sys_call_fun(step11_true, fun)
     #   |> FarmProc.step()
-    # assert_receive %AST{kind: :wait, args: %{milliseconds: 100}, body: []}
+    assert_receive %AST{kind: :wait, args: %{milliseconds: 100}, body: []}
     # IO.inspect step12
   end
 
