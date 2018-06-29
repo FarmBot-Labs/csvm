@@ -7,9 +7,9 @@ defmodule Csvm.AST.Slicer do
   """
   alias Csvm.AST
   alias AST.Heap
-  alias AST.Heap.Address
 
-  @doc "Run the Slicer on the canonical AST format."
+  @doc "Sice the canonical AST format into a AST Heap."
+  @spec run(AST.t()) :: Heap.t()
   def run(canonical)
 
   def run(%AST{} = canonical) do
@@ -26,6 +26,7 @@ defmodule Csvm.AST.Slicer do
   end
 
   @doc false
+  @spec allocate(Heap.t(), AST.t(), Address.t()) :: {Heap.here(), Heap.t()}
   def allocate(%Heap{} = heap, %AST{} = ast, %Address{} = parent_addr) do
     %Heap{here: addr} = heap = Heap.alot(heap, ast.kind)
 
@@ -37,8 +38,8 @@ defmodule Csvm.AST.Slicer do
     {addr, new_heap}
   end
 
-  @doc false
-  def iterate_over_args(%Heap{} = heap, %AST{} = canonical_node, parent_addr) do
+  @spec iterate_over_args(Heap.t(), AST.t(), Address.t()) :: Heap.t()
+  defp iterate_over_args(%Heap{} = heap, %AST{} = canonical_node, parent_addr) do
     keys = Map.keys(canonical_node.args)
 
     Enum.reduce(keys, heap, fn key, %Heap{} = heap ->
@@ -54,15 +55,15 @@ defmodule Csvm.AST.Slicer do
     end)
   end
 
-  @doc false
-  def iterate_over_body(%Heap{} = heap, %AST{} = canonical_node, parent_addr) do
+  @spec iterate_over_body(Heap.t(), AST.t(), Address.t()) :: Heap.t()
+  defp iterate_over_body(%Heap{} = heap, %AST{} = canonical_node, parent_addr) do
     recurse_into_body(heap, canonical_node.body, parent_addr)
   end
 
-  @doc false
-  def recurse_into_body(heap, body, parent_addr, index \\ 0)
+  @spec recurse_into_body(Heap.t(), [AST.t()], Address.t(), integer) :: Heap.t()
+  defp recurse_into_body(heap, body, parent_addr, index \\ 0)
 
-  def recurse_into_body(%Heap{} = heap, [body_item | rest], prev_addr, 0) do
+  defp recurse_into_body(%Heap{} = heap, [body_item | rest], prev_addr, 0) do
     {my_heap_address, %Heap{} = new_heap} =
       heap
       |> Heap.put(prev_addr, Heap.body(), Address.inc(prev_addr))
@@ -73,11 +74,11 @@ defmodule Csvm.AST.Slicer do
     |> recurse_into_body(rest, my_heap_address, 1)
   end
 
-  def recurse_into_body(%Heap{} = heap, [body_item | rest], prev_addr, index) do
+  defp recurse_into_body(%Heap{} = heap, [body_item | rest], prev_addr, index) do
     {my_heap_address, %Heap{} = heap} = allocate(heap, body_item, prev_addr)
     new_heap = Heap.put(heap, prev_addr, Heap.next(), my_heap_address)
     recurse_into_body(new_heap, rest, my_heap_address, index + 1)
   end
 
-  def recurse_into_body(heap, [], _, _), do: heap
+  defp recurse_into_body(%Heap{} = heap, [], _, _), do: heap
 end

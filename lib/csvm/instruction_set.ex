@@ -36,8 +36,10 @@ defmodule Csvm.InstructionSet do
       end
     end
 
-    def crash(_farm_proc, reason) do
-      raise("VM Crashed: " <> reason)
+    @spec crash(FarmProc.t(), String.t()) :: FarmProc.t()
+    def crash(farm_proc, reason) do
+      IO.warn("runtime exception: #{reason}")
+      FarmProc.set_status(farm_proc, :crashed)
     end
   end
 
@@ -54,22 +56,20 @@ defmodule Csvm.InstructionSet do
     body_addr = FarmProc.get_body_address(farm_proc, FarmProc.get_pc_ptr(farm_proc))
 
     if FarmProc.is_null_address?(body_addr) do
-      IO.puts("This sequence has no body. Exiting.")
       Ops.return(farm_proc)
     else
-      IO.puts("This sequence has a body. Entering: #{inspect(body_addr)}")
       Ops.call(farm_proc, body_addr)
     end
   end
 
-  # TODO(Connor) -  Fix this in the Heap/Slicer mods.
-  def unquote(:"Elixir.Csvm.AST.Node.Nothing")(%FarmProc{} = farm_proc) do
-    IO.puts("Sequence complete.")
-    %FarmProc{farm_proc | status: :done}
+  @spec nothing(FarmProc.t()) :: FarmProc.t()
+  def nothing(%FarmProc{} = farm_proc) do
+    FarmProc.set_status(farm_proc, :done)
   end
 
+  @spec handle_io_result(FarmProc.t(), :ok | {:error, String.t()}) :: FarmProc.t()
   defp handle_io_result(farm_proc, :ok), do: farm_proc
 
-  defp handle_io_result(farm_proc, {:error, reason}),
+  defp handle_io_result(farm_proc, {:error, reason}) when is_binary(reason),
     do: Ops.crash(farm_proc, reason)
 end

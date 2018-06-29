@@ -4,13 +4,13 @@ defmodule Csvm.AST do
   Ast nodes.
   """
 
-  @typedoc "Arguments to a Node."
+  @typedoc "Arguments to a ast node."
   @type args :: map
 
-  @typedoc "Body of a Node."
+  @typedoc "Body of a ast node."
   @type body :: [t]
 
-  @typedoc "Kind of a Node."
+  @typedoc "Kind of a ast node."
   @type kind :: module
 
   @typedoc "AST node."
@@ -23,52 +23,56 @@ defmodule Csvm.AST do
 
   defstruct [:args, :body, :kind, :comment]
 
-  def parse(map_or_json_map)
+  @doc "Decode a base map into CeleryScript AST."
+  @spec decode(t() | map) :: t()
+  def decode(map_or_list_of_maps)
 
-  def parse(%{__struct__: _} = thing) do
-    thing |> Map.from_struct() |> parse
+  def decode(%{__struct__: _} = thing) do
+    thing |> Map.from_struct() |> decode
   end
 
-  def parse(%{"kind" => kind, "args" => args} = thing) do
+  def decode(%{"kind" => kind, "args" => args} = thing) do
     body = thing["body"] || []
     comment = thing["comment"]
 
     %__MODULE__{
       kind: String.to_atom(to_string(kind)),
-      args: parse_args(args),
-      body: parse(body),
+      args: decode_args(args),
+      body: decode_body(body),
       comment: comment
     }
   end
 
-  def parse(%{kind: kind, args: args} = thing) do
+  def decode(%{kind: kind, args: args} = thing) do
     body = thing[:body] || []
     comment = thing[:comment]
-    %__MODULE__{kind: kind, body: parse(body), args: parse_args(args), comment: comment}
+    %__MODULE__{kind: kind, body: decode_body(body), args: decode_args(args), comment: comment}
   end
 
   # You can give a list of nodes.
-  def parse(body) when is_list(body) do
-    Enum.reduce(body, [], fn blah, acc ->
-      acc ++ [parse(blah)]
+  @spec decode_body([map]) :: [t()]
+  def decode_body(body) when is_list(body) do
+    Enum.map(body, fn itm ->
+      decode(itm)
     end)
   end
 
-  def parse(other_thing), do: {:error, "#{inspect(other_thing)} is not valid celeryscript"}
-
-  def parse_args(map) when is_map(map) do
+  @spec decode_args(map) :: args
+  def decode_args(map) when is_map(map) do
     Enum.reduce(map, %{}, fn {key, val}, acc ->
       if is_map(val) do
-        # if it is a map, it could be another node so parse it too.
-        real_val = parse(val)
-        Map.put(acc, String.to_atom(key), real_val)
+        # if it is a map, it could be another node so decode it too.
+        real_val = decode(val)
+        Map.put(acc, String.to_atom(to_string(key)), real_val)
       else
-        Map.put(acc, String.to_atom(key), val)
+        Map.put(acc, String.to_atom(to_string(key)), val)
       end
     end)
   end
 
+  @spec new(atom, map, [map]) :: t()
   def new(kind, args, body) when is_map(args) and is_list(body) do
     %__MODULE__{kind: String.to_atom(to_string(kind)), args: args, body: body}
+    |> decode()
   end
 end

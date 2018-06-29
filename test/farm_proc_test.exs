@@ -3,7 +3,6 @@ defmodule Csvm.FarmProcTest do
   alias Csvm.FarmProc
   alias Csvm.FarmProc.Pointer
   alias Csvm.AST
-  alias Csvm.AST.Heap.Address
 
   test "init a new farm_proc" do
     fun = fn _kind, _args ->
@@ -16,6 +15,14 @@ defmodule Csvm.FarmProcTest do
     assert FarmProc.get_heap_by_page_index(farm_proc, 0) == heap
     assert FarmProc.get_return_stack(farm_proc) == []
     assert FarmProc.get_kind(farm_proc, FarmProc.get_pc_ptr(farm_proc)) == :sequence
+  end
+
+  test "io functions crash the vm" do
+    fun = fn _ -> {:error, "movement error"} end
+    heap = AST.new(:move_relative, %{x: 100, y: 123, z: 0}, []) |> Csvm.AST.Slicer.run()
+    step0 = FarmProc.new(fun, heap)
+    step1 = FarmProc.step(step0)
+    assert FarmProc.get_status(step1) == :crashed
   end
 
   test "get_body_address" do
@@ -175,7 +182,8 @@ defmodule Csvm.FarmProcTest do
       ]
     }
 
-    %FarmProc{} = step10 = FarmProc.step(step9)
+    %FarmProc{} = _step10 = FarmProc.step(step9)
+
     assert_receive %Csvm.AST{
       kind: :find_home,
       args: %{
@@ -183,6 +191,16 @@ defmodule Csvm.FarmProcTest do
         axis: "all"
       }
     }
+  end
+
+  test "raises an exception when no implementation is found for a `kind`" do
+    heap = AST.new(:sequence, %{}, [AST.new(:fire_laser, %{}, [])]) |> Csvm.AST.Slicer.run()
+
+    assert_raise RuntimeError, "No implementation for: fire_laser", fn ->
+      step_0 = FarmProc.new(fn _ -> :ok end, heap)
+      step_1 = FarmProc.step(step_0)
+      _step_2 = FarmProc.step(step_1)
+    end
   end
 
   test "sequence with no body halts" do

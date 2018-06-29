@@ -2,53 +2,52 @@ defmodule Csvm.AST.SlicerTest do
   use ExUnit.Case
   alias Csvm.AST
   alias AST.{Heap, Slicer}
-  alias AST.Heap.Address
 
   @big_real_sequence %AST{
-    kind: AST.Node.Sequence,
+    kind: :sequence,
     args: %{
       is_outdated: false,
-      locals: %{args: %{}, kind: "scope_declaration"},
+      locals: %{args: %{}, kind: :scope_declaration},
       version: 6
     },
     body: [
       %AST{
         args: %{
-          location: %{args: %{x: 1, y: 2, z: 3}, kind: "coordinate"},
-          offset: %{args: %{x: 0, y: 0, z: 0}, kind: "coordinate"},
+          location: %{args: %{x: 1, y: 2, z: 3}, kind: :coordinate},
+          offset: %{args: %{x: 0, y: 0, z: 0}, kind: :coordinate},
           speed: 4
         },
         body: [],
-        kind: AST.Node.MoveAbsolute
+        kind: :move_absolute
       },
       %AST{
         args: %{
-          location: %{args: %{tool_id: 1}, kind: "tool"},
-          offset: %{args: %{x: 0, y: 0, z: 0}, kind: "coordinate"},
+          location: %{args: %{tool_id: 1}, kind: :tool},
+          offset: %{args: %{x: 0, y: 0, z: 0}, kind: :coordinate},
           speed: 4
         },
         body: [],
-        kind: AST.Node.MoveAbsolute
+        kind: :move_absolute
       },
       %AST{
         args: %{speed: 4, x: 1, y: 2, z: 3},
         body: [],
-        kind: AST.Node.MoveRelative
+        kind: :move_relative
       },
       %AST{
         args: %{pin_mode: 1, pin_number: 1, pin_value: 128},
         body: [],
-        kind: AST.Node.WritePin
+        kind: :write_pin
       },
       %AST{
         args: %{label: "my_pin", pin_mode: 1, pin_number: 1},
         body: [],
-        kind: AST.Node.ReadPin
+        kind: :read_pin
       },
       %AST{
         args: %{milliseconds: 500},
         body: [],
-        kind: AST.Node.Wait
+        kind: :wait
       },
       %AST{
         args: %{
@@ -59,26 +58,26 @@ defmodule Csvm.AST.SlicerTest do
           %AST{
             args: %{channel_name: "toast"},
             body: [],
-            kind: AST.Node.Channel
+            kind: :channel
           }
         ],
-        kind: AST.Node.SendMessage
+        kind: :send_message
       },
       %AST{
         args: %{
-          _else: %{args: %{}, kind: "nothing"},
-          _then: %{args: %{sequence_id: 1}, kind: "execute"},
+          _else: %{args: %{}, kind: :nothing},
+          _then: %{args: %{sequence_id: 1}, kind: :execute},
           lhs: "x",
           op: "is",
           rhs: 300
         },
         body: [],
-        kind: AST.Node.If
+        kind: :_if
       },
       %AST{
         args: %{sequence_id: 1},
         body: [],
-        kind: AST.Node.Execute
+        kind: :execute
       }
     ]
   }
@@ -173,8 +172,8 @@ defmodule Csvm.AST.SlicerTest do
 
     assert heap[addr(1)][@kind] == :"Elixir.Csvm.AST.Node.ROOT"
     assert heap[heap[addr(1)][@body]][@kind] == :"Elixir.Csvm.AST.Node.ROOT[0]"
-    assert heap[heap[addr(1)][@next]][@kind] == Csvm.AST.Node.Nothing
-    assert heap[heap[addr(1)][@parent]][@kind] == Csvm.AST.Node.Nothing
+    assert heap[heap[addr(1)][@next]][@kind] == :nothing
+    assert heap[heap[addr(1)][@parent]][@kind] == :nothing
 
     assert heap[addr(2)][@kind] == :"Elixir.Csvm.AST.Node.ROOT[0]"
     assert heap[heap[addr(2)][@body]][@kind] == :"Elixir.Csvm.AST.Node.ROOT[0][0]"
@@ -184,17 +183,17 @@ defmodule Csvm.AST.SlicerTest do
     # AST with more ast in the args and asts in the body
     assert heap[addr(11)][@kind] == :"Elixir.Csvm.AST.Node.ROOT[2][2]"
     assert heap[heap[addr(11)][@body]][@kind] == :"Elixir.Csvm.AST.Node.ROOT[2][2][0]"
-    assert heap[heap[addr(11)][@next]][@kind] == Csvm.AST.Node.Nothing
+    assert heap[heap[addr(11)][@next]][@kind] == :nothing
     assert heap[heap[addr(11)][@parent]][@kind] == :"Elixir.Csvm.AST.Node.ROOT[2][1]"
 
     assert heap[addr(12)][@kind] == :"Elixir.Csvm.AST.Node.ROOT[2][2][0]"
-    assert heap[heap[addr(12)][@body]][@kind] == Csvm.AST.Node.Nothing
-    assert heap[heap[addr(12)][@next]][@kind] == Csvm.AST.Node.Nothing
+    assert heap[heap[addr(12)][@body]][@kind] == :nothing
+    assert heap[heap[addr(12)][@next]][@kind] == :nothing
     assert heap[heap[addr(12)][@parent]][@kind] == :"Elixir.Csvm.AST.Node.ROOT[2][2]"
 
     assert heap[addr(13)][@kind] == :"Elixir.Csvm.AST.Node.ROOT[2][-1]"
-    assert heap[heap[addr(13)][@body]][@kind] == Csvm.AST.Node.Nothing
-    assert heap[heap[addr(13)][@next]][@kind] == Csvm.AST.Node.Nothing
+    assert heap[heap[addr(13)][@body]][@kind] == :nothing
+    assert heap[heap[addr(13)][@next]][@kind] == :nothing
     assert heap[heap[addr(13)][@parent]][@kind] == :"Elixir.Csvm.AST.Node.ROOT[2][2]"
   end
 

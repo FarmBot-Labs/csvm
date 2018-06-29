@@ -9,18 +9,19 @@ defmodule Csvm.ASTTest do
                           |> Jason.decode!()
   @bad_json "{\"whoops\": "
 
-  test "parses ast from json" do
-    res = AST.parse(@nothing_json)
+  test "decodes ast from json" do
+    res = AST.decode(@nothing_json)
     assert match?(%AST{}, res)
   end
 
-  test "won't parse ast from bad json" do
-    res = AST.parse(@bad_json)
-    assert match?({:error, _}, res)
+  test "decodes ast with sub asts in the body" do
+    res = AST.decode(@nothing_json_with_body)
+    assert match?(%AST{}, res)
   end
 
-  test "parses ast with sub asts in the body" do
-    res = AST.parse(@nothing_json_with_body)
-    assert match?(%AST{}, res)
+  test "won't decode ast from bad json" do
+    assert_raise FunctionClauseError, fn ->
+      AST.decode(@bad_json)
+    end
   end
 end

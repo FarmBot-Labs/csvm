@@ -2,7 +2,6 @@ defmodule Csvm.AST.HeapTest do
   use ExUnit.Case
   alias Csvm.AST
   alias AST.Heap
-  alias AST.Heap.Address
 
   describe "Address" do
     test "inspect gives nice stuff" do
@@ -82,7 +81,7 @@ defmodule Csvm.AST.HeapTest do
 
   defp is_null?(%{
          __body: %Address{value: 0},
-         __kind: Csvm.AST.Node.Nothing,
+         __kind: :nothing,
          __next: %Address{value: 0},
          __parent: %Address{value: 0}
        }),

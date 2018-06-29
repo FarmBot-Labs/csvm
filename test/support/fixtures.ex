@@ -5,7 +5,7 @@ defmodule Csvm.TestSupport.Fixtures do
 
   def heap do
     {:ok, map} = Csvm.TestSupport.Fixtures.master_sequence()
-    ast = Csvm.AST.parse(map)
+    ast = Csvm.AST.decode(map)
     Csvm.AST.Slicer.run(ast)
   end
 end

@@ -1,12 +1,10 @@
 defmodule Csvm.AST.UnslicerTest do
   use ExUnit.Case, async: true
   alias Csvm.AST.Unslicer
-  alias Csvm.AST.Heap
-  alias Heap.Address, as: HeapAddress
 
   test "unslices all the things" do
     heap = Csvm.TestSupport.Fixtures.heap()
-    ast = Unslicer.run(heap, HeapAddress.new(1))
+    ast = Unslicer.run(heap, Address.new(1))
     assert ast.kind == :sequence
 
     assert ast.args == %{
