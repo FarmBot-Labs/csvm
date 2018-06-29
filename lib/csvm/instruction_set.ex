@@ -75,12 +75,19 @@ defmodule Csvm.InstructionSet do
   end
 
   @spec _if(FarmProc.t()) :: FarmProc.t()
-  def _if(%FarmProc{} = farm_proc) do
+  def _if(%FarmProc{io_result: nil} = farm_proc) do
     pc = FarmProc.get_pc_ptr(farm_proc)
     heap = FarmProc.get_heap_by_page_index(farm_proc, pc.page)
     data = Csvm.AST.Unslicer.run(heap, pc.heap_address)
+    latch = Csvm.SysCallHandler.apply_sys_call_fun(farm_proc.sys_call_fun, data)
+    farm_proc
+      |> FarmProc.set_status(:waiting)
+      |> FarmProc.set_io_latch(latch)
+  end
 
-    case apply_sys_call_fun(farm_proc.sys_call_fun, data) do
+  def _if(%FarmProc{io_result: result} = farm_proc) do
+    pc = FarmProc.get_pc_ptr(farm_proc)
+    case result do
       {:ok, true} ->
         FarmProc.set_pc_ptr(farm_proc, FarmProc.get_cell_attr_as_pointer(farm_proc, pc, :___then))
 
@@ -101,7 +108,7 @@ defmodule Csvm.InstructionSet do
   end
 
   @spec execute(FarmProc.t()) :: FarmProc.t()
-  def execute(farm_proc) do
+  def execute(%FarmProc{io_result: nil} = farm_proc) do
     pc = FarmProc.get_pc_ptr(farm_proc)
     heap = FarmProc.get_heap_by_page_index(farm_proc, pc.page)
     sequence_id = FarmProc.get_cell_attr(farm_proc, pc, :sequence_id)
@@ -114,25 +121,37 @@ defmodule Csvm.InstructionSet do
     else
       # Step 0: Unslice current address.
       data = Csvm.AST.Unslicer.run(heap, pc.heap_address)
-      # Step 1: Get a copy of the sequence.
-      case apply_sys_call_fun(farm_proc.sys_call_fun, data) do
-        {:ok, %AST{} = sequence} ->
-          # Step 2: Push PC -> RS
-          # Step 3: Slice it
-          new_heap = Csvm.AST.Slicer.run(sequence)
-
-          FarmProc.push_rs(farm_proc, next_ptr)
-          # Step 4: Add the new page.
-          |> FarmProc.new_page(sequence_id, new_heap)
-          # Step 5: Set PC to Ptr(1, 1)
-          |> FarmProc.set_pc_ptr(Pointer.new(sequence_id, Address.new(1)))
-
-        {:error, reason} ->
-          Ops.crash(farm_proc, reason)
-
-        _ ->
-          raise("Bad execute implementation.")
-      end
+      latch = Csvm.SysCallHandler.apply_sys_call_fun(farm_proc.sys_call_fun, data)
+      farm_proc
+        |> FarmProc.set_status(:waiting)
+        |> FarmProc.set_io_latch(latch)
     end
   end
+
+  def execute(%FarmProc{io_result: result} = farm_proc) do
+    pc = FarmProc.get_pc_ptr(farm_proc)
+    sequence_id = FarmProc.get_cell_attr(farm_proc, pc, :sequence_id)
+    next_ptr = FarmProc.get_next_address(farm_proc, pc)
+    # Step 1: Get a copy of the sequence.
+    case result do
+      {:ok, %AST{} = sequence} ->
+        # Step 2: Push PC -> RS
+        # Step 3: Slice it
+        new_heap = Csvm.AST.Slicer.run(sequence)
+
+        FarmProc.push_rs(farm_proc, next_ptr)
+        # Step 4: Add the new page.
+        |> FarmProc.new_page(sequence_id, new_heap)
+        # Step 5: Set PC to Ptr(1, 1)
+        |> FarmProc.set_pc_ptr(Pointer.new(sequence_id, Address.new(1)))
+
+      {:error, reason} ->
+        Ops.crash(farm_proc, reason)
+
+      _ ->
+        raise("Bad execute implementation.")
+    end
+  end
+
+
 end

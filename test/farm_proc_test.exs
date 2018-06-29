@@ -31,10 +31,16 @@ defmodule Csvm.FarmProcTest do
     fun = fn _ -> {:eroror, 100} end
     heap = AST.new(:move_relative, %{x: 100, y: 123, z: 0}, []) |> Csvm.AST.Slicer.run()
     step0 = FarmProc.new(fun, 0, heap)
+    step1 = FarmProc.step(step0)
+    assert FarmProc.get_status(step1) == :waiting
+    assert Process.alive?(step1.io_latch)
+    # require IEx; IEx.pry
+    FarmProc.step(step1)
 
-    assert_raise RuntimeError, "Bad return value: {:eroror, 100}", fn ->
-      FarmProc.step(step0)
-    end
+    # assert_raise RuntimeError, "Bad return value: {:eroror, 100}", fn ->
+    #   Process.alive?(step1.io_latch)
+    #   FarmProc.step(step1)
+    # end
   end
 
   test "get_body_address" do

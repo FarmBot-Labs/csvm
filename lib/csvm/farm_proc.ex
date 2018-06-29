@@ -10,6 +10,8 @@ defmodule Csvm.FarmProc do
             reduction_count: 0,
             pc: nil,
             rs: [],
+            io_latch: nil,
+            io_result: nil,
             crash_reason: nil,
             status: :ok,
             heap: %{}
@@ -20,7 +22,7 @@ defmodule Csvm.FarmProc do
   @typedoc "Page address register"
   @type page :: integer
 
-  @type status_enum :: :ok | :crashed
+  @type status_enum :: :ok | :crashed | :waiting
 
   defmodule Pointer do
     defstruct [:heap_address, :page]
@@ -91,6 +93,17 @@ defmodule Csvm.FarmProc do
     raise("Too many reductions!")
   end
 
+  def step(%FarmProc{status: :waiting} = farm_proc) do
+    case Csvm.SysCallHandler.get_status(farm_proc.io_latch) do
+      :ok -> farm_proc
+      :complete ->
+        FarmProc.set_status(farm_proc, :ok)
+        |> FarmProc.set_io_latch_result(Csvm.SysCallHandler.get_results(farm_proc.io_latch))
+        |> FarmProc.remove_io_latch()
+        |> FarmProc.step()
+    end
+  end
+
   def step(%FarmProc{} = farm_proc) do
     pc_ptr = get_pc_ptr(farm_proc)
     kind = get_kind(farm_proc, pc_ptr)
@@ -110,6 +123,20 @@ defmodule Csvm.FarmProc do
   @spec set_pc_ptr(FarmProc.t(), Pointer.t()) :: FarmProc.t()
   def set_pc_ptr(%FarmProc{} = farm_proc, %Pointer{} = pc) do
     %FarmProc{farm_proc | pc: pc}
+  end
+
+  def set_io_latch(farm_proc, pid) do
+    %{farm_proc | io_latch: pid}
+  end
+
+  def set_io_latch_result(farm_proc, result) do
+    %{farm_proc | io_result: result}
+  end
+
+  def remove_io_latch(farm_proc) do
+    # Csvm.SysCallHandler.stop(farm_proc.io_latch)
+    # %{farm_proc | io_latch: nil}
+    farm_proc
   end
 
   @spec get_heap_by_page_index(FarmProc.t(), page) :: Heap.t() | no_return
