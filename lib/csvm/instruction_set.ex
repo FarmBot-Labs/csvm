@@ -41,7 +41,13 @@ defmodule Csvm.InstructionSet do
     @spec crash(FarmProc.t(), String.t()) :: FarmProc.t()
     def crash(farm_proc, reason) do
       IO.warn("runtime exception: #{reason}")
-      FarmProc.set_status(farm_proc, :crashed)
+      crash_address = FarmProc.get_pc_ptr(farm_proc)
+      # Push PC -> RS
+      step0 = FarmProc.push_rs(farm_proc, crash_address)
+      # set PC to 0,0
+      step1 = FarmProc.set_pc_ptr(step0, Pointer.null())
+      # Set status to crashed, return the farmproc
+      FarmProc.set_status(step1, :crashed)
     end
   end
 

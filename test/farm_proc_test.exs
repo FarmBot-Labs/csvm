@@ -22,7 +22,9 @@ defmodule Csvm.FarmProcTest do
     heap = AST.new(:move_relative, %{x: 100, y: 123, z: 0}, []) |> Csvm.AST.Slicer.run()
     step0 = FarmProc.new(fun, heap)
     step1 = FarmProc.step(step0)
+    assert FarmProc.get_pc_ptr(step1).page == 0
     assert FarmProc.get_status(step1) == :crashed
+    assert FarmProc.get_pc_ptr(step1) == Pointer.null()
   end
 
   test "io functions bad return values raise runtime exception" do
@@ -247,7 +249,7 @@ defmodule Csvm.FarmProcTest do
     next = FarmProc.step(farm_proc)
     assert FarmProc.get_pc_ptr(next) == Pointer.null()
     assert FarmProc.get_return_stack(next) == []
-    assert FarmProc.get_status(next) == :ok
+    assert FarmProc.get_status(next) == :done
 
     # Each following step should still be stopped/paused.
     next1 = FarmProc.step(next)

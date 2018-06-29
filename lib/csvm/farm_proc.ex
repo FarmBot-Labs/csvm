@@ -99,7 +99,9 @@ defmodule Csvm.FarmProc do
   def get_status(%FarmProc{status: status}), do: status
 
   @spec set_status(FarmProc.t(), status_enum()) :: FarmProc.t()
-  def set_status(%FarmProc{} = farm_proc, status), do: %FarmProc{farm_proc | status: status}
+  def set_status(%FarmProc{} = farm_proc, status) do
+    %FarmProc{farm_proc | status: status}
+  end
 
   # TODO(Rick): Use `cell` type, not `map`. - 28 JUN 18
   # @spec get_pc_cell(FarmProc.t()) :: Heap.cell()
