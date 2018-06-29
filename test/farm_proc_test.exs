@@ -25,6 +25,15 @@ defmodule Csvm.FarmProcTest do
     assert FarmProc.get_status(step1) == :crashed
   end
 
+  test "io functions bad return values raise runtime exception" do
+    fun = fn _ -> {:eroror, 100} end
+    heap = AST.new(:move_relative, %{x: 100, y: 123, z: 0}, []) |> Csvm.AST.Slicer.run()
+    step0 = FarmProc.new(fun, heap)
+    assert_raise RuntimeError, "Bad return value: {:eroror, 100}", fn() ->
+      FarmProc.step(step0)
+    end
+  end
+
   test "get_body_address" do
     farm_proc = FarmProc.new(fn _, _ -> :ok end, Csvm.TestSupport.Fixtures.heap())
     data = FarmProc.get_body_address(farm_proc, Pointer.new(0, Address.new(1)))
