@@ -10,12 +10,21 @@ defmodule Csvm.InstructionSetTest do
              _else: %{ kind: :nothing, args: %{} } }
   })
 
-  test "Slices a realistic sequence" do
+  test "Sets the correct `crash_reason`" do
     fun       = fn (_) -> {:error, "whatever"} end
     heap      = Slicer.run(@fixture)
     farm_proc = FarmProc.new(fun, 1, heap)
     crashed   = FarmProc.step(farm_proc)
     assert FarmProc.get_status(crashed) == :crashed
     assert FarmProc.get_crash_reason(crashed) == "whatever"
+  end
+
+  test "_if handles bad interaction layer implementations" do
+    fun       = fn (_) -> :ok end
+    heap      = Slicer.run(@fixture)
+    farm_proc = FarmProc.new(fun, 1, heap)
+    assert_raise RuntimeError, "Bad _if implementation.", fn ->
+      FarmProc.step(farm_proc)
+    end
   end
 end

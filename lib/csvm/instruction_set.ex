@@ -127,9 +127,8 @@ defmodule Csvm.InstructionSet do
           # Step 5: Set PC to Ptr(1, 1)
           |> FarmProc.set_pc_ptr(Pointer.new(sequence_id, Address.new(1)))
 
-        :ok ->
+        _ ->
           raise("Bad execute implementation.")
-
         {:error, reason} ->
           Ops.crash(farm_proc, reason)
       end
