@@ -1,9 +1,6 @@
 version: 2
 jobs:
   build:
-    branches:
-      only:
-        - elixir
     docker:
       # Bump cache key version below when changing elixir version
       - image: circleci/elixir:1.6.6
