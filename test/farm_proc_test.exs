@@ -74,7 +74,7 @@ defmodule Csvm.FarmProcTest do
       end
     end
 
-    step0 = FarmProc.new(always_false_fun, 0, Csvm.TestSupport.Fixtures.heap())
+    step0 = FarmProc.new(always_false_fun, 1, Csvm.TestSupport.Fixtures.heap())
     assert FarmProc.get_kind(step0, FarmProc.get_pc_ptr(step0)) == :sequence
     %FarmProc{} = step1 = FarmProc.step(step0)
     assert Enum.count(FarmProc.get_return_stack(step1)) == 1
@@ -223,13 +223,49 @@ defmodule Csvm.FarmProcTest do
     assert FarmProc.get_kind(step11_false, next_pc_ptr) == :nothing
 
     # Step 10, but _if is true -> execute
-    step10_mod = %{step10 | sys_call_fun: always_true_fun}
+    step10_mod = replace_sys_call_fun(step10, always_true_fun)
     %FarmProc{} = step11_true = FarmProc.step(step10_mod)
     next_pc_ptr = FarmProc.get_pc_ptr(step11_true)
     assert FarmProc.get_kind(step11_true, next_pc_ptr) == :execute
 
     # Take the `execute` path.
     %FarmProc{} = step12 = FarmProc.step(step11_true)
+  end
+
+  test "recursive sequence" do
+    sequence_5 = AST.new(:sequence, %{}, [AST.new(:execute, %{sequence_id: 5}, [])])
+
+    fun = fn ast ->
+      if ast.kind == :execute do
+        {:error, "Should already be cached."}
+      else
+        :ok
+      end
+    end
+
+    heap = AST.Slicer.run(sequence_5)
+    step0 = FarmProc.new(fun, 5, heap)
+
+    step1 = FarmProc.step(step0)
+    assert Enum.count(FarmProc.get_return_stack(step1)) == 1
+
+    step2 = FarmProc.step(step1)
+    assert Enum.count(FarmProc.get_return_stack(step2)) == 2
+
+    step3 = FarmProc.step(step2)
+    assert Enum.count(FarmProc.get_return_stack(step3)) == 3
+
+    pc = FarmProc.get_pc_ptr(step3)
+    zero_page_num = FarmProc.get_zero_page_num(step3)
+    assert pc.page == zero_page_num
+
+    step999 = Enum.reduce(0..996, step3, fn(_, acc) ->
+      FarmProc.step(acc)
+    end)
+
+    assert_raise RuntimeError, "Too many reductions!", fn() ->
+      FarmProc.step(step999)
+    end
   end
 
   test "raises an exception when no implementation is found for a `kind`" do
@@ -268,5 +304,9 @@ defmodule Csvm.FarmProcTest do
     assert FarmProc.get_pc_ptr(next3) == Pointer.null()
     assert FarmProc.get_return_stack(next3) == []
     assert FarmProc.get_status(next3) == :done
+  end
+
+  defp replace_sys_call_fun(%FarmProc{} = farm_proc, fun) when is_function(fun) do
+    %FarmProc{farm_proc | sys_call_fun: fun}
   end
 end

@@ -3,8 +3,11 @@ defmodule Csvm.FarmProc do
   alias Csvm.AST.Heap
 
   @instruction_set Csvm.InstructionSet
+  @max_reduction_count 1000
 
   defstruct sys_call_fun: nil,
+            zero_page: nil,
+            reduction_count: 0,
             pc: nil,
             rs: [],
             status: :ok,
@@ -41,17 +44,22 @@ defmodule Csvm.FarmProc do
   @type t :: %FarmProc{
           sys_call_fun: Csvm.SysCallHandler.sys_call_fun(),
           status: status_enum(),
+          zero_page: page,
           pc: Pointer.t(),
           rs: [Pointer.t()],
+          reduction_count: pos_integer(),
           heap: %{page => Heap.t()}
         }
 
   @spec new(Csvm.SysCallHandler.sys_call_fun(), page, Heap.t()) :: FarmProc.t()
-  def new(sys_call_fun, page_num, heap) do
+  def new(sys_call_fun, page_num, %Heap{} = heap)
+      when is_function(sys_call_fun)
+      when is_integer(page_num) do
     struct(
       FarmProc,
       status: :ok,
-      pc: Pointer.new(0, Address.new(1)),
+      zero_page: page_num,
+      pc: Pointer.new(page_num, Address.new(1)),
       sys_call_fun: sys_call_fun,
       heap: %{page_num => heap}
     )
@@ -63,12 +71,29 @@ defmodule Csvm.FarmProc do
     %FarmProc{farm_proc | heap: new_heap}
   end
 
+  @spec get_zero_page_num(FarmProc.t()) :: page
+  def get_zero_page_num(%FarmProc{} = farm_proc) do
+    farm_proc.zero_page
+  end
+
   @spec has_page?(FarmProc.t(), page) :: boolean()
   def has_page?(%FarmProc{} = farm_proc, page) do
     Map.has_key?(farm_proc.heap, page)
   end
 
   @spec step(FarmProc.t()) :: FarmProc.t() | no_return
+  def step(%FarmProc{status: :crashed} = _farm_proc) do
+    raise("Tried to step with crashed process!")
+  end
+
+  def step(%FarmProc{status: :done} = farm_proc) do
+    farm_proc
+  end
+
+  def step(%FarmProc{reduction_count: c}) when c >= @max_reduction_count do
+    raise("Too many reductions!")
+  end
+
   def step(%FarmProc{} = farm_proc) do
     pc_ptr = get_pc_ptr(farm_proc)
     kind = get_kind(farm_proc, pc_ptr)
@@ -77,6 +102,7 @@ defmodule Csvm.FarmProc do
       raise("No implementation for: #{kind}")
     end
 
+    farm_proc = %FarmProc{farm_proc | reduction_count: farm_proc.reduction_count + 1}
     apply(@instruction_set, kind, [farm_proc])
   end
 
@@ -85,7 +111,8 @@ defmodule Csvm.FarmProc do
 
   @spec set_pc_ptr(FarmProc.t(), Pointer.t()) :: FarmProc.t()
   def set_pc_ptr(%FarmProc{} = farm_proc, %Pointer{} = pc) do
-    if pc.page == 0 and pc.heap_address == Address.null() do
+    # TODO(Connor) - make this a getter
+    if pc.page == farm_proc.zero_page and pc.heap_address == Address.null() do
       farm_proc = FarmProc.set_status(farm_proc, :done)
       %FarmProc{farm_proc | pc: pc}
     else
