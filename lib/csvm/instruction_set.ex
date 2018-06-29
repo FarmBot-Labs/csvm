@@ -50,7 +50,8 @@ defmodule Csvm.InstructionSet do
       # set PC to 0,0
       step1 = FarmProc.set_pc_ptr(step0, Pointer.null(step0))
       # Set status to crashed, return the farmproc
-      FarmProc.set_status(step1, :crashed)
+      crashed = FarmProc.set_status(step1, :crashed)
+      FarmProc.set_crash_reason(crashed, reason)
     end
   end
 
