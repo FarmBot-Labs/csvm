@@ -32,15 +32,6 @@ CSVM.await(ref) # later
 
 Where `schedule/1` == `execute/1`.
 
-## Internal CSVM API
-Internally we will have 3 moving parts that should have no concern to
-the rest of Farmbot OS. (Names maybe not final)
-
-* `CSVM` - Has the public api described above.
-* `CSVM.InstructionSet` - Has implementation for common/generic instructions + wraps the IOHandler.
-* `CSVM.IOHandler` - No logic, just behaviour definition. Configurable at compile time to allow for independent testing.
-  * implementation specific syncronous calls get wrapped by the `InstructionSet` module/process.
-
 ### Example of the IOHandler behaviour and implementation.
 ```elixir
 # The behaviour definition.
