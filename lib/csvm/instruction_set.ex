@@ -88,9 +88,27 @@ defmodule Csvm.InstructionSet do
     Ops.next_or_return(farm_proc)
   end
 
-  @spec handle_io_result(FarmProc.t(), :ok | {:error, String.t()}) :: FarmProc.t()
-  defp handle_io_result(farm_proc, :ok), do: farm_proc
+  @spec execute(FarmProc.t()) :: FarmProc.t()
+  def execute(farm_proc) do
+    pc   = FarmProc.get_pc_ptr(farm_proc)
+    heap = FarmProc.get_heap_by_page_index(farm_proc, pc.page)
+    data = Csvm.AST.Unslicer.run(heap, pc.heap_address)
+    # Step 0: Unslice current address.
+    case apply_sys_call_fun(farm_proc.sys_call_fun, data) do
+      {:ok, sequence}  ->
+        step0 = FarmProc.new_page_from_sequence(farm_proc, sequence)
+        new_page_heap = Csvm.AST.Slicer.run(sequence)
+        FarmProc.set_pc_ptr(farm_proc,
+        FarmProc.get_cell_attr_as_pointer(farm_proc, pc, :___then))
+      :ok -> raise("Bad execute implementation.")
+      {:error, reason} -> Ops.crash(farm_proc, reason)
+    end
 
-  defp handle_io_result(farm_proc, {:error, reason}) when is_binary(reason),
-    do: Ops.crash(farm_proc, reason)
+    # Step 1: Get a copy of the sequence.
+    # Step 2: Slice it
+    # Step 3: Create an ID <-> Page mapping
+    # Step 4: Add the new page.
+    # Step 5: Push PC -> RS
+    # Step 6: Set PC to Ptr(1, 1)
+  end
 end
