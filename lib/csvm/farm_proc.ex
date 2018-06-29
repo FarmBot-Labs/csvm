@@ -175,14 +175,13 @@ defmodule Csvm.FarmProc do
   end
 
   @spec get_crash_reason(FarmProc.t()) :: String.t() | nil
-  def get_crash_reason(crashed) do
+  def get_crash_reason(%FarmProc{} = crashed) do
     crashed.crash_reason
   end
 
-
   @spec set_crash_reason(FarmProc.t(), String.t()) :: FarmProc.t()
-  def set_crash_reason(crashed, reason) do
-    %FarmProc{ crashed | crash_reason: reason }
+  def set_crash_reason(%FarmProc{} = crashed, reason) when is_binary(reason) do
+    %FarmProc{crashed | crash_reason: reason}
   end
 
   @spec is_null_address?(Address.t() | Pointer.t()) :: boolean()

@@ -43,15 +43,15 @@ defmodule Csvm.InstructionSet do
 
     @spec crash(FarmProc.t(), String.t()) :: FarmProc.t()
     def crash(farm_proc, reason) do
-      IO.warn("runtime exception: #{reason}")
       crash_address = FarmProc.get_pc_ptr(farm_proc)
       # Push PC -> RS
-      step0 = FarmProc.push_rs(farm_proc, crash_address)
+      farm_proc
+      |> FarmProc.push_rs(crash_address)
       # set PC to 0,0
-      step1 = FarmProc.set_pc_ptr(step0, Pointer.null(step0))
+      |> FarmProc.set_pc_ptr(Pointer.null(farm_proc))
       # Set status to crashed, return the farmproc
-      crashed = FarmProc.set_status(step1, :crashed)
-      FarmProc.set_crash_reason(crashed, reason)
+      |> FarmProc.set_status(:crashed)
+      |> FarmProc.set_crash_reason(reason)
     end
   end
 
@@ -127,10 +127,11 @@ defmodule Csvm.InstructionSet do
           # Step 5: Set PC to Ptr(1, 1)
           |> FarmProc.set_pc_ptr(Pointer.new(sequence_id, Address.new(1)))
 
-        _ ->
-          raise("Bad execute implementation.")
         {:error, reason} ->
           Ops.crash(farm_proc, reason)
+
+        _ ->
+          raise("Bad execute implementation.")
       end
     end
   end

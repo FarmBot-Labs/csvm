@@ -269,6 +269,18 @@ defmodule Csvm.FarmProcTest do
     assert FarmProc.get_pc_ptr(step7) == Pointer.null(step7)
   end
 
+  test "raises when trying to step thru a crashed proc" do
+    heap = AST.new(:execute, %{sequence_id: 100}, []) |> AST.Slicer.run()
+    fun = fn _ -> {:error, "could not find sequence"} end
+    step0 = FarmProc.new(fun, 1, heap)
+    crashed = FarmProc.step(step0)
+    assert FarmProc.get_status(crashed) == :crashed
+
+    assert_raise RuntimeError, "Tried to step with crashed process!", fn ->
+      FarmProc.step(crashed)
+    end
+  end
+
   test "recursive sequence" do
     sequence_5 = AST.new(:sequence, %{}, [AST.new(:execute, %{sequence_id: 5}, [])])
 
