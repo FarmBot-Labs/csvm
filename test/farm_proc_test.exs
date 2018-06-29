@@ -29,7 +29,8 @@ defmodule Csvm.FarmProcTest do
     fun = fn _ -> {:eroror, 100} end
     heap = AST.new(:move_relative, %{x: 100, y: 123, z: 0}, []) |> Csvm.AST.Slicer.run()
     step0 = FarmProc.new(fun, heap)
-    assert_raise RuntimeError, "Bad return value: {:eroror, 100}", fn() ->
+
+    assert_raise RuntimeError, "Bad return value: {:eroror, 100}", fn ->
       FarmProc.step(step0)
     end
   end
