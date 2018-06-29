@@ -1,3 +1,202 @@
+-- TODO: Add this example that @gabrielBurnworth wrote:
+-- {
+--     "kind": "sequence",
+--     "name": "Test Sequence (TM)",
+--     "color": "red",
+--     "id": 1,
+--     "args": {
+--       "version": 20180209,
+--       "locals": {
+--         "kind": "scope_declaration",
+--         "args": {}
+--       }
+--     },
+--     "body": [
+--       {
+--         "kind": "move_absolute",
+--         "args": {
+--           "speed": 100,
+--           "offset": {
+--             "kind": "coordinate",
+--             "args": {
+--               "y": 20,
+--               "x": 10,
+--               "z": -30
+--             }
+--           },
+--           "location": {
+--             "kind": "point",
+--             "args": {
+--               "pointer_type": "Plant",
+--               "pointer_id": 1
+--             }
+--           }
+--         }
+--       },
+--       {
+--         "kind": "move_relative",
+--         "args": {
+--           "y": 20,
+--           "x": 10,
+--           "z": 30,
+--           "speed": 50
+--         },
+--         "comment": "Slow move"
+--       },
+--       {
+--         "kind": "write_pin",
+--         "args": {
+--           "pin_number": 0,
+--           "pin_value": 0,
+--           "pin_mode": 0
+--         }
+--       },
+--       {
+--         "kind": "write_pin",
+--         "args": {
+--           "pin_mode": 0,
+--           "pin_value": 1,
+--           "pin_number": {
+--             "kind": "named_pin",
+--             "args": {
+--               "pin_type": "Peripheral",
+--               "pin_id": 5
+--             }
+--           }
+--         }
+--       },
+--       {
+--         "kind": "read_pin",
+--         "args": {
+--           "pin_mode": 0,
+--           "label": "---",
+--           "pin_number": 0
+--         }
+--       },
+--       {
+--         "kind": "read_pin",
+--         "args": {
+--           "pin_mode": 1,
+--           "label": "---",
+--           "pin_number": {
+--             "kind": "named_pin",
+--             "args": {
+--               "pin_type": "Sensor",
+--               "pin_id": 1
+--             }
+--           }
+--         }
+--       },
+--       {
+--         "kind": "wait",
+--         "args": {
+--           "milliseconds": 100
+--         }
+--       },
+--       {
+--         "kind": "send_message",
+--         "args": {
+--           "message": "FarmBot is at position {{ x }}, {{ y }}, {{ z }}.",
+--           "message_type": "success"
+--         },
+--         "body": [
+--           {
+--             "kind": "channel",
+--             "args": {
+--               "channel_name": "toast"
+--             }
+--           },
+--           {
+--             "kind": "channel",
+--             "args": {
+--               "channel_name": "email"
+--             }
+--           },
+--           {
+--             "kind": "channel",
+--             "args": {
+--               "channel_name": "espeak"
+--             }
+--           }
+--         ]
+--       },
+--       {
+--         "kind": "find_home",
+--         "args": {
+--           "speed": 100,
+--           "axis": "all"
+--         }
+--       },
+--       {
+--         "kind": "_if",
+--         "args": {
+--           "rhs": 0,
+--           "op": "is_undefined",
+--           "lhs": "x",
+--           "_then": {
+--             "kind": "execute",
+--             "args": {
+--               "sequence_id": 1
+--             }
+--           },
+--           "_else": {
+--             "kind": "nothing",
+--             "args": {}
+--           }
+--         }
+--       },
+--       {
+--         "kind": "_if",
+--         "args": {
+--           "rhs": 500,
+--           "op": ">",
+--           "_then": {
+--             "kind": "nothing",
+--             "args": {}
+--           },
+--           "_else": {
+--             "kind": "execute",
+--             "args": {
+--               "sequence_id": 1
+--             }
+--           },
+--           "lhs": {
+--             "kind": "named_pin",
+--             "args": {
+--               "pin_type": "Sensor",
+--               "pin_id": 2
+--             }
+--           }
+--         }
+--       },
+--       {
+--         "kind": "execute",
+--         "args": {
+--           "sequence_id": 1
+--         }
+--       },
+--       {
+--         "kind": "execute_script",
+--         "args": {
+--           "label": "plant-detection"
+--         },
+--         "body": [
+--           {
+--             "kind": "pair",
+--             "args": {
+--               "value": 0,
+--               "label": "plant_detection_input"
+--             },
+--             "comment": "Input"
+--           }
+--         ]
+--       },
+--       {
+--         "kind": "take_photo",
+--         "args": {}
+--       }
+--     ]
+--   }
 local M = {}
 M.example1 =
   [[
@@ -122,13 +321,15 @@ M.example1 =
 ]]
 
 M.sliced_example1 = {
-  { -- 1
+  {
+    -- 1
     __next = 1,
     __parent = 1,
     __body = 1,
     __KIND = "nothing"
   },
-  { -- 2
+  {
+    -- 2
     __KIND = "sequence",
     __parent = 1,
     __body = 3,
@@ -136,7 +337,8 @@ M.sliced_example1 = {
     __next = 1,
     version = 20180209
   },
-  { -- 3
+  {
+    -- 3
     __KIND = "move_absolute",
     __location = 5,
     __parent = 2,
@@ -145,7 +347,8 @@ M.sliced_example1 = {
     speed = 100,
     __next = 6
   },
-  { -- 4
+  {
+    -- 4
     __KIND = "coordinate",
     __next = 1,
     __parent = 3,
@@ -154,7 +357,8 @@ M.sliced_example1 = {
     y = 0,
     z = 0
   },
-  { -- 5
+  {
+    -- 5
     __KIND = "point",
     __parent = 3,
     __body = 1,
@@ -162,7 +366,8 @@ M.sliced_example1 = {
     pointer_type = "Plant",
     pointer_id = 20246
   },
-  { -- 6
+  {
+    -- 6
     __KIND = "move_relative",
     __body = 1,
     __next = 7,
@@ -172,7 +377,8 @@ M.sliced_example1 = {
     y = 0,
     z = 0
   },
-  { -- 7
+  {
+    -- 7
     __KIND = "write_pin",
     __body = 1,
     __next = 8,
@@ -181,31 +387,35 @@ M.sliced_example1 = {
     pin_number = 0,
     pin_value = 0
   },
-  { -- 8
+  {
+    -- 8
     __KIND = "read_pin",
     __body = 1,
     __next = 9,
     __parent = 7,
     label = "---",
     pin_mode = 0,
-    pin_number = 0,
+    pin_number = 0
   },
-  { -- 9
+  {
+    -- 9
     milliseconds = 0,
     __KIND = "wait",
     __body = 1,
     __parent = 8,
     __next = 10
   },
-  { -- 10
+  {
+    -- 10
     __parent = 9,
     __KIND = "send_message",
     __body = 1,
     __next = 11,
     message = "Hello, world!",
-    message_type = "success",
+    message_type = "success"
   },
-  { -- 11
+  {
+    -- 11
     __parent = 10,
     speed = 100,
     __KIND = "find_home",
@@ -213,7 +423,8 @@ M.sliced_example1 = {
     __body = 1,
     __next = 12
   },
-  { -- 12
+  {
+    -- 12
     ___then = 14,
     __KIND = "_if",
     __body = 1,
@@ -224,40 +435,46 @@ M.sliced_example1 = {
     __next = 15,
     rhs = 0
   },
-  { -- 13
+  {
+    -- 13
     __next = 1,
     __parent = 12,
     __body = 1,
     __KIND = "nothing"
   },
-  { -- 14
+  {
+    -- 14
     __parent = 12,
     __KIND = "execute",
     __body = 1,
     __next = 1,
     sequence_id = 1183
   },
-  { -- 15
+  {
+    -- 15
     __parent = 12,
     __KIND = "execute",
     __body = 1,
     __next = 16,
     sequence_id = 754
   },
-  { -- 16
+  {
+    -- 16
     __parent = 15,
     __KIND = "execute_script",
     label = "plant-detection",
     __body = 1,
     __next = 17
   },
-  { -- 17
+  {
+    -- 17
     __next = 1,
     __parent = 16,
     __body = 1,
     __KIND = "take_photo"
   },
-  { -- 18
+  {
+    -- 18
     __next = 1,
     __parent = 2,
     __body = 1,

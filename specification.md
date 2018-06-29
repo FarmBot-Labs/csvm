@@ -1,67 +1,28 @@
 # Spec for VM <-> Elixir communication.
 
-## Request Header
-Requests can travel in either direction:
-
-|Seg|Description |Width             |Notes                     |
-|---|------------|------------------|--------------------------|
-| 0 |Channel Num | 2 bytes          | Uint16, big endian       |
-| 1 |Namespace   | 4 bytes          | ASCII operation namespace|
-| 3 |Operation   | 5 bytes          | ASCII operation name     |
-| 4 |Payload size| 2 bytes          | Uint16, big endian       |
-| 5 |CLRF        | 2 bytes          | Y'know, `\r\n`           |
-
-Followed by a "payload"
-
-## Request Payload
-
-This is based on the size of segment 3 in the header and is typically used for
-paramter storage.
-
-## Response (6 bytes)
-
-|Seg|Description           |Width   |Notes                       |
-|---|----------------------|--------|----------------------------|
-|  0|Channel Num           | 2 bytes| Originating channel number |
-|  1|Return status code    | 2 bytes| Implementation specific    |
-|  2|Return value          | 2 bytes| Uint16, big endian         |
-|  3|CLRF                  | 2 bytes|                            |
-
 ## Operation Listing
 
-|Namespace|Operation|Request Payload          |Return  |
-|---------|---------|-------------------------|--------|
-|CODE     |WRITE    |CeleryScript JSON        |Code ID |
-|CODE     |RM       |Code ID                  |Status  |
-|PROC     |KILL     |Process ID               |Status  |
-|PROC     |PAUSE    |Process ID               |Status  |
-|PROC     |RUN      |Process ID               |Status  |
-|PROC     |START    |Code ID                  |Pid     |
-|REGISTER |NEW      |Still up for discussion. |        |
-|SLICE    |NEW      |Still up for discussion. |        |
-
-## Hypervisor Calls
-
-### System control
-|Namespace |Operation     |Request Payload |Return |
-|----------|--------------|----------------|-------|
-|SYS       |CHECK_UPDATES | NONE           |       |
-|SYS       |FACTORY_RESET | Package        |       |
-|SYS       |POWER_OFF     | NONE           |       |
-|SYS       |REBOOT        | NONE           |       |
-
-### Firmware interaction
-|Namespace |Operation         |Request Payload                  |Return |
-|----------|------------------|---------------------------------|-------|
-|SYS       |MOVE_ABSOLUTE     | X, Y, Z, Xspeed, Yspeed, Zspeed |       |
-|SYS       |MOVE_RELATIVE (?) | Just forward to Moveabs?        |       |
-|SYS       |CALIBRATE         | Axis Enum                       |       |
-|SYS       |FIND_HOME         | Axis Enum                       |       |
-|SYS       |HOME              | Axis Enum                       |       |
-|SYS       |ZERO              | Axis Enum                       |       |
-|SYS       |SET_SERVO_ANGLE   | Angle                           |       |
-|SYS       |TOGGLE_PIN        | Pin                             |       |
-|SYS       |WRITE_PIN         | Pin                             |       |
+|message              |Arg Type |Arg Description           |Returns |
+|-------------------  |---------|--------------------------|--------|
+|:code_write          |string   |CeleryScript JSON         |Code ID |
+|:code_rm             |int      |Code ID                   |Status  |
+|:proc_kill           |int      |CS Process ID             |Status  |
+|:proc_pause          |int      |CS Process ID             |Status  |
+|:proc_run            |int      |CS Process ID             |Status  |
+|:proc_start          |int      |Code ID                   |Pid     |
+|:sys_check_updates   |none     |                          |        |
+|:sys_factory_reset   |string   |package                   |        |
+|:sys_power_off       |none     |                          |        |
+|:sys_reboot          |none     |                          |        |
+|:sys_move_absolute   |Vector3  | Needs speed?             |        |
+|:sys_move_relative   |Vector3  | Just forward to Moveabs? |        |
+|:sys_calibrate       |String   | Axis name                |        |
+|:sys_find_home       |Vector3  | Axis Enum                |        |
+|:sys_home            |Vector3  | Axis Enum                |        |
+|:sys_zero            |Vector3  | Axis Enum                |        |
+|:sys_set_servo_angle |int      | Angle                    |        |
+|:sys_toggle_pin      |int      | Pin                      |        |
+|:sys_write_pin       |int      | Pin                      |        |
 
 ### Configuration interaction and communication.
 |Namespace |Operation     |Request Payload         |Return |
@@ -83,7 +44,7 @@ paramter storage.
 ### RPI GPIO
 |Namespace |Operation       |Request Payload |Return |
 |----------|----------------|----------------|-------|
-|SYS       |REGISTER_GPIO   | Depricated?    |       |
+|SYS       |REGISTER_GPIO   | Deprecated?    |       |
 |SYS       |UNREGISTER_GPIO | Depricated?    |       |
 
 ### Control
