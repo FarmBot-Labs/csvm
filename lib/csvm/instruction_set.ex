@@ -8,8 +8,10 @@ defmodule Csvm.InstructionSet do
   defmodule Ops do
     @spec call(FarmProc.t(), Pointer.t()) :: FarmProc.t()
     def call(%FarmProc{} = farm_proc, %Pointer{} = address) do
+      current_pc = FarmProc.get_pc_ptr(farm_proc)
+      next_ptr = FarmProc.get_next_address(farm_proc, current_pc)
       farm_proc
-      |> FarmProc.push_rs(FarmProc.get_pc_ptr(farm_proc))
+      |> FarmProc.push_rs(next_ptr)
       |> FarmProc.set_pc_ptr(address)
     end
 
@@ -32,6 +34,7 @@ defmodule Csvm.InstructionSet do
       addr = FarmProc.get_next_address(farm_proc, pc_ptr)
 
       if FarmProc.is_null_address?(addr) do
+        IO.puts "!!!!!!"
         Ops.return(farm_proc)
       else
         Ops.next(farm_proc)
@@ -64,6 +67,7 @@ defmodule Csvm.InstructionSet do
     body_addr = FarmProc.get_body_address(farm_proc, FarmProc.get_pc_ptr(farm_proc))
 
     if FarmProc.is_null_address?(body_addr) do
+      IO.puts "SEQUENCE COMPLETE, RETURNING"
       Ops.return(farm_proc)
     else
       Ops.call(farm_proc, body_addr)
@@ -101,10 +105,11 @@ defmodule Csvm.InstructionSet do
     pc = FarmProc.get_pc_ptr(farm_proc)
     heap = FarmProc.get_heap_by_page_index(farm_proc, pc.page)
     sequence_id = FarmProc.get_cell_attr(farm_proc, pc, :sequence_id)
+    next_ptr = FarmProc.get_next_address(farm_proc, pc)
 
     if FarmProc.has_page?(farm_proc, sequence_id) do
       farm_proc
-      |> FarmProc.push_rs(pc)
+      |> FarmProc.push_rs(next_ptr)
       |> FarmProc.set_pc_ptr(Pointer.new(sequence_id, Address.new(1)))
     else
       # Step 0: Unslice current address.
@@ -116,7 +121,7 @@ defmodule Csvm.InstructionSet do
           # Step 3: Slice it
           new_heap = Csvm.AST.Slicer.run(sequence)
 
-          FarmProc.push_rs(farm_proc, pc)
+          FarmProc.push_rs(farm_proc, next_ptr)
           # Step 4: Add the new page.
           |> FarmProc.new_page(sequence_id, new_heap)
           # Step 5: Set PC to Ptr(1, 1)

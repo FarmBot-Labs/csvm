@@ -74,7 +74,7 @@ defmodule Csvm.FarmProcTest do
       end
     end
 
-    step0 = FarmProc.new(always_false_fun, 1, Csvm.TestSupport.Fixtures.heap())
+    step0 = FarmProc.new(always_false_fun, 2, Csvm.TestSupport.Fixtures.heap())
     assert FarmProc.get_kind(step0, FarmProc.get_pc_ptr(step0)) == :sequence
     %FarmProc{} = step1 = FarmProc.step(step0)
     assert Enum.count(FarmProc.get_return_stack(step1)) == 1
@@ -229,7 +229,59 @@ defmodule Csvm.FarmProcTest do
     assert FarmProc.get_kind(step11_true, next_pc_ptr) == :execute
 
     # Take the `execute` path.
-    %FarmProc{} = step12 = FarmProc.step(step11_true)
+    fun = fn ast ->
+      if ast.kind == :execute do
+        seq = AST.new(:sequence, %{}, [AST.new(:wait, %{milliseconds: 100}, [])])
+        {:ok, seq}
+      else
+        send(self(), ast)
+        :ok
+      end
+    end
+    %FarmProc{} = step12 = replace_sys_call_fun(step11_true, fun)
+    #   |> FarmProc.step()
+    # assert_receive %AST{kind: :wait, args: %{milliseconds: 100}, body: []}
+    # IO.inspect step12
+  end
+
+  test "nonrecursive execute" do
+    seq2     = AST.new(:sequence, %{}, [AST.new(:wait, %{milliseconds: 100}, [])])
+    main_seq = AST.new(:sequence, %{}, [AST.new(:execute, %{sequence_id: 2}, [])])
+    initial_heap = AST.Slicer.run(main_seq)
+    fun = fn(ast) ->
+      if ast.kind == :execute do
+        {:ok, seq2}
+      else
+        :ok
+      end
+    end
+    step0 = FarmProc.new(fun, 1, initial_heap)
+    assert FarmProc.get_heap_by_page_index(step0, 1)
+    assert_raise RuntimeError, ~r(page), fn() ->
+      FarmProc.get_heap_by_page_index(step0, 2)
+    end
+
+    step1 = FarmProc.step(step0)
+    step2 = FarmProc.step(step1)
+    assert FarmProc.get_heap_by_page_index(step2, 2)
+    [ptr1, ptr2] = FarmProc.get_return_stack(step2)
+    assert ptr1 == Pointer.new(1, Address.new(0))
+    assert ptr2 == Pointer.new(1, Address.new(0))
+
+    step3 = FarmProc.step(step2)
+    [ptr3 |_] = FarmProc.get_return_stack(step3)
+    assert ptr3 == Pointer.new(2, Address.new(0))
+
+    step4 = FarmProc.step(step3)
+    IO.inspect({step4.rs, step4.status}, label: "step4")
+    step5 = FarmProc.step(step4)
+    IO.inspect({step5.rs, step5.status}, label: "step5")
+    step6 = FarmProc.step(step5)
+    IO.inspect({step6.rs, step6.status}, label: "step6")
+    step7 = FarmProc.step(step5)
+    IO.inspect({step7.rs, step7.status}, label: "step7")
+    # not popping back to page2
+    # IO.inspect step7
   end
 
   test "recursive sequence" do
@@ -287,23 +339,19 @@ defmodule Csvm.FarmProcTest do
     next = FarmProc.step(farm_proc)
     assert FarmProc.get_pc_ptr(next) == Pointer.null()
     assert FarmProc.get_return_stack(next) == []
-    assert FarmProc.get_status(next) == :done
 
     # Each following step should still be stopped/paused.
     next1 = FarmProc.step(next)
     assert FarmProc.get_pc_ptr(next1) == Pointer.null()
     assert FarmProc.get_return_stack(next1) == []
-    assert FarmProc.get_status(next1) == :done
 
     next2 = FarmProc.step(next1)
     assert FarmProc.get_pc_ptr(next2) == Pointer.null()
     assert FarmProc.get_return_stack(next2) == []
-    assert FarmProc.get_status(next2) == :done
 
     next3 = FarmProc.step(next2)
     assert FarmProc.get_pc_ptr(next3) == Pointer.null()
     assert FarmProc.get_return_stack(next3) == []
-    assert FarmProc.get_status(next3) == :done
   end
 
   defp replace_sys_call_fun(%FarmProc{} = farm_proc, fun) when is_function(fun) do

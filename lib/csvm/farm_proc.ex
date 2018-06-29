@@ -19,7 +19,7 @@ defmodule Csvm.FarmProc do
   @typedoc "Page address register"
   @type page :: integer
 
-  @type status_enum :: :ok | :done | :crashed
+  @type status_enum :: :ok | :crashed
 
   defmodule Pointer do
     defstruct [:heap_address, :page]
@@ -86,10 +86,6 @@ defmodule Csvm.FarmProc do
     raise("Tried to step with crashed process!")
   end
 
-  def step(%FarmProc{status: :done} = farm_proc) do
-    farm_proc
-  end
-
   def step(%FarmProc{reduction_count: c}) when c >= @max_reduction_count do
     raise("Too many reductions!")
   end
@@ -103,6 +99,7 @@ defmodule Csvm.FarmProc do
     end
 
     farm_proc = %FarmProc{farm_proc | reduction_count: farm_proc.reduction_count + 1}
+    IO.puts "executing: [#{pc_ptr.page}, #{inspect pc_ptr.heap_address}] #{kind}"
     apply(@instruction_set, kind, [farm_proc])
   end
 
@@ -111,13 +108,7 @@ defmodule Csvm.FarmProc do
 
   @spec set_pc_ptr(FarmProc.t(), Pointer.t()) :: FarmProc.t()
   def set_pc_ptr(%FarmProc{} = farm_proc, %Pointer{} = pc) do
-    # TODO(Connor) - make this a getter
-    if pc.page == farm_proc.zero_page and pc.heap_address == Address.null() do
-      farm_proc = FarmProc.set_status(farm_proc, :done)
-      %FarmProc{farm_proc | pc: pc}
-    else
-      %FarmProc{farm_proc | pc: pc}
-    end
+    %FarmProc{farm_proc | pc: pc}
   end
 
   @spec get_heap_by_page_index(FarmProc.t(), page) :: Heap.t() | no_return
