@@ -1,5 +1,5 @@
-[![CircleCI](https://circleci.com/gh/FarmBot-Labs/CeleryScript-Runtime.svg?style=svg)](https://circleci.com/gh/FarmBot-Labs/CeleryScript-Runtime)
-[![Coverage Status](https://coveralls.io/repos/github/FarmBot-Labs/CeleryScript-Runtime/badge.svg?branch=master)](https://coveralls.io/github/FarmBot-Labs/CeleryScript-Runtime?branch=master)
+[![CircleCI](https://circleci.com/gh/FarmBot-Labs/CeleryScript-Runtime/tree/elixir.svg?style=svg)](https://circleci.com/gh/FarmBot-Labs/CeleryScript-Runtime/tree/elixir)
+[![Coverage Status](https://coveralls.io/repos/github/FarmBot-Labs/CeleryScript-Runtime/badge.svg?branch=elixir)](https://coveralls.io/github/FarmBot-Labs/CeleryScript-Runtime?branch=elixir)
 
 # CSVM
 
