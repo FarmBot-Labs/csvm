@@ -10,7 +10,7 @@ defmodule Csvm.FarmProcTest do
     end
 
     heap = Csvm.TestSupport.Fixtures.heap()
-    farm_proc = FarmProc.new(fun, heap)
+    farm_proc = FarmProc.new(fun, 0, heap)
     assert FarmProc.get_pc_ptr(farm_proc) == Pointer.new(0, Address.new(1))
     assert FarmProc.get_heap_by_page_index(farm_proc, 0) == heap
     assert FarmProc.get_return_stack(farm_proc) == []
@@ -20,7 +20,7 @@ defmodule Csvm.FarmProcTest do
   test "io functions crash the vm" do
     fun = fn _ -> {:error, "movement error"} end
     heap = AST.new(:move_relative, %{x: 100, y: 123, z: 0}, []) |> Csvm.AST.Slicer.run()
-    step0 = FarmProc.new(fun, heap)
+    step0 = FarmProc.new(fun, 0, heap)
     step1 = FarmProc.step(step0)
     assert FarmProc.get_pc_ptr(step1).page == 0
     assert FarmProc.get_status(step1) == :crashed
@@ -30,7 +30,7 @@ defmodule Csvm.FarmProcTest do
   test "io functions bad return values raise runtime exception" do
     fun = fn _ -> {:eroror, 100} end
     heap = AST.new(:move_relative, %{x: 100, y: 123, z: 0}, []) |> Csvm.AST.Slicer.run()
-    step0 = FarmProc.new(fun, heap)
+    step0 = FarmProc.new(fun, 0, heap)
 
     assert_raise RuntimeError, "Bad return value: {:eroror, 100}", fn ->
       FarmProc.step(step0)
@@ -38,7 +38,7 @@ defmodule Csvm.FarmProcTest do
   end
 
   test "get_body_address" do
-    farm_proc = FarmProc.new(fn _, _ -> :ok end, Csvm.TestSupport.Fixtures.heap())
+    farm_proc = FarmProc.new(fn _ -> :ok end, 0, Csvm.TestSupport.Fixtures.heap())
     data = FarmProc.get_body_address(farm_proc, Pointer.new(0, Address.new(1)))
     refute FarmProc.is_null_address?(data)
   end
@@ -58,6 +58,7 @@ defmodule Csvm.FarmProcTest do
 
     always_false_fun = fn ast ->
       send(this, ast)
+
       case ast.kind do
         :_if -> {:ok, false}
         _ -> :ok
@@ -66,13 +67,14 @@ defmodule Csvm.FarmProcTest do
 
     always_true_fun = fn ast ->
       send(this, ast)
+
       case ast.kind do
         :_if -> {:ok, true}
         _ -> :ok
       end
     end
 
-    step0 = FarmProc.new(always_false_fun, Csvm.TestSupport.Fixtures.heap())
+    step0 = FarmProc.new(always_false_fun, 0, Csvm.TestSupport.Fixtures.heap())
     assert FarmProc.get_kind(step0, FarmProc.get_pc_ptr(step0)) == :sequence
     %FarmProc{} = step1 = FarmProc.step(step0)
     assert Enum.count(FarmProc.get_return_stack(step1)) == 1
@@ -234,7 +236,7 @@ defmodule Csvm.FarmProcTest do
     heap = AST.new(:sequence, %{}, [AST.new(:fire_laser, %{}, [])]) |> Csvm.AST.Slicer.run()
 
     assert_raise RuntimeError, "No implementation for: fire_laser", fn ->
-      step_0 = FarmProc.new(fn _ -> :ok end, heap)
+      step_0 = FarmProc.new(fn _ -> :ok end, 0, heap)
       step_1 = FarmProc.step(step_0)
       _step_2 = FarmProc.step(step_1)
     end
@@ -242,7 +244,7 @@ defmodule Csvm.FarmProcTest do
 
   test "sequence with no body halts" do
     heap = AST.new(:sequence, %{}, []) |> Csvm.AST.Slicer.run()
-    farm_proc = FarmProc.new(fn _, _ -> :ok end, heap)
+    farm_proc = FarmProc.new(fn _ -> :ok end, 0, heap)
     assert FarmProc.get_status(farm_proc) == :ok
 
     # step into the sequence.

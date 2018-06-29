@@ -1,9 +1,9 @@
 defmodule Csvm.InstructionSet do
+  alias Csvm.AST
   alias Csvm.FarmProc
   alias Csvm.FarmProc.Pointer
   import Csvm.Instruction, only: [simple_io_instruction: 1]
   import Csvm.SysCallHandler, only: [apply_sys_call_fun: 2]
-
 
   defmodule Ops do
     @spec call(FarmProc.t(), Pointer.t()) :: FarmProc.t()
@@ -75,11 +75,19 @@ defmodule Csvm.InstructionSet do
     pc = FarmProc.get_pc_ptr(farm_proc)
     heap = FarmProc.get_heap_by_page_index(farm_proc, pc.page)
     data = Csvm.AST.Unslicer.run(heap, pc.heap_address)
+
     case apply_sys_call_fun(farm_proc.sys_call_fun, data) do
-      {:ok, true}  -> FarmProc.set_pc_ptr(farm_proc, FarmProc.get_cell_attr_as_pointer(farm_proc, pc, :___then))
-      {:ok, false} -> FarmProc.set_pc_ptr(farm_proc, FarmProc.get_cell_attr_as_pointer(farm_proc, pc, :___else))
-      :ok -> raise("Bad _if implementation.")
-      {:error, reason} -> Ops.crash(farm_proc, reason)
+      {:ok, true} ->
+        FarmProc.set_pc_ptr(farm_proc, FarmProc.get_cell_attr_as_pointer(farm_proc, pc, :___then))
+
+      {:ok, false} ->
+        FarmProc.set_pc_ptr(farm_proc, FarmProc.get_cell_attr_as_pointer(farm_proc, pc, :___else))
+
+      :ok ->
+        raise("Bad _if implementation.")
+
+      {:error, reason} ->
+        Ops.crash(farm_proc, reason)
     end
   end
 
@@ -90,25 +98,36 @@ defmodule Csvm.InstructionSet do
 
   @spec execute(FarmProc.t()) :: FarmProc.t()
   def execute(farm_proc) do
-    pc   = FarmProc.get_pc_ptr(farm_proc)
+    pc = FarmProc.get_pc_ptr(farm_proc)
     heap = FarmProc.get_heap_by_page_index(farm_proc, pc.page)
-    data = Csvm.AST.Unslicer.run(heap, pc.heap_address)
-    # Step 0: Unslice current address.
-    case apply_sys_call_fun(farm_proc.sys_call_fun, data) do
-      {:ok, sequence}  ->
-        step0 = FarmProc.new_page_from_sequence(farm_proc, sequence)
-        new_page_heap = Csvm.AST.Slicer.run(sequence)
-        FarmProc.set_pc_ptr(farm_proc,
-        FarmProc.get_cell_attr_as_pointer(farm_proc, pc, :___then))
-      :ok -> raise("Bad execute implementation.")
-      {:error, reason} -> Ops.crash(farm_proc, reason)
-    end
+    sequence_id = FarmProc.get_cell_attr(farm_proc, pc, :sequence_id)
 
-    # Step 1: Get a copy of the sequence.
-    # Step 2: Slice it
-    # Step 3: Create an ID <-> Page mapping
-    # Step 4: Add the new page.
-    # Step 5: Push PC -> RS
-    # Step 6: Set PC to Ptr(1, 1)
+    if FarmProc.has_page?(farm_proc, sequence_id) do
+      farm_proc
+      |> FarmProc.push_rs(pc)
+      |> FarmProc.set_pc_ptr(Pointer.new(sequence_id, Address.new(1)))
+    else
+      # Step 0: Unslice current address.
+      data = Csvm.AST.Unslicer.run(heap, pc.heap_address)
+      # Step 1: Get a copy of the sequence.
+      case apply_sys_call_fun(farm_proc.sys_call_fun, data) do
+        {:ok, %AST{} = sequence} ->
+          # Step 2: Push PC -> RS
+          # Step 3: Slice it
+          new_heap = Csvm.AST.Slicer.run(sequence)
+
+          FarmProc.push_rs(farm_proc, pc)
+          # Step 4: Add the new page.
+          |> FarmProc.new_page(sequence_id, new_heap)
+          # Step 5: Set PC to Ptr(1, 1)
+          |> FarmProc.set_pc_ptr(Pointer.new(sequence_id, Address.new(1)))
+
+        :ok ->
+          raise("Bad execute implementation.")
+
+        {:error, reason} ->
+          Ops.crash(farm_proc, reason)
+      end
+    end
   end
 end

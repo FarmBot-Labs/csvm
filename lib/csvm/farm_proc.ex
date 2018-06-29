@@ -46,15 +46,26 @@ defmodule Csvm.FarmProc do
           heap: %{page => Heap.t()}
         }
 
-  @spec new(Csvm.SysCallHandler.sys_call_fun(), Heap.t()) :: FarmProc.t()
-  def new(sys_call_fun, heap) do
+  @spec new(Csvm.SysCallHandler.sys_call_fun(), page, Heap.t()) :: FarmProc.t()
+  def new(sys_call_fun, page_num, heap) do
     struct(
       FarmProc,
       status: :ok,
       pc: Pointer.new(0, Address.new(1)),
       sys_call_fun: sys_call_fun,
-      heap: %{0 => heap}
+      heap: %{page_num => heap}
     )
+  end
+
+  @spec new_page(FarmProc.t(), page, Heap.t()) :: FarmProc.t()
+  def new_page(%FarmProc{} = farm_proc, page_num, heap_contents) do
+    new_heap = Map.put(farm_proc.heap, page_num, heap_contents)
+    %FarmProc{farm_proc | heap: new_heap}
+  end
+
+  @spec has_page?(FarmProc.t(), page) :: boolean()
+  def has_page?(%FarmProc{} = farm_proc, page) do
+    Map.has_key?(farm_proc.heap, page)
   end
 
   @spec step(FarmProc.t()) :: FarmProc.t() | no_return
@@ -74,7 +85,7 @@ defmodule Csvm.FarmProc do
 
   @spec set_pc_ptr(FarmProc.t(), Pointer.t()) :: FarmProc.t()
   def set_pc_ptr(%FarmProc{} = farm_proc, %Pointer{} = pc) do
-    if (pc.page == 0) and (pc.heap_address == Address.null()) do
+    if pc.page == 0 and pc.heap_address == Address.null() do
       farm_proc = FarmProc.set_status(farm_proc, :done)
       %FarmProc{farm_proc | pc: pc}
     else
