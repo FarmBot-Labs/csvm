@@ -1,3 +1,6 @@
+[![CircleCI](https://circleci.com/gh/FarmBot-Labs/CeleryScript-Runtime.svg?style=svg)](https://circleci.com/gh/FarmBot-Labs/CeleryScript-Runtime)
+[![Coverage Status](https://coveralls.io/repos/github/FarmBot-Labs/CeleryScript-Runtime/badge.svg?branch=master)](https://coveralls.io/github/FarmBot-Labs/CeleryScript-Runtime?branch=master)
+
 # CSVM
 
 # Init
