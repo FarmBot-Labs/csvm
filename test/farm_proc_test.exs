@@ -51,15 +51,26 @@ defmodule Csvm.FarmProcTest do
     refute FarmProc.is_null_address?(Address.new(99))
   end
 
-  test "performs steps" do
+  test "performs all the steps" do
     this = self()
 
-    fun = fn ast ->
+    always_false_fun = fn ast ->
       send(this, ast)
-      :ok
+      case ast.kind do
+        :_if -> {:ok, false}
+        _ -> :ok
+      end
     end
 
-    step0 = FarmProc.new(fun, Csvm.TestSupport.Fixtures.heap())
+    always_true_fun = fn ast ->
+      send(this, ast)
+      case ast.kind do
+        :_if -> {:ok, true}
+        _ -> :ok
+      end
+    end
+
+    step0 = FarmProc.new(always_false_fun, Csvm.TestSupport.Fixtures.heap())
     assert FarmProc.get_kind(step0, FarmProc.get_pc_ptr(step0)) == :sequence
     %FarmProc{} = step1 = FarmProc.step(step0)
     assert Enum.count(FarmProc.get_return_stack(step1)) == 1
@@ -192,7 +203,7 @@ defmodule Csvm.FarmProcTest do
       ]
     }
 
-    %FarmProc{} = _step10 = FarmProc.step(step9)
+    %FarmProc{} = step10 = FarmProc.step(step9)
 
     assert_receive %Csvm.AST{
       kind: :find_home,
@@ -201,6 +212,20 @@ defmodule Csvm.FarmProcTest do
         axis: "all"
       }
     }
+
+    # Step 10, but _if is false -> nothing
+    %FarmProc{} = step11_false = FarmProc.step(step10)
+    next_pc_ptr = FarmProc.get_pc_ptr(step11_false)
+    assert FarmProc.get_kind(step11_false, next_pc_ptr) == :nothing
+
+    # Step 10, but _if is true -> execute
+    step10_mod = %{step10 | sys_call_fun: always_true_fun}
+    %FarmProc{} = step11_true = FarmProc.step(step10_mod)
+    next_pc_ptr = FarmProc.get_pc_ptr(step11_true)
+    assert FarmProc.get_kind(step11_true, next_pc_ptr) == :execute
+
+    # Take the `execute` path.
+    %FarmProc{} = step12 = FarmProc.step(step11_true)
   end
 
   test "raises an exception when no implementation is found for a `kind`" do

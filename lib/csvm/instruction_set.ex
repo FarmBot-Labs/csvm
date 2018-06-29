@@ -2,6 +2,8 @@ defmodule Csvm.InstructionSet do
   alias Csvm.FarmProc
   alias Csvm.FarmProc.Pointer
   import Csvm.Instruction, only: [simple_io_instruction: 1]
+  import Csvm.SysCallHandler, only: [apply_sys_call_fun: 2]
+
 
   defmodule Ops do
     @spec call(FarmProc.t(), Pointer.t()) :: FarmProc.t()
@@ -62,9 +64,22 @@ defmodule Csvm.InstructionSet do
     end
   end
 
+  @spec _if(FarmProc.t()) :: FarmProc.t()
+  def _if(%FarmProc{} = farm_proc) do
+    pc = FarmProc.get_pc_ptr(farm_proc)
+    heap = FarmProc.get_heap_by_page_index(farm_proc, pc.page)
+    data = Csvm.AST.Unslicer.run(heap, pc.heap_address)
+    case apply_sys_call_fun(farm_proc.sys_call_fun, data) do
+      {:ok, true}  -> FarmProc.set_pc_ptr(farm_proc, FarmProc.get_cell_attr_as_pointer(farm_proc, pc, :___then))
+      {:ok, false} -> FarmProc.set_pc_ptr(farm_proc, FarmProc.get_cell_attr_as_pointer(farm_proc, pc, :___else))
+      :ok -> raise("Bad _if implementation.")
+      {:error, reason} -> Ops.crash(farm_proc, reason)
+    end
+  end
+
   @spec nothing(FarmProc.t()) :: FarmProc.t()
   def nothing(%FarmProc{} = farm_proc) do
-    FarmProc.set_status(farm_proc, :done)
+    Ops.next_or_return(farm_proc)
   end
 
   @spec handle_io_result(FarmProc.t(), :ok | {:error, String.t()}) :: FarmProc.t()

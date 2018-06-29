@@ -73,8 +73,14 @@ defmodule Csvm.FarmProc do
   def get_pc_ptr(%FarmProc{pc: pc}), do: pc
 
   @spec set_pc_ptr(FarmProc.t(), Pointer.t()) :: FarmProc.t()
-  def set_pc_ptr(%FarmProc{} = farm_proc, %Pointer{} = pc),
-    do: %FarmProc{farm_proc | pc: pc}
+  def set_pc_ptr(%FarmProc{} = farm_proc, %Pointer{} = pc) do
+    if (pc.page == 0) and (pc.heap_address == Address.null()) do
+      farm_proc = FarmProc.set_status(farm_proc, :done)
+      %FarmProc{farm_proc | pc: pc}
+    else
+      %FarmProc{farm_proc | pc: pc}
+    end
+  end
 
   @spec get_heap_by_page_index(FarmProc.t(), page) :: Heap.t() | no_return
   def get_heap_by_page_index(%FarmProc{heap: heap}, page) do
@@ -101,18 +107,25 @@ defmodule Csvm.FarmProc do
   #   get_cell_by_address(farm_proc, get_pc_ptr(farm_proc))
   # end
 
-  @spec get_body_address(FarmProc.t(), Pointer.t()) :: Pointer.t() | no_return
+  @spec get_body_address(FarmProc.t(), Pointer.t()) :: Pointer.t()
   def get_body_address(%FarmProc{} = farm_proc, %Pointer{} = here_address) do
-    cell = get_cell_by_address(farm_proc, here_address)
-    body_heap_address = cell[Heap.body()] || raise("#{inspect(cell)} has no body pointer")
-    Pointer.new(here_address.page, body_heap_address)
+    get_cell_attr_as_pointer(farm_proc, here_address, Heap.body())
   end
 
-  @spec get_next_address(FarmProc.t(), Pointer.t()) :: Pointer.t() | no_return
+  @spec get_next_address(FarmProc.t(), Pointer.t()) :: Pointer.t()
   def get_next_address(%FarmProc{} = farm_proc, %Pointer{} = here_address) do
-    cell = get_cell_by_address(farm_proc, here_address)
-    next_heap_address = cell[Heap.next()] || raise("#{inspect(cell)} has no `next` pointer")
-    Pointer.new(here_address.page, next_heap_address)
+    get_cell_attr_as_pointer(farm_proc, here_address, Heap.next())
+  end
+
+  @spec get_cell_attr(FarmProc.t(), Pointer.t(), atom) :: any()
+  def get_cell_attr(%FarmProc{} = farm_proc, %Pointer{} = location, field) do
+    cell = get_cell_by_address(farm_proc, location)
+    cell[field] || raise("#{inspect(cell)} has no field called: #{field}")
+  end
+
+  def get_cell_attr_as_pointer(%FarmProc{} = farm_proc, %Pointer{} = location, field) do
+    %Address{} = data = get_cell_attr(farm_proc, location, field)
+    Pointer.new(location.page, data)
   end
 
   @spec push_rs(FarmProc.t(), Pointer.t()) :: FarmProc.t()
