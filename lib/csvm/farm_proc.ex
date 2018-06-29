@@ -32,11 +32,11 @@ defmodule Csvm.FarmProc do
       }
     end
 
-    @spec null :: t
-    def null do
+    @spec null(FarmProc.t()) :: t()
+    def null(%FarmProc{} = farm_proc) do
       %Pointer{
         heap_address: Address.new(0),
-        page: 0
+        page: FarmProc.get_zero_page_num(farm_proc)
       }
     end
   end
@@ -99,7 +99,7 @@ defmodule Csvm.FarmProc do
     end
 
     farm_proc = %FarmProc{farm_proc | reduction_count: farm_proc.reduction_count + 1}
-    IO.puts "executing: [#{pc_ptr.page}, #{inspect pc_ptr.heap_address}] #{kind}"
+    # IO.puts "executing: [#{pc_ptr.page}, #{inspect pc_ptr.heap_address}] #{kind}"
     apply(@instruction_set, kind, [farm_proc])
   end
 
@@ -169,7 +169,7 @@ defmodule Csvm.FarmProc do
   def pop_rs(%FarmProc{rs: rs} = farm_proc) do
     case rs do
       [hd | new_rs] -> {hd, %FarmProc{farm_proc | rs: new_rs}}
-      [] -> {Pointer.null(), farm_proc}
+      [] -> {Pointer.null(farm_proc), farm_proc}
     end
   end
 

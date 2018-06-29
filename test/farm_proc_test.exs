@@ -24,7 +24,7 @@ defmodule Csvm.FarmProcTest do
     step1 = FarmProc.step(step0)
     assert FarmProc.get_pc_ptr(step1).page == 0
     assert FarmProc.get_status(step1) == :crashed
-    assert FarmProc.get_pc_ptr(step1) == Pointer.null()
+    assert FarmProc.get_pc_ptr(step1) == Pointer.null(step1)
   end
 
   test "io functions bad return values raise runtime exception" do
@@ -44,7 +44,8 @@ defmodule Csvm.FarmProcTest do
   end
 
   test "null address" do
-    assert FarmProc.is_null_address?(Pointer.null())
+    farm_proc = FarmProc.new(fn _ -> :ok end, 0, Csvm.TestSupport.Fixtures.heap())
+    assert FarmProc.is_null_address?(Pointer.null(farm_proc))
     assert FarmProc.is_null_address?(Address.null())
     assert FarmProc.is_null_address?(Pointer.new(0, Address.new(0)))
     assert FarmProc.is_null_address?(Address.new(0))
@@ -227,37 +228,25 @@ defmodule Csvm.FarmProcTest do
     %FarmProc{} = step11_true = FarmProc.step(step10_mod)
     next_pc_ptr = FarmProc.get_pc_ptr(step11_true)
     assert FarmProc.get_kind(step11_true, next_pc_ptr) == :execute
-
-    # Take the `execute` path.
-    fun = fn ast ->
-      if ast.kind == :execute do
-        seq = AST.new(:sequence, %{}, [AST.new(:wait, %{milliseconds: 100}, [])])
-        {:ok, seq}
-      else
-        send(self(), ast)
-        :ok
-      end
-    end
-    %FarmProc{} = step12 = replace_sys_call_fun(step11_true, fun)
-    #   |> FarmProc.step()
-    assert_receive %AST{kind: :wait, args: %{milliseconds: 100}, body: []}
-    # IO.inspect step12
   end
 
   test "nonrecursive execute" do
-    seq2     = AST.new(:sequence, %{}, [AST.new(:wait, %{milliseconds: 100}, [])])
+    seq2 = AST.new(:sequence, %{}, [AST.new(:wait, %{milliseconds: 100}, [])])
     main_seq = AST.new(:sequence, %{}, [AST.new(:execute, %{sequence_id: 2}, [])])
     initial_heap = AST.Slicer.run(main_seq)
-    fun = fn(ast) ->
+
+    fun = fn ast ->
       if ast.kind == :execute do
         {:ok, seq2}
       else
         :ok
       end
     end
+
     step0 = FarmProc.new(fun, 1, initial_heap)
     assert FarmProc.get_heap_by_page_index(step0, 1)
-    assert_raise RuntimeError, ~r(page), fn() ->
+
+    assert_raise RuntimeError, ~r(page), fn ->
       FarmProc.get_heap_by_page_index(step0, 2)
     end
 
@@ -269,19 +258,15 @@ defmodule Csvm.FarmProcTest do
     assert ptr2 == Pointer.new(1, Address.new(0))
 
     step3 = FarmProc.step(step2)
-    [ptr3 |_] = FarmProc.get_return_stack(step3)
+    [ptr3 | _] = FarmProc.get_return_stack(step3)
     assert ptr3 == Pointer.new(2, Address.new(0))
 
     step4 = FarmProc.step(step3)
-    IO.inspect({step4.rs, step4.status}, label: "step4")
     step5 = FarmProc.step(step4)
-    IO.inspect({step5.rs, step5.status}, label: "step5")
     step6 = FarmProc.step(step5)
-    IO.inspect({step6.rs, step6.status}, label: "step6")
-    step7 = FarmProc.step(step5)
-    IO.inspect({step7.rs, step7.status}, label: "step7")
-    # not popping back to page2
-    # IO.inspect step7
+    step7 = FarmProc.step(step6)
+    assert FarmProc.get_return_stack(step7) == []
+    assert FarmProc.get_pc_ptr(step7) == Pointer.null(step7)
   end
 
   test "recursive sequence" do
@@ -311,11 +296,12 @@ defmodule Csvm.FarmProcTest do
     zero_page_num = FarmProc.get_zero_page_num(step3)
     assert pc.page == zero_page_num
 
-    step999 = Enum.reduce(0..996, step3, fn(_, acc) ->
-      FarmProc.step(acc)
-    end)
+    step999 =
+      Enum.reduce(0..996, step3, fn _, acc ->
+        FarmProc.step(acc)
+      end)
 
-    assert_raise RuntimeError, "Too many reductions!", fn() ->
+    assert_raise RuntimeError, "Too many reductions!", fn ->
       FarmProc.step(step999)
     end
   end
@@ -337,20 +323,20 @@ defmodule Csvm.FarmProcTest do
 
     # step into the sequence.
     next = FarmProc.step(farm_proc)
-    assert FarmProc.get_pc_ptr(next) == Pointer.null()
+    assert FarmProc.get_pc_ptr(next) == Pointer.null(next)
     assert FarmProc.get_return_stack(next) == []
 
     # Each following step should still be stopped/paused.
     next1 = FarmProc.step(next)
-    assert FarmProc.get_pc_ptr(next1) == Pointer.null()
+    assert FarmProc.get_pc_ptr(next1) == Pointer.null(next1)
     assert FarmProc.get_return_stack(next1) == []
 
     next2 = FarmProc.step(next1)
-    assert FarmProc.get_pc_ptr(next2) == Pointer.null()
+    assert FarmProc.get_pc_ptr(next2) == Pointer.null(next2)
     assert FarmProc.get_return_stack(next2) == []
 
     next3 = FarmProc.step(next2)
-    assert FarmProc.get_pc_ptr(next3) == Pointer.null()
+    assert FarmProc.get_pc_ptr(next3) == Pointer.null(next3)
     assert FarmProc.get_return_stack(next3) == []
   end
 

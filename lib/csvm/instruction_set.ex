@@ -10,6 +10,7 @@ defmodule Csvm.InstructionSet do
     def call(%FarmProc{} = farm_proc, %Pointer{} = address) do
       current_pc = FarmProc.get_pc_ptr(farm_proc)
       next_ptr = FarmProc.get_next_address(farm_proc, current_pc)
+
       farm_proc
       |> FarmProc.push_rs(next_ptr)
       |> FarmProc.set_pc_ptr(address)
@@ -34,7 +35,6 @@ defmodule Csvm.InstructionSet do
       addr = FarmProc.get_next_address(farm_proc, pc_ptr)
 
       if FarmProc.is_null_address?(addr) do
-        IO.puts "!!!!!!"
         Ops.return(farm_proc)
       else
         Ops.next(farm_proc)
@@ -48,7 +48,7 @@ defmodule Csvm.InstructionSet do
       # Push PC -> RS
       step0 = FarmProc.push_rs(farm_proc, crash_address)
       # set PC to 0,0
-      step1 = FarmProc.set_pc_ptr(step0, Pointer.null())
+      step1 = FarmProc.set_pc_ptr(step0, Pointer.null(step0))
       # Set status to crashed, return the farmproc
       FarmProc.set_status(step1, :crashed)
     end
@@ -67,7 +67,6 @@ defmodule Csvm.InstructionSet do
     body_addr = FarmProc.get_body_address(farm_proc, FarmProc.get_pc_ptr(farm_proc))
 
     if FarmProc.is_null_address?(body_addr) do
-      IO.puts "SEQUENCE COMPLETE, RETURNING"
       Ops.return(farm_proc)
     else
       Ops.call(farm_proc, body_addr)
