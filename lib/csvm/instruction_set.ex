@@ -1,5 +1,6 @@
 defmodule Csvm.InstructionSet do
   alias Csvm.{AST, FarmProc, Instruction, SysCallHandler}
+  import Csvm.Utils
   import Instruction, only: [simple_io_instruction: 1]
   import SysCallHandler, only: [apply_sys_call_fun: 2]
 
@@ -47,7 +48,7 @@ defmodule Csvm.InstructionSet do
       farm_proc
       |> FarmProc.push_rs(crash_address)
       # set PC to 0,0
-      |> FarmProc.set_pc_ptr(Pointer.null(FarmProc.get_zero_page_num(farm_proc)))
+      |> FarmProc.set_pc_ptr(Pointer.null(FarmProc.get_zero_page(farm_proc)))
       # Set status to crashed, return the farmproc
       |> FarmProc.set_status(:crashed)
       |> FarmProc.set_crash_reason(reason)
@@ -117,10 +118,10 @@ defmodule Csvm.InstructionSet do
     sequence_id = FarmProc.get_cell_attr(farm_proc, pc, :sequence_id)
     next_ptr = FarmProc.get_next_address(farm_proc, pc)
 
-    if FarmProc.has_page?(farm_proc, Address.new(sequence_id)) do
+    if FarmProc.has_page?(farm_proc, addr(sequence_id)) do
       farm_proc
       |> FarmProc.push_rs(next_ptr)
-      |> FarmProc.set_pc_ptr(Pointer.new(Address.new(sequence_id), Address.new(1)))
+      |> FarmProc.set_pc_ptr(ptr(sequence_id, 1))
     else
       # Step 0: Unslice current address.
       data = AST.unslice(heap, pc.heap_address)
@@ -145,9 +146,9 @@ defmodule Csvm.InstructionSet do
 
         FarmProc.push_rs(farm_proc, next_ptr)
         # Step 4: Add the new page.
-        |> FarmProc.new_page(Address.new(sequence_id), new_heap)
+        |> FarmProc.new_page(addr(sequence_id), new_heap)
         # Step 5: Set PC to Ptr(1, 1)
-        |> FarmProc.set_pc_ptr(Pointer.new(Address.new(sequence_id), Address.new(1)))
+        |> FarmProc.set_pc_ptr(ptr(sequence_id, 1))
         |> FarmProc.clear_io_result()
 
       {:error, reason} ->

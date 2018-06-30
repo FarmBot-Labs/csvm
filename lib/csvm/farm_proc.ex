@@ -6,6 +6,7 @@ defmodule Csvm.FarmProc do
     InstructionSet
   }
 
+  import Csvm.Utils
   alias AST.Heap
 
   @instruction_set InstructionSet
@@ -48,7 +49,7 @@ defmodule Csvm.FarmProc do
       FarmProc,
       status: :ok,
       zero_page: page,
-      pc: Pointer.new(page, Address.new(1)),
+      pc: Pointer.new(page, addr(1)),
       sys_call_fun: sys_call_fun,
       heap: %{page => heap}
     )
@@ -60,8 +61,8 @@ defmodule Csvm.FarmProc do
     %FarmProc{farm_proc | heap: new_heap}
   end
 
-  @spec get_zero_page_num(FarmProc.t()) :: page
-  def get_zero_page_num(%FarmProc{} = farm_proc) do
+  @spec get_zero_page(FarmProc.t()) :: page
+  def get_zero_page(%FarmProc{} = farm_proc) do
     farm_proc.zero_page
   end
 
@@ -188,7 +189,7 @@ defmodule Csvm.FarmProc do
   def pop_rs(%FarmProc{rs: rs} = farm_proc) do
     case rs do
       [hd | new_rs] -> {hd, %FarmProc{farm_proc | rs: new_rs}}
-      [] -> {Pointer.null(FarmProc.get_zero_page_num(farm_proc)), farm_proc}
+      [] -> {Pointer.null(FarmProc.get_zero_page(farm_proc)), farm_proc}
     end
   end
 
