@@ -1,7 +1,8 @@
 defmodule AddressTest do
   use ExUnit.Case, async: true
+
   test "inspect gives nice stuff" do
-    assert inspect(Address.new(100)) == "Address(100)"
+    assert inspect(Address.new(100)) == "#Address<100>"
   end
 
   test "increments an address" do
@@ -13,5 +14,4 @@ defmodule AddressTest do
     base = Address.new(123)
     assert Address.dec(base) == Address.new(122)
   end
-
 end

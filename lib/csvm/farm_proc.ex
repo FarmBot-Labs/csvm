@@ -5,6 +5,7 @@ defmodule Csvm.FarmProc do
     SysCallHandler,
     InstructionSet
   }
+
   alias AST.Heap
 
   @instruction_set InstructionSet
@@ -27,6 +28,7 @@ defmodule Csvm.FarmProc do
   @typedoc "Page address register"
   @type page :: Address.t()
 
+  @typedoc "Possible values of the status attribute."
   @type status_enum :: :ok | :crashed | :waiting
 
   @type t :: %FarmProc{
@@ -41,8 +43,7 @@ defmodule Csvm.FarmProc do
 
   @spec new(Csvm.SysCallHandler.sys_call_fun(), page, Heap.t()) :: FarmProc.t()
   def new(sys_call_fun, %Address{} = page, %Heap{} = heap)
-      when is_function(sys_call_fun)
-       do
+      when is_function(sys_call_fun) do
     struct(
       FarmProc,
       status: :ok,
