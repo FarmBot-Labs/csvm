@@ -11,13 +11,22 @@ defmodule Csvm.Instruction do
             pc = FarmProc.get_pc_ptr(farm_proc)
             heap = FarmProc.get_heap_by_page_index(farm_proc, pc.page)
             data = Csvm.AST.Unslicer.run(heap, pc.heap_address)
-            latch = Csvm.SysCallHandler.apply_sys_call_fun(farm_proc.sys_call_fun, data)
+            latch = apply_sys_call_fun(farm_proc.sys_call_fun, data)
+
             FarmProc.set_status(farm_proc, :waiting)
             |> FarmProc.set_io_latch(latch)
-          :ok -> Csvm.InstructionSet.Ops.next_or_return(farm_proc)
-          {:ok, result} -> raise "Cant handle results: #{inspect {:ok, result}}"
-          {:error, reason} -> Csvm.InstructionSet.Ops.crash(farm_proc, reason)
-          other -> raise "Bad return value: #{inspect other}"
+
+          :ok ->
+            Csvm.InstructionSet.Ops.next_or_return(farm_proc)
+
+          {:ok, result} ->
+            raise "Cant handle results: #{inspect({:ok, result})}"
+
+          {:error, reason} ->
+            Csvm.InstructionSet.Ops.crash(farm_proc, reason)
+
+          other ->
+            raise "Bad return value: #{inspect(other)}"
         end
       end
     end

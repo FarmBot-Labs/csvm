@@ -33,6 +33,7 @@ defmodule Csvm.InstructionSet do
     def next_or_return(farm_proc) do
       pc_ptr = FarmProc.get_pc_ptr(farm_proc)
       addr = FarmProc.get_next_address(farm_proc, pc_ptr)
+      farm_proc = FarmProc.clear_io_result(farm_proc)
 
       if FarmProc.is_null_address?(addr) do
         Ops.return(farm_proc)
@@ -79,20 +80,24 @@ defmodule Csvm.InstructionSet do
     pc = FarmProc.get_pc_ptr(farm_proc)
     heap = FarmProc.get_heap_by_page_index(farm_proc, pc.page)
     data = Csvm.AST.Unslicer.run(heap, pc.heap_address)
-    latch = Csvm.SysCallHandler.apply_sys_call_fun(farm_proc.sys_call_fun, data)
+    latch = apply_sys_call_fun(farm_proc.sys_call_fun, data)
+
     farm_proc
-      |> FarmProc.set_status(:waiting)
-      |> FarmProc.set_io_latch(latch)
+    |> FarmProc.set_status(:waiting)
+    |> FarmProc.set_io_latch(latch)
   end
 
   def _if(%FarmProc{io_result: result} = farm_proc) do
     pc = FarmProc.get_pc_ptr(farm_proc)
+
     case result do
       {:ok, true} ->
         FarmProc.set_pc_ptr(farm_proc, FarmProc.get_cell_attr_as_pointer(farm_proc, pc, :___then))
+        |> FarmProc.clear_io_result()
 
       {:ok, false} ->
         FarmProc.set_pc_ptr(farm_proc, FarmProc.get_cell_attr_as_pointer(farm_proc, pc, :___else))
+        |> FarmProc.clear_io_result()
 
       :ok ->
         raise("Bad _if implementation.")
@@ -121,10 +126,11 @@ defmodule Csvm.InstructionSet do
     else
       # Step 0: Unslice current address.
       data = Csvm.AST.Unslicer.run(heap, pc.heap_address)
-      latch = Csvm.SysCallHandler.apply_sys_call_fun(farm_proc.sys_call_fun, data)
+      latch = apply_sys_call_fun(farm_proc.sys_call_fun, data)
+
       farm_proc
-        |> FarmProc.set_status(:waiting)
-        |> FarmProc.set_io_latch(latch)
+      |> FarmProc.set_status(:waiting)
+      |> FarmProc.set_io_latch(latch)
     end
   end
 
@@ -144,6 +150,7 @@ defmodule Csvm.InstructionSet do
         |> FarmProc.new_page(sequence_id, new_heap)
         # Step 5: Set PC to Ptr(1, 1)
         |> FarmProc.set_pc_ptr(Pointer.new(sequence_id, Address.new(1)))
+        |> FarmProc.clear_io_result()
 
       {:error, reason} ->
         Ops.crash(farm_proc, reason)
@@ -152,6 +159,4 @@ defmodule Csvm.InstructionSet do
         raise("Bad execute implementation.")
     end
   end
-
-
 end

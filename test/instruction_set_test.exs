@@ -18,7 +18,11 @@ defmodule Csvm.InstructionSetTest do
     fun = fn _ -> {:error, "whatever"} end
     heap = Slicer.run(@fixture)
     farm_proc = FarmProc.new(fun, 1, heap)
-    crashed = FarmProc.step(farm_proc)
+
+    waiting = FarmProc.step(farm_proc)
+    assert FarmProc.get_status(waiting) == :waiting
+
+    crashed = FarmProc.step(waiting)
     assert FarmProc.get_status(crashed) == :crashed
     assert FarmProc.get_crash_reason(crashed) == "whatever"
   end
@@ -29,7 +33,7 @@ defmodule Csvm.InstructionSetTest do
     farm_proc = FarmProc.new(fun, 1, heap)
 
     assert_raise RuntimeError, "Bad _if implementation.", fn ->
-      %{status: waiting} = farm_proc = FarmProc.step(farm_proc)
+      %{status: :waiting} = farm_proc = FarmProc.step(farm_proc)
       FarmProc.step(farm_proc)
     end
   end
@@ -41,7 +45,7 @@ defmodule Csvm.InstructionSetTest do
     farm_proc = FarmProc.new(fun, 1, heap)
 
     assert_raise RuntimeError, "Bad execute implementation.", fn ->
-      %{status: waiting} = farm_proc = FarmProc.step(farm_proc)
+      %{status: :waiting} = farm_proc = FarmProc.step(farm_proc)
       FarmProc.step(farm_proc)
     end
   end

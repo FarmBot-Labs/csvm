@@ -5,7 +5,7 @@ defmodule Csvm.FarmProcTest do
   alias Csvm.AST
 
   test "init a new farm_proc" do
-    fun = fn _kind, _args ->
+    fun = fn _ast ->
       :ok
     end
 
@@ -15,6 +15,23 @@ defmodule Csvm.FarmProcTest do
     assert FarmProc.get_heap_by_page_index(farm_proc, 0) == heap
     assert FarmProc.get_return_stack(farm_proc) == []
     assert FarmProc.get_kind(farm_proc, FarmProc.get_pc_ptr(farm_proc)) == :sequence
+  end
+
+  test "IO functions require 2 steps" do
+    fun = fn _ast -> :ok end
+    heap = AST.new(:move_relative, %{x: 1, y: 2, z: 3}, []) |> AST.Slicer.run()
+    step0 = FarmProc.new(fun, 1, heap)
+    assert FarmProc.get_status(step0) == :ok
+
+    # Step into the `move_relative` block.
+    # step1: waiting for IO to complete async.
+    step1 = FarmProc.step(step0)
+    assert FarmProc.get_status(step1) == :waiting
+
+    # step2: IO is _probably_ completed by now. Complete the step.
+    # This is _technically_ a race condition, but it shouldn't fail in this case
+    step2 = FarmProc.step(step1)
+    assert FarmProc.get_status(step2) == :ok
   end
 
   test "io functions crash the vm" do
@@ -65,28 +82,16 @@ defmodule Csvm.FarmProcTest do
   test "performs all the steps" do
     this = self()
 
-    always_false_fun = fn ast ->
+    fun = fn ast ->
       send(this, ast)
-
-      case ast.kind do
-        :_if -> {:ok, false}
-        _ -> :ok
-      end
+      :ok
     end
 
-    always_true_fun = fn ast ->
-      send(this, ast)
-
-      case ast.kind do
-        :_if -> {:ok, true}
-        _ -> :ok
-      end
-    end
-
-    step0 = FarmProc.new(always_false_fun, 2, Csvm.TestSupport.Fixtures.heap())
+    step0 = FarmProc.new(fun, 2, Csvm.TestSupport.Fixtures.heap())
     assert FarmProc.get_kind(step0, FarmProc.get_pc_ptr(step0)) == :sequence
     %FarmProc{} = step1 = FarmProc.step(step0)
     assert Enum.count(FarmProc.get_return_stack(step1)) == 1
+    assert FarmProc.get_status(step1) == :ok
 
     pc_pointer = FarmProc.get_pc_ptr(step1)
     actual_kind = FarmProc.get_kind(step1, pc_pointer)
@@ -94,18 +99,23 @@ defmodule Csvm.FarmProcTest do
     assert actual_kind == :move_absolute
     assert step1_cell[:speed] == 100
 
-    # Perform "move_abs"
-    %FarmProc{} = %{status: :waiting} = step1 = FarmProc.step(step1)
+    # Perform "move_abs" pt1
     %FarmProc{} = step2 = FarmProc.step(step1)
+    assert FarmProc.get_status(step2) == :waiting
+
+    # Perform "move_abs" pt2
+    %FarmProc{} = step3 = FarmProc.step(step2)
+    assert FarmProc.get_status(step3) == :ok
+
     # Make sure side effects are called
-    pc_pointer = FarmProc.get_pc_ptr(step2)
-    actual_kind = FarmProc.get_kind(step2, pc_pointer)
-    step2_cell = FarmProc.get_cell_by_address(step2, pc_pointer)
+    pc_pointer = FarmProc.get_pc_ptr(step3)
+    actual_kind = FarmProc.get_kind(step3, pc_pointer)
+    step3_cell = FarmProc.get_cell_by_address(step3, pc_pointer)
     assert actual_kind == :move_relative
-    assert step2_cell[:x] == 10
-    assert step2_cell[:y] == 20
-    assert step2_cell[:z] == 30
-    assert step2_cell[:speed] == 50
+    assert step3_cell[:x] == 10
+    assert step3_cell[:y] == 20
+    assert step3_cell[:z] == 30
+    assert step3_cell[:speed] == 50
     # Test side effects.
 
     assert_receive %Csvm.AST{
@@ -123,8 +133,13 @@ defmodule Csvm.FarmProcTest do
       kind: :move_absolute
     }
 
-    # Make sure that `Ops.next` is moving correctly.
-    %FarmProc{} = step3 = FarmProc.step(step2)
+    # Perform "move_rel" pt1
+    %FarmProc{} = step4 = FarmProc.step(step3)
+    assert FarmProc.get_status(step4) == :waiting
+
+    # Perform "move_rel" pt2
+    %FarmProc{} = step5 = FarmProc.step(step4)
+    assert FarmProc.get_status(step5) == :ok
 
     assert_receive %Csvm.AST{
       kind: :move_relative,
@@ -137,7 +152,13 @@ defmodule Csvm.FarmProcTest do
       }
     }
 
-    %FarmProc{} = step4 = FarmProc.step(step3)
+    # Perform "write_pin" pt1
+    %FarmProc{} = step6 = FarmProc.step(step5)
+    assert FarmProc.get_status(step6) == :waiting
+
+    # Perform "write_pin" pt2
+    %FarmProc{} = step7 = FarmProc.step(step6)
+    assert FarmProc.get_status(step7) == :ok
 
     assert_receive %Csvm.AST{
       kind: :write_pin,
@@ -148,7 +169,13 @@ defmodule Csvm.FarmProcTest do
       }
     }
 
-    %FarmProc{} = step5 = FarmProc.step(step4)
+    # Perform "write_pin" pt1
+    %FarmProc{} = step8 = FarmProc.step(step7)
+    assert FarmProc.get_status(step8) == :waiting
+
+    # Perform "write_pin" pt2
+    %FarmProc{} = step9 = FarmProc.step(step8)
+    assert FarmProc.get_status(step9) == :ok
 
     assert_receive %Csvm.AST{
       kind: :write_pin,
@@ -165,7 +192,13 @@ defmodule Csvm.FarmProcTest do
       }
     }
 
-    %FarmProc{} = step6 = FarmProc.step(step5)
+    # Perform "read_pin" pt1
+    %FarmProc{} = step10 = FarmProc.step(step9)
+    assert FarmProc.get_status(step10) == :waiting
+
+    # Perform "read_pin" pt2
+    %FarmProc{} = step11 = FarmProc.step(step10)
+    assert FarmProc.get_status(step11) == :ok
 
     assert_receive %Csvm.AST{
       kind: :read_pin,
@@ -176,7 +209,13 @@ defmodule Csvm.FarmProcTest do
       }
     }
 
-    %FarmProc{} = step7 = FarmProc.step(step6)
+    # Perform "read_pin" pt1
+    %FarmProc{} = step12 = FarmProc.step(step11)
+    assert FarmProc.get_status(step12) == :waiting
+
+    # Perform "read_pin" pt2
+    %FarmProc{} = step13 = FarmProc.step(step12)
+    assert FarmProc.get_status(step13) == :ok
 
     assert_receive %Csvm.AST{
       kind: :read_pin,
@@ -193,7 +232,13 @@ defmodule Csvm.FarmProcTest do
       }
     }
 
-    %FarmProc{} = step8 = FarmProc.step(step7)
+    # Perform "read_pin" pt1
+    %FarmProc{} = step14 = FarmProc.step(step13)
+    assert FarmProc.get_status(step14) == :waiting
+
+    # Perform "read_pin" pt2
+    %FarmProc{} = step15 = FarmProc.step(step14)
+    assert FarmProc.get_status(step15) == :ok
 
     assert_receive %Csvm.AST{
       kind: :wait,
@@ -202,7 +247,13 @@ defmodule Csvm.FarmProcTest do
       }
     }
 
-    %FarmProc{} = step9 = FarmProc.step(step8)
+    # Perform "send_message" pt1
+    %FarmProc{} = step16 = FarmProc.step(step15)
+    assert FarmProc.get_status(step16) == :waiting
+
+    # Perform "send_message" pt2
+    %FarmProc{} = step17 = FarmProc.step(step16)
+    assert FarmProc.get_status(step17) == :ok
 
     assert_receive %Csvm.AST{
       kind: :send_message,
@@ -217,7 +268,13 @@ defmodule Csvm.FarmProcTest do
       ]
     }
 
-    %FarmProc{} = step10 = FarmProc.step(step9)
+    # Perform "find_home" pt1
+    %FarmProc{} = step18 = FarmProc.step(step17)
+    assert FarmProc.get_status(step18) == :waiting
+
+    # Perform "find_home" pt2
+    %FarmProc{} = step19 = FarmProc.step(step18)
+    assert FarmProc.get_status(step19) == :ok
 
     assert_receive %Csvm.AST{
       kind: :find_home,
@@ -226,17 +283,6 @@ defmodule Csvm.FarmProcTest do
         axis: "all"
       }
     }
-
-    # Step 10, but _if is false -> nothing
-    %FarmProc{} = step11_false = FarmProc.step(step10)
-    next_pc_ptr = FarmProc.get_pc_ptr(step11_false)
-    assert FarmProc.get_kind(step11_false, next_pc_ptr) == :nothing
-
-    # Step 10, but _if is true -> execute
-    step10_mod = replace_sys_call_fun(step10, always_true_fun)
-    %FarmProc{} = step11_true = FarmProc.step(step10_mod)
-    next_pc_ptr = FarmProc.get_pc_ptr(step11_true)
-    assert FarmProc.get_kind(step11_true, next_pc_ptr) == :execute
   end
 
   test "nonrecursive execute" do
@@ -254,24 +300,39 @@ defmodule Csvm.FarmProcTest do
 
     step0 = FarmProc.new(fun, 1, initial_heap)
     assert FarmProc.get_heap_by_page_index(step0, 1)
+    assert FarmProc.get_status(step0) == :ok
 
     assert_raise RuntimeError, ~r(page), fn ->
       FarmProc.get_heap_by_page_index(step0, 2)
     end
 
+    # enter sequence.
     step1 = FarmProc.step(step0)
-    %{status: :waiting} = step1 = FarmProc.step(step1)
+    assert FarmProc.get_status(step1) == :ok
+
+    # enter execute.
     step2 = FarmProc.step(step1)
+    assert FarmProc.get_status(step2) == :waiting
+
+    # Finish execute.
+    step2 = FarmProc.step(step2)
+    assert FarmProc.get_status(step2) == :ok
+
     assert FarmProc.get_heap_by_page_index(step2, 2)
     [ptr1, ptr2] = FarmProc.get_return_stack(step2)
     assert ptr1 == Pointer.new(1, Address.new(0))
     assert ptr2 == Pointer.new(1, Address.new(0))
 
+    # start sequence
     step3 = FarmProc.step(step2)
+    assert FarmProc.get_status(step3) == :ok
+
     [ptr3 | _] = FarmProc.get_return_stack(step3)
     assert ptr3 == Pointer.new(2, Address.new(0))
 
     step4 = FarmProc.step(step3)
+    assert FarmProc.get_status(step4) == :waiting
+
     step5 = FarmProc.step(step4)
     step6 = FarmProc.step(step5)
     step7 = FarmProc.step(step6)
@@ -363,7 +424,62 @@ defmodule Csvm.FarmProcTest do
     assert FarmProc.get_return_stack(next3) == []
   end
 
-  defp replace_sys_call_fun(%FarmProc{} = farm_proc, fun) when is_function(fun) do
-    %FarmProc{farm_proc | sys_call_fun: fun}
+  test "_if" do
+    pid = self()
+
+    fun_gen = fn bool ->
+      fn ast ->
+        if ast.kind == :_if do
+          send(pid, bool)
+          {:ok, bool}
+        else
+          :ok
+        end
+      end
+    end
+
+    nothing_ast = AST.new(:nothing, %{}, [])
+
+    heap =
+      AST.new(
+        :_if,
+        %{rhs: 0, op: "is_undefined", lhs: "x", _then: nothing_ast, _else: nothing_ast},
+        []
+      )
+      |> AST.Slicer.run()
+
+    truthy_step0 = FarmProc.new(fun_gen.(true), 1, heap)
+    truthy_step1 = FarmProc.step(truthy_step0)
+    assert FarmProc.get_status(truthy_step1) == :waiting
+    truthy_step2 = FarmProc.step(truthy_step1)
+    assert FarmProc.get_status(truthy_step2) == :ok
+    assert_received true
+
+    falsy_step0 = FarmProc.new(fun_gen.(false), 1, heap)
+    falsy_step1 = FarmProc.step(falsy_step0)
+    assert FarmProc.get_status(falsy_step1) == :waiting
+    falsy_step2 = FarmProc.step(falsy_step1)
+    assert FarmProc.get_status(falsy_step2) == :ok
+    assert_received false
+  end
+
+  test "IO isn't instant" do
+    sleep_time = 100
+
+    fun = fn _move_relative_ast ->
+      Process.sleep(sleep_time)
+      :ok
+    end
+
+    heap = AST.new(:move_relative, %{x: 1, y: 2, z: 0}, []) |> AST.Slicer.run()
+    step0 = FarmProc.new(fun, 1, heap)
+
+    step1 = FarmProc.step(step0)
+    step2 = FarmProc.step(step1)
+    assert FarmProc.get_status(step1) == :waiting
+    assert FarmProc.get_status(step2) == :waiting
+    Process.sleep(sleep_time)
+    final = FarmProc.step(step2)
+    assert FarmProc.get_status(final) == :ok
   end
 end

@@ -4,7 +4,7 @@ defmodule Csvm.SysCallHandler do
   @type return_value :: :ok | {:ok, any} | {:error, String.t()}
   @type sys_call_fun :: (ast -> return_value)
 
-  @spec apply_sys_call_fun(sys_call_fun, ast) :: return_value | no_return
+  @spec apply_sys_call_fun(sys_call_fun, ast) :: pid
   def apply_sys_call_fun(fun, ast) do
     {:ok, sys_call} = GenServer.start_link(__MODULE__, [fun, ast])
     sys_call
@@ -15,19 +15,18 @@ defmodule Csvm.SysCallHandler do
   end
 
   def get_results(sys_call) do
-    GenServer.call(sys_call, :get_results)
+    case GenServer.call(sys_call, :get_results) do
+      nil -> raise("no results")
+      results -> results
+    end
   end
 
   def init([fun, ast]) do
-    pid = spawn_monitor __MODULE__, :do_apply, [fun, ast]
+    pid = spawn_link(__MODULE__, :do_apply, [self(), fun, ast])
     {:ok, %{status: :ok, results: nil, pid: pid}}
   end
 
-  def terminate(reason, state) do
-    IO.puts "WHOOPS???: #{inspect reason}"
-  end
-
-  def handle_info({:DOWN, _ref, :process, _pid, info}, %{pid: pid} = state) do
+  def handle_info({_pid, info}, state) do
     {:noreply, %{state | results: info, status: :complete}}
   end
 
@@ -36,14 +35,14 @@ defmodule Csvm.SysCallHandler do
   end
 
   def handle_call(:get_results, _from, %{results: nil} = state) do
-    {:stop, "no results", state}
+    {:stop, :normal, nil, state}
   end
 
   def handle_call(:get_results, _from, %{results: results} = state) do
     {:stop, :normal, results, state}
   end
 
-  def do_apply(fun, ast) do
-    exit(apply(fun, [ast]))
+  def do_apply(pid, fun, ast) do
+    send(pid, {self(), apply(fun, [ast])})
   end
 end

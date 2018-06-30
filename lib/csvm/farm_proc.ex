@@ -95,9 +95,10 @@ defmodule Csvm.FarmProc do
 
   def step(%FarmProc{status: :waiting} = farm_proc) do
     case Csvm.SysCallHandler.get_status(farm_proc.io_latch) do
-      :ok -> farm_proc
+      :ok ->
+        farm_proc
+
       :complete ->
-        IO.puts "getting IO"
         FarmProc.set_status(farm_proc, :ok)
         |> FarmProc.set_io_latch_result(Csvm.SysCallHandler.get_results(farm_proc.io_latch))
         |> FarmProc.remove_io_latch()
@@ -132,6 +133,10 @@ defmodule Csvm.FarmProc do
 
   def set_io_latch_result(%FarmProc{} = farm_proc, result) do
     %FarmProc{farm_proc | io_result: result}
+  end
+
+  def clear_io_result(%FarmProc{} = farm_proc) do
+    %FarmProc{farm_proc | io_result: nil}
   end
 
   def remove_io_latch(%FarmProc{} = farm_proc) do
