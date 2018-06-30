@@ -3,7 +3,7 @@ defmodule Csvm.SysCallHandler do
   @type ast :: Csvm.AST.t()
   @type return_value :: :ok | {:ok, any} | {:error, String.t()}
   @type sys_call_fun :: (ast -> return_value)
-  @opaque sys_call :: pid
+  @type sys_call :: pid
 
   @spec apply_sys_call_fun(sys_call_fun, ast) :: sys_call
   def apply_sys_call_fun(fun, ast) do

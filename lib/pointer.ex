@@ -15,7 +15,7 @@ defmodule Pointer do
   @doc """
   Returns a new Pointer.
   """
-  @spec new(Address.t(), Address.t()) :: Poiinter.t()
+  @spec new(Address.t(), Address.t()) :: Pointer.t()
   def new(%Address{} = page_address, %Address{} = heap_address) do
     %Pointer{
       heap_address: heap_address,
