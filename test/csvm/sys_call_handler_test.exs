@@ -1,7 +1,6 @@
 defmodule Csvm.SysCallHandlerTest do
   use ExUnit.Case, async: true
-  alias Csvm.SysCallHandler
-  alias Csvm.AST
+  alias Csvm.{AST, SysCallHandler}
 
   test "trying to get results before they are ready crashes" do
     Process.flag(:trap_exit, true)

@@ -32,6 +32,6 @@ defmodule Address do
   end
 
   defimpl Inspect, for: __MODULE__ do
-    def inspect(%{value: val}, _), do: "HeapAddress(#{val})"
+    def inspect(%{value: val}, _), do: "Address(#{val})"
   end
 end

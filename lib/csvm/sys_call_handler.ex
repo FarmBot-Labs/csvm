@@ -3,17 +3,20 @@ defmodule Csvm.SysCallHandler do
   @type ast :: Csvm.AST.t()
   @type return_value :: :ok | {:ok, any} | {:error, String.t()}
   @type sys_call_fun :: (ast -> return_value)
+  @opaque sys_call :: pid
 
-  @spec apply_sys_call_fun(sys_call_fun, ast) :: pid
+  @spec apply_sys_call_fun(sys_call_fun, ast) :: sys_call
   def apply_sys_call_fun(fun, ast) do
     {:ok, sys_call} = GenServer.start_link(__MODULE__, [fun, ast])
     sys_call
   end
 
+  @spec get_status(sys_call) :: :ok | :complete
   def get_status(sys_call) do
     GenServer.call(sys_call, :get_status)
   end
 
+  @spec get_results(sys_call) :: return_value | no_return()
   def get_results(sys_call) do
     case GenServer.call(sys_call, :get_results) do
       nil -> raise("no results")

@@ -3,6 +3,8 @@ defmodule Csvm.AST do
   Handy functions for turning various data types into Farbot Celery Script
   Ast nodes.
   """
+  alias Csvm.AST
+  alias AST.{Heap, Slicer, Unslicer}
 
   @typedoc "Arguments to a ast node."
   @type args :: map
@@ -75,4 +77,10 @@ defmodule Csvm.AST do
     %__MODULE__{kind: String.to_atom(to_string(kind)), args: args, body: body}
     |> decode()
   end
+
+  @spec slice(AST.t()) :: Heap.t()
+  def slice(%AST{} = ast), do: Slicer.run(ast)
+
+  @spec unslice(Heap.t(), Address.t()) :: AST.t()
+  def unslice(%Heap{} = heap, %Address{} = addr), do: Unslicer.run(heap, addr)
 end

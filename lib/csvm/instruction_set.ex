@@ -1,9 +1,7 @@
 defmodule Csvm.InstructionSet do
-  alias Csvm.AST
-  alias Csvm.FarmProc
-  alias Csvm.FarmProc.Pointer
-  import Csvm.Instruction, only: [simple_io_instruction: 1]
-  import Csvm.SysCallHandler, only: [apply_sys_call_fun: 2]
+  alias Csvm.{AST, FarmProc, Instruction, SysCallHandler}
+  import Instruction, only: [simple_io_instruction: 1]
+  import SysCallHandler, only: [apply_sys_call_fun: 2]
 
   defmodule Ops do
     @spec call(FarmProc.t(), Pointer.t()) :: FarmProc.t()
@@ -49,7 +47,7 @@ defmodule Csvm.InstructionSet do
       farm_proc
       |> FarmProc.push_rs(crash_address)
       # set PC to 0,0
-      |> FarmProc.set_pc_ptr(Pointer.null(farm_proc))
+      |> FarmProc.set_pc_ptr(Pointer.null(FarmProc.get_zero_page_num(farm_proc)))
       # Set status to crashed, return the farmproc
       |> FarmProc.set_status(:crashed)
       |> FarmProc.set_crash_reason(reason)
@@ -78,7 +76,7 @@ defmodule Csvm.InstructionSet do
   @spec _if(FarmProc.t()) :: FarmProc.t()
   def _if(%FarmProc{io_result: nil} = farm_proc) do
     pc = FarmProc.get_pc_ptr(farm_proc)
-    heap = FarmProc.get_heap_by_page_index(farm_proc, pc.page)
+    heap = FarmProc.get_heap_by_page_index(farm_proc, pc.page_address)
     data = Csvm.AST.Unslicer.run(heap, pc.heap_address)
     latch = apply_sys_call_fun(farm_proc.sys_call_fun, data)
 
@@ -115,17 +113,17 @@ defmodule Csvm.InstructionSet do
   @spec execute(FarmProc.t()) :: FarmProc.t()
   def execute(%FarmProc{io_result: nil} = farm_proc) do
     pc = FarmProc.get_pc_ptr(farm_proc)
-    heap = FarmProc.get_heap_by_page_index(farm_proc, pc.page)
+    heap = FarmProc.get_heap_by_page_index(farm_proc, pc.page_address)
     sequence_id = FarmProc.get_cell_attr(farm_proc, pc, :sequence_id)
     next_ptr = FarmProc.get_next_address(farm_proc, pc)
 
-    if FarmProc.has_page?(farm_proc, sequence_id) do
+    if FarmProc.has_page?(farm_proc, Address.new(sequence_id)) do
       farm_proc
       |> FarmProc.push_rs(next_ptr)
-      |> FarmProc.set_pc_ptr(Pointer.new(sequence_id, Address.new(1)))
+      |> FarmProc.set_pc_ptr(Pointer.new(Address.new(sequence_id), Address.new(1)))
     else
       # Step 0: Unslice current address.
-      data = Csvm.AST.Unslicer.run(heap, pc.heap_address)
+      data = AST.unslice(heap, pc.heap_address)
       latch = apply_sys_call_fun(farm_proc.sys_call_fun, data)
 
       farm_proc
@@ -147,9 +145,9 @@ defmodule Csvm.InstructionSet do
 
         FarmProc.push_rs(farm_proc, next_ptr)
         # Step 4: Add the new page.
-        |> FarmProc.new_page(sequence_id, new_heap)
+        |> FarmProc.new_page(Address.new(sequence_id), new_heap)
         # Step 5: Set PC to Ptr(1, 1)
-        |> FarmProc.set_pc_ptr(Pointer.new(sequence_id, Address.new(1)))
+        |> FarmProc.set_pc_ptr(Pointer.new(Address.new(sequence_id), Address.new(1)))
         |> FarmProc.clear_io_result()
 
       {:error, reason} ->

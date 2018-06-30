@@ -1,8 +1,7 @@
 defmodule Csvm.FarmProcTest do
   use ExUnit.Case
-  alias Csvm.FarmProc
-  alias Csvm.FarmProc.Pointer
-  alias Csvm.AST
+  alias Csvm.{AST, FarmProc}
+  alias Pointer
 
   test "init a new farm_proc" do
     fun = fn _ast ->
@@ -10,9 +9,9 @@ defmodule Csvm.FarmProcTest do
     end
 
     heap = Csvm.TestSupport.Fixtures.heap()
-    farm_proc = FarmProc.new(fun, 0, heap)
-    assert FarmProc.get_pc_ptr(farm_proc) == Pointer.new(0, Address.new(1))
-    assert FarmProc.get_heap_by_page_index(farm_proc, 0) == heap
+    farm_proc = FarmProc.new(fun, Address.new(0), heap)
+    assert FarmProc.get_pc_ptr(farm_proc) == Pointer.new(Address.new(0), Address.new(1))
+    assert FarmProc.get_heap_by_page_index(farm_proc, Address.new(0)) == heap
     assert FarmProc.get_return_stack(farm_proc) == []
     assert FarmProc.get_kind(farm_proc, FarmProc.get_pc_ptr(farm_proc)) == :sequence
   end
@@ -20,7 +19,7 @@ defmodule Csvm.FarmProcTest do
   test "IO functions require 2 steps" do
     fun = fn _ast -> :ok end
     heap = AST.new(:move_relative, %{x: 1, y: 2, z: 3}, []) |> AST.Slicer.run()
-    step0 = FarmProc.new(fun, 1, heap)
+    step0 = FarmProc.new(fun, Address.new(1), heap)
     assert FarmProc.get_status(step0) == :ok
 
     # Step into the `move_relative` block.
@@ -37,45 +36,43 @@ defmodule Csvm.FarmProcTest do
   test "io functions crash the vm" do
     fun = fn _ -> {:error, "movement error"} end
     heap = AST.new(:move_relative, %{x: 100, y: 123, z: 0}, []) |> Csvm.AST.Slicer.run()
-    step0 = FarmProc.new(fun, 0, heap)
+    step0 = FarmProc.new(fun, Address.new(0), heap)
     step1 = FarmProc.step(step0)
-    assert FarmProc.get_pc_ptr(step1).page == 0
+    assert FarmProc.get_pc_ptr(step1).page_address == Address.new(0)
     assert FarmProc.get_status(step1) == :waiting
     step2 = FarmProc.step(step1)
     assert FarmProc.get_status(step2) == :crashed
-    assert FarmProc.get_pc_ptr(step2) == Pointer.null(step1)
+    assert FarmProc.get_pc_ptr(step2) == Pointer.null(FarmProc.get_zero_page_num(step1))
   end
 
   test "io functions bad return values raise runtime exception" do
     fun = fn _ -> {:eroror, 100} end
     heap = AST.new(:move_relative, %{x: 100, y: 123, z: 0}, []) |> Csvm.AST.Slicer.run()
-    step0 = FarmProc.new(fun, 0, heap)
+    step0 = FarmProc.new(fun, Address.new(0), heap)
     step1 = FarmProc.step(step0)
     assert FarmProc.get_status(step1) == :waiting
     assert Process.alive?(step1.io_latch)
-    # require IEx; IEx.pry
-    # FarmProc.step(step1)
 
     assert_raise RuntimeError, "Bad return value: {:eroror, 100}", fn ->
-      Process.alive?(step1.io_latch)
+      assert Process.alive?(step1.io_latch)
       FarmProc.step(step1)
     end
   end
 
   test "get_body_address" do
-    farm_proc = FarmProc.new(fn _ -> :ok end, 0, Csvm.TestSupport.Fixtures.heap())
-    data = FarmProc.get_body_address(farm_proc, Pointer.new(0, Address.new(1)))
+    farm_proc = FarmProc.new(fn _ -> :ok end, Address.new(0), Csvm.TestSupport.Fixtures.heap())
+    data = FarmProc.get_body_address(farm_proc, Pointer.new(Address.new(0), Address.new(1)))
     refute FarmProc.is_null_address?(data)
   end
 
   test "null address" do
-    farm_proc = FarmProc.new(fn _ -> :ok end, 0, Csvm.TestSupport.Fixtures.heap())
-    assert FarmProc.is_null_address?(Pointer.null(farm_proc))
+    farm_proc = FarmProc.new(fn _ -> :ok end, Address.new(0), Csvm.TestSupport.Fixtures.heap())
+    assert FarmProc.is_null_address?(Pointer.null(FarmProc.get_zero_page_num(farm_proc)))
     assert FarmProc.is_null_address?(Address.null())
-    assert FarmProc.is_null_address?(Pointer.new(0, Address.new(0)))
+    assert FarmProc.is_null_address?(Pointer.new(Address.new(0), Address.new(0)))
     assert FarmProc.is_null_address?(Address.new(0))
-    assert FarmProc.is_null_address?(Pointer.new(100, Address.new(0)))
-    refute FarmProc.is_null_address?(Pointer.new(100, Address.new(50)))
+    assert FarmProc.is_null_address?(Pointer.new(Address.new(100), Address.new(0)))
+    refute FarmProc.is_null_address?(Pointer.new(Address.new(100), Address.new(50)))
     refute FarmProc.is_null_address?(Address.new(99))
   end
 
@@ -87,7 +84,7 @@ defmodule Csvm.FarmProcTest do
       :ok
     end
 
-    step0 = FarmProc.new(fun, 2, Csvm.TestSupport.Fixtures.heap())
+    step0 = FarmProc.new(fun, Address.new(2), Csvm.TestSupport.Fixtures.heap())
     assert FarmProc.get_kind(step0, FarmProc.get_pc_ptr(step0)) == :sequence
     %FarmProc{} = step1 = FarmProc.step(step0)
     assert Enum.count(FarmProc.get_return_stack(step1)) == 1
@@ -298,12 +295,12 @@ defmodule Csvm.FarmProcTest do
       end
     end
 
-    step0 = FarmProc.new(fun, 1, initial_heap)
-    assert FarmProc.get_heap_by_page_index(step0, 1)
+    step0 = FarmProc.new(fun, Address.new(1), initial_heap)
+    assert FarmProc.get_heap_by_page_index(step0, Address.new(1))
     assert FarmProc.get_status(step0) == :ok
 
     assert_raise RuntimeError, ~r(page), fn ->
-      FarmProc.get_heap_by_page_index(step0, 2)
+      FarmProc.get_heap_by_page_index(step0, Address.new(2))
     end
 
     # enter sequence.
@@ -318,17 +315,17 @@ defmodule Csvm.FarmProcTest do
     step2 = FarmProc.step(step2)
     assert FarmProc.get_status(step2) == :ok
 
-    assert FarmProc.get_heap_by_page_index(step2, 2)
+    assert FarmProc.get_heap_by_page_index(step2, Address.new(2))
     [ptr1, ptr2] = FarmProc.get_return_stack(step2)
-    assert ptr1 == Pointer.new(1, Address.new(0))
-    assert ptr2 == Pointer.new(1, Address.new(0))
+    assert ptr1 == Pointer.new(Address.new(1), Address.new(0))
+    assert ptr2 == Pointer.new(Address.new(1), Address.new(0))
 
     # start sequence
     step3 = FarmProc.step(step2)
     assert FarmProc.get_status(step3) == :ok
 
     [ptr3 | _] = FarmProc.get_return_stack(step3)
-    assert ptr3 == Pointer.new(2, Address.new(0))
+    assert ptr3 == Pointer.new(Address.new(2), Address.new(0))
 
     step4 = FarmProc.step(step3)
     assert FarmProc.get_status(step4) == :waiting
@@ -337,13 +334,13 @@ defmodule Csvm.FarmProcTest do
     step6 = FarmProc.step(step5)
     step7 = FarmProc.step(step6)
     assert FarmProc.get_return_stack(step7) == []
-    assert FarmProc.get_pc_ptr(step7) == Pointer.null(step7)
+    assert FarmProc.get_pc_ptr(step7) == Pointer.null(FarmProc.get_zero_page_num(step7))
   end
 
   test "raises when trying to step thru a crashed proc" do
     heap = AST.new(:execute, %{sequence_id: 100}, []) |> AST.Slicer.run()
     fun = fn _ -> {:error, "could not find sequence"} end
-    step0 = FarmProc.new(fun, 1, heap)
+    step0 = FarmProc.new(fun, Address.new(1), heap)
     waiting = FarmProc.step(step0)
     crashed = FarmProc.step(waiting)
     assert FarmProc.get_status(crashed) == :crashed
@@ -365,7 +362,7 @@ defmodule Csvm.FarmProcTest do
     end
 
     heap = AST.Slicer.run(sequence_5)
-    step0 = FarmProc.new(fun, 5, heap)
+    step0 = FarmProc.new(fun, Address.new(5), heap)
 
     step1 = FarmProc.step(step0)
     assert Enum.count(FarmProc.get_return_stack(step1)) == 1
@@ -378,7 +375,7 @@ defmodule Csvm.FarmProcTest do
 
     pc = FarmProc.get_pc_ptr(step3)
     zero_page_num = FarmProc.get_zero_page_num(step3)
-    assert pc.page == zero_page_num
+    assert pc.page_address == zero_page_num
 
     step999 =
       Enum.reduce(0..996, step3, fn _, acc ->
@@ -394,7 +391,7 @@ defmodule Csvm.FarmProcTest do
     heap = AST.new(:sequence, %{}, [AST.new(:fire_laser, %{}, [])]) |> Csvm.AST.Slicer.run()
 
     assert_raise RuntimeError, "No implementation for: fire_laser", fn ->
-      step_0 = FarmProc.new(fn _ -> :ok end, 0, heap)
+      step_0 = FarmProc.new(fn _ -> :ok end, Address.new(0), heap)
       step_1 = FarmProc.step(step_0)
       _step_2 = FarmProc.step(step_1)
     end
@@ -402,25 +399,25 @@ defmodule Csvm.FarmProcTest do
 
   test "sequence with no body halts" do
     heap = AST.new(:sequence, %{}, []) |> Csvm.AST.Slicer.run()
-    farm_proc = FarmProc.new(fn _ -> :ok end, 0, heap)
+    farm_proc = FarmProc.new(fn _ -> :ok end, Address.new(0), heap)
     assert FarmProc.get_status(farm_proc) == :ok
 
     # step into the sequence.
     next = FarmProc.step(farm_proc)
-    assert FarmProc.get_pc_ptr(next) == Pointer.null(next)
+    assert FarmProc.get_pc_ptr(next) == Pointer.null(FarmProc.get_zero_page_num(next))
     assert FarmProc.get_return_stack(next) == []
 
     # Each following step should still be stopped/paused.
     next1 = FarmProc.step(next)
-    assert FarmProc.get_pc_ptr(next1) == Pointer.null(next1)
+    assert FarmProc.get_pc_ptr(next1) == Pointer.null(FarmProc.get_zero_page_num(next1))
     assert FarmProc.get_return_stack(next1) == []
 
     next2 = FarmProc.step(next1)
-    assert FarmProc.get_pc_ptr(next2) == Pointer.null(next2)
+    assert FarmProc.get_pc_ptr(next2) == Pointer.null(FarmProc.get_zero_page_num(next2))
     assert FarmProc.get_return_stack(next2) == []
 
     next3 = FarmProc.step(next2)
-    assert FarmProc.get_pc_ptr(next3) == Pointer.null(next3)
+    assert FarmProc.get_pc_ptr(next3) == Pointer.null(FarmProc.get_zero_page_num(next3))
     assert FarmProc.get_return_stack(next3) == []
   end
 
@@ -448,14 +445,14 @@ defmodule Csvm.FarmProcTest do
       )
       |> AST.Slicer.run()
 
-    truthy_step0 = FarmProc.new(fun_gen.(true), 1, heap)
+    truthy_step0 = FarmProc.new(fun_gen.(true), Address.new(1), heap)
     truthy_step1 = FarmProc.step(truthy_step0)
     assert FarmProc.get_status(truthy_step1) == :waiting
     truthy_step2 = FarmProc.step(truthy_step1)
     assert FarmProc.get_status(truthy_step2) == :ok
     assert_received true
 
-    falsy_step0 = FarmProc.new(fun_gen.(false), 1, heap)
+    falsy_step0 = FarmProc.new(fun_gen.(false), Address.new(1), heap)
     falsy_step1 = FarmProc.step(falsy_step0)
     assert FarmProc.get_status(falsy_step1) == :waiting
     falsy_step2 = FarmProc.step(falsy_step1)
@@ -472,7 +469,7 @@ defmodule Csvm.FarmProcTest do
     end
 
     heap = AST.new(:move_relative, %{x: 1, y: 2, z: 0}, []) |> AST.Slicer.run()
-    step0 = FarmProc.new(fun, 1, heap)
+    step0 = FarmProc.new(fun, Address.new(1), heap)
 
     step1 = FarmProc.step(step0)
     step2 = FarmProc.step(step1)
