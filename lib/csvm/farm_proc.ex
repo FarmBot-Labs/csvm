@@ -151,12 +151,6 @@ defmodule Csvm.FarmProc do
     %FarmProc{farm_proc | status: status}
   end
 
-  # TODO(Rick): Use `cell` type, not `map`. - 28 JUN 18
-  # @spec get_pc_cell(FarmProc.t()) :: Heap.cell()
-  # def get_pc_cell(%FarmProc{} = farm_proc) do
-  #   get_cell_by_address(farm_proc, get_pc_ptr(farm_proc))
-  # end
-
   @spec get_body_address(FarmProc.t(), Pointer.t()) :: Pointer.t()
   def get_body_address(%FarmProc{} = farm_proc, %Pointer{} = here_address) do
     get_cell_attr_as_pointer(farm_proc, here_address, Heap.body())
