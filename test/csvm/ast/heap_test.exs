@@ -3,34 +3,6 @@ defmodule Csvm.AST.HeapTest do
   alias Csvm.AST
   alias AST.Heap
 
-  describe "Address" do
-    test "inspect gives nice stuff" do
-      assert inspect(Address.new(100)) == "HeapAddress(100)"
-    end
-
-    test "increments an address" do
-      base = Address.new(123)
-      assert Address.inc(base) == Address.new(124)
-    end
-
-    test "decrements an address" do
-      base = Address.new(123)
-      assert Address.dec(base) == Address.new(122)
-    end
-  end
-
-  test "initializes a new heap" do
-    heap = Heap.new()
-    assert is_null?(heap.here)
-  end
-
-  test "alots one kind on the heap" do
-    heap = Heap.new()
-    aloted = Heap.alot(heap, "abc")
-    assert aloted.here == Address.new(1)
-    assert match?(%{:__kind => "abc"}, aloted.entries[Address.new(1)])
-  end
-
   test "Heap access with address" do
     heap =
       Heap.new()

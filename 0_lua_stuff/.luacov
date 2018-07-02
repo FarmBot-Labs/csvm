@@ -1,8 +1,0 @@
-return {
-    -- Patterns for files to include when reporting
-    -- all will be included if nothing is listed
-    -- (exclude overrules include, do not include
-    -- the .lua extension, path separator is always '/')
-    ["include"] = { 'src' },
-    ["exclude"] = { '_test' }
-  }

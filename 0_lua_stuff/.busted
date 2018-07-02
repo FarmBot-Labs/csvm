@@ -1,7 +1,0 @@
-return {
-  _all = {
-    coverage = true,
-    verbose = true,
-    pattern = "_test.lua"
-  },
-}

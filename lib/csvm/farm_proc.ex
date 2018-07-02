@@ -1,8 +1,15 @@
 defmodule Csvm.FarmProc do
-  alias Csvm.FarmProc
-  alias Csvm.AST.Heap
+  alias Csvm.{
+    AST,
+    FarmProc,
+    SysCallHandler,
+    InstructionSet
+  }
 
-  @instruction_set Csvm.InstructionSet
+  import Csvm.Utils
+  alias AST.Heap
+
+  @instruction_set InstructionSet
   @max_reduction_count 1000
 
   defstruct sys_call_fun: nil,
@@ -10,6 +17,8 @@ defmodule Csvm.FarmProc do
             reduction_count: 0,
             pc: nil,
             rs: [],
+            io_latch: nil,
+            io_result: nil,
             crash_reason: nil,
             status: :ok,
             heap: %{}
@@ -18,32 +27,13 @@ defmodule Csvm.FarmProc do
   @type heap_address :: Address.t()
 
   @typedoc "Page address register"
-  @type page :: integer
+  @type page :: Address.t()
 
-  @type status_enum :: :ok | :crashed
-
-  defmodule Pointer do
-    defstruct [:heap_address, :page]
-    @type t :: %__MODULE__{heap_address: FarmProc.heap_address(), page: FarmProc.page()}
-    @spec new(FarmProc.page(), FarmProc.heap_address()) :: t
-    def new(page, %Address{} = ha) when is_integer(page) do
-      %Pointer{
-        heap_address: ha,
-        page: page
-      }
-    end
-
-    @spec null(FarmProc.t()) :: t()
-    def null(%FarmProc{} = farm_proc) do
-      %Pointer{
-        heap_address: Address.new(0),
-        page: FarmProc.get_zero_page_num(farm_proc)
-      }
-    end
-  end
+  @typedoc "Possible values of the status attribute."
+  @type status_enum :: :ok | :crashed | :waiting
 
   @type t :: %FarmProc{
-          sys_call_fun: Csvm.SysCallHandler.sys_call_fun(),
+          sys_call_fun: SysCallHandler.sys_call_fun(),
           status: status_enum(),
           zero_page: page,
           pc: Pointer.t(),
@@ -53,32 +43,31 @@ defmodule Csvm.FarmProc do
         }
 
   @spec new(Csvm.SysCallHandler.sys_call_fun(), page, Heap.t()) :: FarmProc.t()
-  def new(sys_call_fun, page_num, %Heap{} = heap)
-      when is_function(sys_call_fun)
-      when is_integer(page_num) do
+  def new(sys_call_fun, %Address{} = page, %Heap{} = heap)
+      when is_function(sys_call_fun) do
     struct(
       FarmProc,
       status: :ok,
-      zero_page: page_num,
-      pc: Pointer.new(page_num, Address.new(1)),
+      zero_page: page,
+      pc: Pointer.new(page, addr(1)),
       sys_call_fun: sys_call_fun,
-      heap: %{page_num => heap}
+      heap: %{page => heap}
     )
   end
 
   @spec new_page(FarmProc.t(), page, Heap.t()) :: FarmProc.t()
-  def new_page(%FarmProc{} = farm_proc, page_num, heap_contents) do
+  def new_page(%FarmProc{} = farm_proc, %Address{} = page_num, %Heap{} = heap_contents) do
     new_heap = Map.put(farm_proc.heap, page_num, heap_contents)
     %FarmProc{farm_proc | heap: new_heap}
   end
 
-  @spec get_zero_page_num(FarmProc.t()) :: page
-  def get_zero_page_num(%FarmProc{} = farm_proc) do
+  @spec get_zero_page(FarmProc.t()) :: page
+  def get_zero_page(%FarmProc{} = farm_proc) do
     farm_proc.zero_page
   end
 
   @spec has_page?(FarmProc.t(), page) :: boolean()
-  def has_page?(%FarmProc{} = farm_proc, page) do
+  def has_page?(%FarmProc{} = farm_proc, %Address{} = page) do
     Map.has_key?(farm_proc.heap, page)
   end
 
@@ -91,6 +80,19 @@ defmodule Csvm.FarmProc do
     raise("Too many reductions!")
   end
 
+  def step(%FarmProc{status: :waiting} = farm_proc) do
+    case Csvm.SysCallHandler.get_status(farm_proc.io_latch) do
+      :ok ->
+        farm_proc
+
+      :complete ->
+        FarmProc.set_status(farm_proc, :ok)
+        |> FarmProc.set_io_latch_result(Csvm.SysCallHandler.get_results(farm_proc.io_latch))
+        |> FarmProc.remove_io_latch()
+        |> FarmProc.step()
+    end
+  end
+
   def step(%FarmProc{} = farm_proc) do
     pc_ptr = get_pc_ptr(farm_proc)
     kind = get_kind(farm_proc, pc_ptr)
@@ -100,7 +102,7 @@ defmodule Csvm.FarmProc do
     end
 
     farm_proc = %FarmProc{farm_proc | reduction_count: farm_proc.reduction_count + 1}
-    # IO.puts "executing: [#{pc_ptr.page}, #{inspect pc_ptr.heap_address}] #{kind}"
+    # IO.puts "executing: [#{pc_ptr.page_address}, #{inspect pc_ptr.heap_address}] #{kind}"
     apply(@instruction_set, kind, [farm_proc])
   end
 
@@ -112,8 +114,24 @@ defmodule Csvm.FarmProc do
     %FarmProc{farm_proc | pc: pc}
   end
 
+  def set_io_latch(%FarmProc{} = farm_proc, pid) when is_pid(pid) do
+    %FarmProc{farm_proc | io_latch: pid}
+  end
+
+  def set_io_latch_result(%FarmProc{} = farm_proc, result) do
+    %FarmProc{farm_proc | io_result: result}
+  end
+
+  def clear_io_result(%FarmProc{} = farm_proc) do
+    %FarmProc{farm_proc | io_result: nil}
+  end
+
+  def remove_io_latch(%FarmProc{} = farm_proc) do
+    %FarmProc{farm_proc | io_latch: nil}
+  end
+
   @spec get_heap_by_page_index(FarmProc.t(), page) :: Heap.t() | no_return
-  def get_heap_by_page_index(%FarmProc{heap: heap}, page) do
+  def get_heap_by_page_index(%FarmProc{heap: heap}, %Address{} = page) do
     heap[page] || raise("no page")
   end
 
@@ -133,12 +151,6 @@ defmodule Csvm.FarmProc do
     %FarmProc{farm_proc | status: status}
   end
 
-  # TODO(Rick): Use `cell` type, not `map`. - 28 JUN 18
-  # @spec get_pc_cell(FarmProc.t()) :: Heap.cell()
-  # def get_pc_cell(%FarmProc{} = farm_proc) do
-  #   get_cell_by_address(farm_proc, get_pc_ptr(farm_proc))
-  # end
-
   @spec get_body_address(FarmProc.t(), Pointer.t()) :: Pointer.t()
   def get_body_address(%FarmProc{} = farm_proc, %Pointer{} = here_address) do
     get_cell_attr_as_pointer(farm_proc, here_address, Heap.body())
@@ -155,9 +167,10 @@ defmodule Csvm.FarmProc do
     cell[field] || raise("#{inspect(cell)} has no field called: #{field}")
   end
 
+  @spec get_cell_attr_as_pointer(FarmProc.t(), Pointer.t(), atom) :: Pointer.t()
   def get_cell_attr_as_pointer(%FarmProc{} = farm_proc, %Pointer{} = location, field) do
     %Address{} = data = get_cell_attr(farm_proc, location, field)
-    Pointer.new(location.page, data)
+    Pointer.new(location.page_address, data)
   end
 
   @spec push_rs(FarmProc.t(), Pointer.t()) :: FarmProc.t()
@@ -170,7 +183,7 @@ defmodule Csvm.FarmProc do
   def pop_rs(%FarmProc{rs: rs} = farm_proc) do
     case rs do
       [hd | new_rs] -> {hd, %FarmProc{farm_proc | rs: new_rs}}
-      [] -> {Pointer.null(farm_proc), farm_proc}
+      [] -> {Pointer.null(FarmProc.get_zero_page(farm_proc)), farm_proc}
     end
   end
 
@@ -196,7 +209,7 @@ defmodule Csvm.FarmProc do
   @spec get_cell_by_address(FarmProc.t(), Pointer.t()) :: map | no_return
   def get_cell_by_address(
         %FarmProc{} = farm_proc,
-        %Pointer{page: page, heap_address: %Address{} = ha}
+        %Pointer{page_address: page, heap_address: %Address{} = ha}
       ) do
     get_heap_by_page_index(farm_proc, page)[ha] || raise("bad address")
   end
