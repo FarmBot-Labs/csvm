@@ -143,6 +143,11 @@ defmodule Csvm.FarmProc do
     get_cell_by_address(farm_proc, ptr)[Heap.kind()]
   end
 
+  @spec get_parent(FarmProc.t(), Pointer.t()) :: atom
+  def get_parent(%FarmProc{} = farm_proc, %Pointer{} = ptr) do
+    get_cell_by_address(farm_proc, ptr)[Heap.parent()]
+  end
+
   @spec get_status(FarmProc.t()) :: status_enum()
   def get_status(%FarmProc{status: status}), do: status
 
