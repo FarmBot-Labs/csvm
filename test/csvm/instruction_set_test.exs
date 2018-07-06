@@ -37,6 +37,8 @@ defmodule Csvm.InstructionSetTest do
     end
   end
 
+  test "move absolute bad implementation"
+
   test "execute handles bad interaction layer implementation." do
     fun = fn _ -> {:ok, :not_ast} end
     ast = AST.new(:execute, %{sequence_id: 100}, [])

@@ -63,11 +63,12 @@ defmodule Csvm.InstructionSet do
     heap = FarmProc.get_heap_by_page_index(farm_proc, pc.page_address)
     data = AST.unslice(heap, pc.heap_address)
 
-    data = if data.args.location.kind == :identifier do
-      Resolver.resolve(farm_proc, pc, data.args.location.args.label)
-    else
-      data
-    end
+    data =
+      if data.args.location.kind == :identifier do
+        Resolver.resolve(farm_proc, pc, data.args.location.args.label)
+      else
+        data
+      end
 
     case farm_proc.io_result do
       nil ->
@@ -80,7 +81,12 @@ defmodule Csvm.InstructionSet do
         InstructionSet.Ops.next_or_return(farm_proc)
 
       {:ok, %AST{} = result} ->
-        latch = apply_sys_call_fun(farm_proc.sys_call_fun, AST.new(:move_absolute, %{location: result}, []))
+        latch =
+          apply_sys_call_fun(
+            farm_proc.sys_call_fun,
+            AST.new(:move_absolute, %{location: result}, [])
+          )
+
         FarmProc.set_status(farm_proc, :waiting)
         |> FarmProc.set_io_latch(latch)
 

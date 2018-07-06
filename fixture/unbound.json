@@ -1,5 +1,5 @@
 {
- "id": 456,
+ "id": 123,
  "kind": "sequence",
  "args": {
   "version": 20180209,
@@ -13,8 +13,8 @@
      "data_value": {
       "kind": "point",
       "args": {
-       "pointer_type": "Plant",
-       "pointer_id": 456
+       "pointer_type": "GenericPointer",
+       "pointer_id": 123
       }
      }
     }
@@ -24,7 +24,7 @@
  "body": [{
    "kind": "wait",
    "args": {
-    "milliseconds": 1000
+    "milliseconds": 1050
    }
   },
   {
@@ -34,7 +34,7 @@
     "location": {
      "kind": "identifier",
      "args": {
-      "label": "var1"
+      "label": "var20"
      }
     },
     "offset": {
@@ -45,12 +45,6 @@
       "z": 0
      }
     }
-   }
-  },
-  {
-   "kind": "execute",
-   "args": {
-    "sequence_id": 123
    }
   }
  ]

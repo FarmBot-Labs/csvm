@@ -9,23 +9,34 @@ defmodule Csvm.ResolverTest do
     |> AST.decode()
   end
 
-  test "variable resolution" do
-    pid = self()
-    {:ok, agent} = Agent.start_link fn -> 0 end
-    fun = fn ast ->
+  defp io_fun(pid) do
+    {:ok, agent} = Agent.start_link(fn -> 0 end)
+
+    fn ast ->
       case ast.kind do
         :point ->
-          :ok = Agent.update(agent, fn(old) -> old + 1 end)
-          {:ok, AST.new(:coordinate, %{x: Agent.get(agent, fn(data) -> data end), y: 100, z: 100}, [])}
+          :ok = Agent.update(agent, fn old -> old + 1 end)
+
+          {:ok,
+           AST.new(:coordinate, %{x: Agent.get(agent, fn data -> data end), y: 100, z: 100}, [])}
+
+        :wait ->
+          send(pid, ast)
+          :ok
+
         :move_absolute ->
           send(pid, ast)
           :ok
-        :execute -> {:ok, fetch_fixture("fixture/inner_sequence.json")}
+
+        :execute ->
+          {:ok, fetch_fixture("fixture/inner_sequence.json")}
       end
     end
+  end
 
+  test "variable resolution" do
     outer_json = fetch_fixture("fixture/outer_sequence.json") |> AST.Slicer.run()
-    farm_proc0 = FarmProc.new(fun, addr(0), outer_json)
+    farm_proc0 = FarmProc.new(io_fun(self()), addr(0), outer_json)
 
     farm_proc1 =
       Enum.reduce(0..120, farm_proc0, fn _num, acc ->
@@ -34,9 +45,46 @@ defmodule Csvm.ResolverTest do
 
     assert FarmProc.get_status(farm_proc1) == :ok
 
-    assert_received %Csvm.AST{args: %{location: %Csvm.AST{args: %{x: 1, y: 100, z: 100}, body: [], comment: nil, kind: :coordinate}}, kind: :move_absolute}
-    assert_received %Csvm.AST{args: %{location: %Csvm.AST{args: %{x: 2, y: 100, z: 100}, body: [], comment: nil, kind: :coordinate}}, kind: :move_absolute}
+    assert_received %Csvm.AST{
+      args: %{
+        location: %Csvm.AST{
+          args: %{x: 1, y: 100, z: 100},
+          body: [],
+          comment: nil,
+          kind: :coordinate
+        }
+      },
+      kind: :move_absolute
+    }
+
+    assert_received %Csvm.AST{
+      args: %{
+        location: %Csvm.AST{
+          args: %{x: 2, y: 100, z: 100},
+          body: [],
+          comment: nil,
+          kind: :coordinate
+        }
+      },
+      kind: :move_absolute
+    }
+
+    assert_received %Csvm.AST{args: %{milliseconds: 1000}, body: [], comment: nil, kind: :wait}
+    assert_received %Csvm.AST{args: %{milliseconds: 1050}, body: [], comment: nil, kind: :wait}
   end
+
+  test "sequence with unbound variable" do
+    unbound_json = fetch_fixture("fixture/unbound.json") |> AST.Slicer.run()
+    farm_proc0 = FarmProc.new(io_fun(self()), addr(0), unbound_json)
+
+    assert_raise RuntimeError, "unbound identifier: var20 from pc: #Pointer<0, 0>", fn ->
+      Enum.reduce(0..120, farm_proc0, fn _num, acc ->
+        wait_for_io(acc)
+      end)
+    end
+  end
+
+  test "won't traverse pages"
 
   def wait_for_io(%FarmProc{} = farm_proc, timeout \\ 1000) do
     timer = Process.send_after(self(), :timeout, timeout)
@@ -46,12 +94,14 @@ defmodule Csvm.ResolverTest do
   end
 
   defp do_step(%{status: :ok} = farm_proc), do: farm_proc
+
   defp do_step(farm_proc) do
     receive do
       :timeout -> raise("timed out waiting for farm_proc io!")
     after
       10 -> :notimeout
     end
+
     FarmProc.step(farm_proc)
     |> do_step()
   end
