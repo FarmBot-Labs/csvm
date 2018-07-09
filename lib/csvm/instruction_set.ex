@@ -166,7 +166,17 @@ defmodule Csvm.InstructionSet do
 
   @spec nothing(FarmProc.t()) :: FarmProc.t()
   def nothing(%FarmProc{} = farm_proc) do
-    Ops.next_or_return(farm_proc)
+    # tos         = List.last(farm_proc.rs)
+    # pc          = FarmProc.get_pc_ptr(farm_proc)
+    # is_whatever = tos == pc
+    results = Ops.next_or_return(farm_proc)
+    pc      = FarmProc.get_pc_ptr(results)
+    kind    = FarmProc.get_kind(results, pc)
+    if kind == :nothing do
+      FarmProc.set_status(results, :done)
+    else
+      results
+    end
   end
 
   @spec execute(FarmProc.t()) :: FarmProc.t()
