@@ -84,23 +84,32 @@ defmodule Csvm.ResolverTest do
 
   test "won't traverse pages" do
     fixture = File.read!("fixture/unbound_var_x.json") |> Jason.decode!()
-    outter  = fixture["outter"] |> AST.decode()    |> AST.slice()
-    inner   = fixture["inner"]  |> AST.decode()
+    outter = fixture["outter"] |> AST.decode() |> AST.slice()
+    inner = fixture["inner"] |> AST.decode()
+
     syscall = fn ast ->
-                case ast.kind do
-                  :point         ->
-                    {:ok, AST.new(:coordinate, %{x: 0, y: 1, z: 2}, [])}
-                  :move_absolute ->
-                    :ok
-                  :execute       ->
-                    {:ok, inner}
-                end
-              end
-    proc    = FarmProc.new(syscall, addr(456), outter)
-    result  = Enum.reduce(0..100, proc, fn _num, acc ->
-      wait_for_io(acc)
+      case ast.kind do
+        :point ->
+          {:ok, AST.new(:coordinate, %{x: 0, y: 1, z: 2}, [])}
+
+        :move_absolute ->
+          :ok
+
+        :execute ->
+          {:ok, inner}
+      end
+    end
+
+    proc = FarmProc.new(syscall, addr(456), outter)
+
+    assert_raise(RuntimeError, "unbound identifier: x from pc: #Pointer<123, 0>", fn ->
+      result =
+        Enum.reduce(0..100, proc, fn _num, acc ->
+          wait_for_io(acc)
+        end)
+
+      IO.inspect(result)
     end)
-    IO.inspect(result)
   end
 
   def wait_for_io(%FarmProc{} = farm_proc, timeout \\ 1000) do

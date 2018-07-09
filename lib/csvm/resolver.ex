@@ -24,8 +24,8 @@ defmodule Csvm.Resolver do
 
     if kind in @nodes_with_declerations do
       result = do_resolve(kind, farm_proc, pointer, label)
-      %Address{} = zero_page = FarmProc.get_zero_page(farm_proc)
-      %Pointer{} = new_pointer = Pointer.new(zero_page, FarmProc.get_parent(farm_proc, pointer))
+      %Address{} = page = pointer.page_address
+      %Pointer{} = new_pointer = Pointer.new(page, FarmProc.get_parent(farm_proc, pointer))
 
       if is_nil(result) do
         search_tree(farm_proc, new_pointer, label)
@@ -33,8 +33,8 @@ defmodule Csvm.Resolver do
         result
       end
     else
-      %Address{} = zero_page = FarmProc.get_zero_page(farm_proc)
-      %Pointer{} = new_pointer = Pointer.new(zero_page, FarmProc.get_parent(farm_proc, pointer))
+      %Address{} = page = pointer.page_address
+      %Pointer{} = new_pointer = Pointer.new(page, FarmProc.get_parent(farm_proc, pointer))
       search_tree(farm_proc, new_pointer, label)
     end
   end
