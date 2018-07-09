@@ -55,7 +55,6 @@ defmodule Csvm.InstructionSet do
     end
   end
 
-  # simple_io_instruction(:move_absolute)
   simple_io_instruction(:move_relative)
 
   def move_absolute(%FarmProc{} = farm_proc) do

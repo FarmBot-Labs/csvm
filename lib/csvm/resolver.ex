@@ -3,8 +3,6 @@ defmodule Csvm.Resolver do
 
   @nodes_with_declerations [:sequence]
 
-  # TODO(Connor)  09 JULY 2018 - Make a page be passed in here.
-
   @spec resolve(FarmProc.t(), Pointer.t(), String.t()) :: AST.t()
   def resolve(%FarmProc{} = farm_proc, %Pointer{} = pointer, label) when is_binary(label) do
     # step1 keep climbing (recursivly) __parent until kind in @nodes_with_declerations
