@@ -140,12 +140,12 @@ defmodule Csvm.FarmProc do
 
   @spec get_kind(FarmProc.t(), Pointer.t()) :: atom
   def get_kind(%FarmProc{} = farm_proc, %Pointer{} = ptr) do
-    get_cell_by_address(farm_proc, ptr)[Heap.kind()]
+    get_cell_attr(farm_proc, ptr, Heap.kind())
   end
 
-  @spec get_parent(FarmProc.t(), Pointer.t()) :: atom
+  @spec get_parent(FarmProc.t(), Pointer.t()) :: Address.t()
   def get_parent(%FarmProc{} = farm_proc, %Pointer{} = ptr) do
-    get_cell_by_address(farm_proc, ptr)[Heap.parent()]
+    get_cell_attr(farm_proc, ptr, Heap.parent())
   end
 
   @spec get_status(FarmProc.t()) :: status_enum()
@@ -166,7 +166,8 @@ defmodule Csvm.FarmProc do
     get_cell_attr_as_pointer(farm_proc, here_address, Heap.next())
   end
 
-  @spec get_cell_attr(FarmProc.t(), Pointer.t(), atom) :: any()
+  @spec get_cell_attr(FarmProc.t(), Pointer.t(), atom) ::
+          Address.t() | String.t() | number() | boolean() | atom()
   def get_cell_attr(%FarmProc{} = farm_proc, %Pointer{} = location, field) do
     cell = get_cell_by_address(farm_proc, location)
     cell[field] || raise("#{inspect(cell)} has no field called: #{field}")

@@ -3,8 +3,10 @@ defmodule Csvm.Resolver do
 
   @nodes_with_declerations [:sequence]
 
+  # TODO(Connor)  09 JULY 2018 - Make a page be passed in here.
+
   @spec resolve(FarmProc.t(), Pointer.t(), String.t()) :: AST.t()
-  def resolve(%FarmProc{} = farm_proc, %Pointer{} = pointer, label) do
+  def resolve(%FarmProc{} = farm_proc, %Pointer{} = pointer, label) when is_binary(label) do
     # step1 keep climbing (recursivly) __parent until kind in @nodes_with_declerations
     # step2 execute rule for resolution per node
     # step2.5 if no data, explode
@@ -13,7 +15,7 @@ defmodule Csvm.Resolver do
     search_tree(farm_proc, pointer, label)
   end
 
-  def search_tree(farm_proc, %Pointer{} = pointer, label) do
+  def search_tree(%FarmProc{} = farm_proc, %Pointer{} = pointer, label) when is_binary(label) do
     if FarmProc.is_null_address?(pointer) do
       raise "unbound identifier: #{label} from pc: #{inspect(pointer)}"
     end
