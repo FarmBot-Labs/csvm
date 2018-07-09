@@ -21,7 +21,7 @@ defmodule Csvm.ASTTest do
   end
 
   test "won't decode ast from bad json" do
-    assert_raise FunctionClauseError, fn ->
+    assert_raise RuntimeError, fn ->
       AST.decode(@bad_json)
     end
   end

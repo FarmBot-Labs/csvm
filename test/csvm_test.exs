@@ -1,26 +1,42 @@
 defmodule CsvmTest do
   use ExUnit.Case
-  doctest Csvm
+  alias Csvm.{AST, FarmProc}
+  @master_sequence File.read!("fixture/master_sequence.json") |> Jason.decode!()
 
   setup do
-    csvm = Csvm.new(StubbedInteractionHandler)
-    %{csvm: csvm}
+    fun = fn ast ->
+      raise("fixme")
+    end
+
+    {:ok, csvm} = Csvm.start_link([io_layer: fun], [])
+    {:ok, %{csvm: csvm}}
   end
 
-  # test "one tick", %{csvm: csvm} do
-  #   huge_example = %{
-  #     id: 123,
-  #     kind: "sequence",
-  #     args: %{},
-  #     body: [
-  #       %{kind: "take_photo", args: %{}}
-  #     ]
-  #   }
-  #
-  #   new_vm = Csvm.tick(csvm, huge_example)
-  #   assert Csvm.get_pc(new_vm) == 1
-  #   call_data = StubbedInteractionHandler.get_last_call(ih)
-  #   assert call_data.fn_name == :take_photo
-  #   assert call_data.fn_args == []
-  # end
+  test "master sequence", %{csvm: vm} do
+    id = Csvm.queue(vm, @master_sequence, 2)
+    proc = Csvm.await(vm, id)
+    refute FarmProc.get_status(proc) == :ok
+  end
+
+  test "won't try to start bad celeryscript", %{csvm: vm} do
+    assert_raise RuntimeError, "Bad ast: %{not_valid: :celeryscript}", fn ->
+      Csvm.queue(vm, %{not_valid: :celeryscript}, 1)
+    end
+  end
+
+  test "bad io causes crash" do
+    ast = AST.new(:wait, %{milliseconds: 10000}, [])
+
+    fun = fn _ast ->
+      {:error, "uh oh"}
+    end
+
+    {:ok, csvm} = Csvm.start_link([io_layer: fun], [])
+    id = Csvm.queue(csvm, ast, 0)
+    proc = Csvm.await(csvm, id)
+    assert FarmProc.get_status(proc) == :crashed
+    assert FarmProc.get_crash_reason(proc) == "uh oh"
+  end
+
+  test "runtime exceptions in the vm are caught."
 end

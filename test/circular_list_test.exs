@@ -59,9 +59,13 @@ defmodule CircularListTest do
       |> CircularList.push(:b)
       |> CircularList.push(:c)
 
-    cl1 = CircularList.reduce(cl0, fn({index, value}, acc) ->
-      if value == :b, do: Map.put(acc, index, :z), else: Map.put(acc, index, value)
-    end)
+    cl1 =
+      CircularList.reduce(cl0, fn {index, value}, acc ->
+        if value == :b,
+          do: Map.put(acc, index, :z),
+          else: Map.put(acc, index, value)
+      end)
+
     assert CircularList.current(cl1) == :z
   end
 end

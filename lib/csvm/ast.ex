@@ -57,6 +57,8 @@ defmodule Csvm.AST do
     }
   end
 
+  def decode(bad_ast), do: raise("Bad ast: #{inspect(bad_ast)}")
+
   # You can give a list of nodes.
   @spec decode_body([map]) :: [t()]
   def decode_body(body) when is_list(body) do

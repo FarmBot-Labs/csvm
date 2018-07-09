@@ -34,17 +34,24 @@ defmodule CircularList do
     this.items[index]
   end
 
+  @spec is_empty?(t()) :: boolean()
+  def is_empty?(%{items: items}) when map_size(items) == 0, do: true
+  def is_empty?(_this), do: false
+
   @spec reduce(t(), (index, data -> data)) :: t()
   def reduce(this, fun) do
     results = Enum.reduce(this.items, %{}, fun)
+
     %{this | items: results}
     |> rotate()
   end
 
   @spec update_current(t, (data -> data)) :: t
   def update_current(this, fun) do
-    result = fun.(current(this))
-    %{this | items: Map.put(this.items, get_index(this), result)}
+    index = get_index(this)
+    current_value = at(this, index)
+    result = fun.(current_value)
+    %{this | items: Map.put(this.items, index, result)}
   end
 
   @spec rotate(t) :: t

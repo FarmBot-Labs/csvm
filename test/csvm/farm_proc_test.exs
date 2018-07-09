@@ -3,6 +3,12 @@ defmodule Csvm.FarmProcTest do
   alias Csvm.{AST, FarmProc}
   import Csvm.Utils
 
+  test "inspects farm_proc" do
+    heap = Csvm.TestSupport.Fixtures.heap()
+    farm_proc = FarmProc.new(fn _ -> :ok end, addr(0), heap)
+    assert inspect(farm_proc) == "#FarmProc<[ok] #Pointer<0, 1>>"
+  end
+
   test "init a new farm_proc" do
     fun = fn _ast ->
       :ok
