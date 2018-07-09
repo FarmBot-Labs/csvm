@@ -37,7 +37,18 @@ defmodule Csvm.InstructionSetTest do
     end
   end
 
-  test "move absolute bad implementation"
+  test "move absolute bad implementation" do
+    zero00 = AST.new(:location, %{x: 0, y: 0, z: 0}, [])
+    fun    = fn _ -> :blah end
+    heap   = AST.new(:move_absolute, %{ location: zero00, offset: zero00}, [])
+              |> AST.slice()
+    proc   = FarmProc.new(fun, Address.new(0), heap)
+    assert_raise(RuntimeError, "Bad return value: :blah", fn ->
+      Enum.reduce(0..100, proc, fn(num, acc) ->
+        FarmProc.step(acc)
+      end)
+    end)
+  end
 
   test "execute handles bad interaction layer implementation." do
     fun = fn _ -> {:ok, :not_ast} end
