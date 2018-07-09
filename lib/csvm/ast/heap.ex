@@ -48,7 +48,12 @@ defmodule Csvm.AST.Heap do
   @type link :: atom
 
   @typedoc "individual heap entry."
-  @type cell :: map
+  @type cell :: %{
+          required(:__kind) => atom,
+          required(:__body) => Address.t(),
+          required(:__next) => Address.t(),
+          required(:__parent) => Address.t()
+        }
 
   @doc "Initialize a new heap."
   @spec new() :: t()
