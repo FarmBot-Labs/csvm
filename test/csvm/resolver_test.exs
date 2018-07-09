@@ -4,9 +4,7 @@ defmodule Csvm.ResolverTest do
   import Csvm.Utils
 
   def fetch_fixture(fname) do
-    File.read!(fname)
-    |> Jason.decode!()
-    |> AST.decode()
+    File.read!(fname) |> Jason.decode!() |> AST.decode()
   end
 
   defp io_fun(pid) do
@@ -84,7 +82,26 @@ defmodule Csvm.ResolverTest do
     end
   end
 
-  test "won't traverse pages"
+  test "won't traverse pages" do
+    fixture = File.read!("fixture/unbound_var_x.json") |> Jason.decode!()
+    outter  = fixture["outter"] |> AST.decode()    |> AST.slice()
+    inner   = fixture["inner"]  |> AST.decode()
+    syscall = fn ast ->
+                case ast.kind do
+                  :point         ->
+                    {:ok, AST.new(:coordinate, %{x: 0, y: 1, z: 2}, [])}
+                  :move_absolute ->
+                    :ok
+                  :execute       ->
+                    {:ok, inner}
+                end
+              end
+    proc    = FarmProc.new(syscall, addr(456), outter)
+    result  = Enum.reduce(0..100, proc, fn _num, acc ->
+      wait_for_io(acc)
+    end)
+    IO.inspect(result)
+  end
 
   def wait_for_io(%FarmProc{} = farm_proc, timeout \\ 1000) do
     timer = Process.send_after(self(), :timeout, timeout)
