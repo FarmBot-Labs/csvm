@@ -39,20 +39,28 @@ defmodule Csvm.InstructionSetTest do
 
   test "move absolute bad implementation" do
     zero00 = AST.new(:location, %{x: 0, y: 0, z: 0}, [])
-    fun    = fn _ -> :blah end
-    heap   = AST.new(:move_absolute, %{ location: zero00, offset: zero00}, [])
-              |> AST.slice()
-    proc   = FarmProc.new(fun, Address.new(0), heap)
+    fun = fn _ -> :blah end
+
+    heap =
+      AST.new(:move_absolute, %{location: zero00, offset: zero00}, [])
+      |> AST.slice()
+
+    proc = FarmProc.new(fun, Address.new(0), heap)
+
     assert_raise(RuntimeError, "Bad return value: :blah", fn ->
-      Enum.reduce(0..100, proc, fn(num, acc) ->
+      Enum.reduce(0..100, proc, fn num, acc ->
         FarmProc.step(acc)
       end)
     end)
-    fun2   = fn(_) -> {:error, "whatever"} end
-    proc2  = FarmProc.new(fun2, Address.new(0), heap)
-    result = Enum.reduce(0..1, proc2, fn(num, acc) ->
-      FarmProc.step(acc)
-    end)
+
+    fun2 = fn _ -> {:error, "whatever"} end
+    proc2 = FarmProc.new(fun2, Address.new(0), heap)
+
+    result =
+      Enum.reduce(0..1, proc2, fn num, acc ->
+        FarmProc.step(acc)
+      end)
+
     assert(FarmProc.get_status(result) == :crashed)
     assert(FarmProc.get_crash_reason(result) == "whatever")
   end
