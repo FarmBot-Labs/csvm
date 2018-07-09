@@ -16,7 +16,15 @@ defmodule Csvm.ResolverTest do
           :ok = Agent.update(agent, fn old -> old + 1 end)
 
           {:ok,
-           AST.new(:coordinate, %{x: Agent.get(agent, fn data -> data end), y: 100, z: 100}, [])}
+           AST.new(
+             :coordinate,
+             %{
+               x: Agent.get(agent, fn data -> data end),
+               y: 100,
+               z: 100
+             },
+             []
+           )}
 
         :wait ->
           send(pid, ast)
@@ -33,7 +41,9 @@ defmodule Csvm.ResolverTest do
   end
 
   test "variable resolution" do
-    outer_json = fetch_fixture("fixture/outer_sequence.json") |> AST.Slicer.run()
+    outer_json =
+      fetch_fixture("fixture/outer_sequence.json") |> AST.Slicer.run()
+
     farm_proc0 = FarmProc.new(io_fun(self()), addr(0), outer_json)
 
     farm_proc1 =
@@ -67,23 +77,38 @@ defmodule Csvm.ResolverTest do
       kind: :move_absolute
     }
 
-    assert_received %Csvm.AST{args: %{milliseconds: 1000}, body: [], comment: nil, kind: :wait}
-    assert_received %Csvm.AST{args: %{milliseconds: 1050}, body: [], comment: nil, kind: :wait}
+    assert_received %Csvm.AST{
+      args: %{milliseconds: 1000},
+      body: [],
+      comment: nil,
+      kind: :wait
+    }
+
+    assert_received %Csvm.AST{
+      args: %{milliseconds: 1050},
+      body: [],
+      comment: nil,
+      kind: :wait
+    }
   end
 
   test "sequence with unbound variable" do
     unbound_json = fetch_fixture("fixture/unbound.json") |> AST.Slicer.run()
+
     farm_proc0 = FarmProc.new(io_fun(self()), addr(0), unbound_json)
 
-    assert_raise RuntimeError, "unbound identifier: var20 from pc: #Pointer<0, 0>", fn ->
-      Enum.reduce(0..120, farm_proc0, fn _num, acc ->
-        wait_for_io(acc)
-      end)
-    end
+    assert_raise RuntimeError,
+                 "unbound identifier: var20 from pc: #Pointer<0, 0>",
+                 fn ->
+                   Enum.reduce(0..120, farm_proc0, fn _num, acc ->
+                     wait_for_io(acc)
+                   end)
+                 end
   end
 
   test "won't traverse pages" do
     fixture = File.read!("fixture/unbound_var_x.json") |> Jason.decode!()
+
     outter = fixture["outter"] |> AST.decode() |> AST.slice()
     inner = fixture["inner"] |> AST.decode()
 
@@ -102,14 +127,18 @@ defmodule Csvm.ResolverTest do
 
     proc = FarmProc.new(syscall, addr(456), outter)
 
-    assert_raise(RuntimeError, "unbound identifier: x from pc: #Pointer<123, 0>", fn ->
-      result =
-        Enum.reduce(0..100, proc, fn _num, acc ->
-          wait_for_io(acc)
-        end)
+    assert_raise(
+      RuntimeError,
+      "unbound identifier: x from pc: #Pointer<123, 0>",
+      fn ->
+        result =
+          Enum.reduce(0..100, proc, fn _num, acc ->
+            wait_for_io(acc)
+          end)
 
-      IO.inspect(result)
-    end)
+        IO.inspect(result)
+      end
+    )
   end
 
   def wait_for_io(%FarmProc{} = farm_proc, timeout \\ 1000) do

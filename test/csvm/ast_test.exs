@@ -2,7 +2,8 @@ defmodule Csvm.ASTTest do
   use ExUnit.Case, async: true
   alias Csvm.AST
 
-  @nothing_json "{\"kind\": \"nothing\", \"args\": {}}" |> Jason.decode!()
+  @nothing_json "{\"kind\": \"nothing\", \"args\": {}}"
+                |> Jason.decode!()
   @nothing_json_with_body "{\"kind\": \"nothing\", \"args\": {}, \"body\":[#{
                             Jason.encode!(@nothing_json)
                           }]}"

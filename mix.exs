@@ -10,7 +10,14 @@ defmodule Csvm.MixProject do
       elixirc_paths: elixirc_paths(Mix.env()),
       deps: deps(),
       elixirc_options: [warnings_as_errors: true],
-      dialyzer: [flags: ["-Wunmatched_returns", :error_handling, :race_conditions, :underspecs]],
+      dialyzer: [
+        flags: [
+          "-Wunmatched_returns",
+          :error_handling,
+          :race_conditions,
+          :underspecs
+        ]
+      ],
       test_coverage: [tool: ExCoveralls],
       preferred_cli_env: [
         test: :test,

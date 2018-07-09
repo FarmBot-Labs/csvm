@@ -42,4 +42,13 @@ defmodule CircularListTest do
     cl1 = CircularList.remove(cl0, index)
     assert CircularList.remove(cl1, index) == cl1
   end
+
+  test "update_at" do
+    cl0 =
+      CircularList.new()
+      |> CircularList.push(100)
+
+    cl1 = CircularList.update_current(cl0, fn old -> old + old end)
+    assert CircularList.current(cl1) == 200
+  end
 end

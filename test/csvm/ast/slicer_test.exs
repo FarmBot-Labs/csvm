@@ -171,30 +171,47 @@ defmodule Csvm.AST.SlicerTest do
     assert heap.here == Address.new(13)
 
     assert heap[addr(1)][@kind] == :"Elixir.Csvm.AST.Node.ROOT"
+
     assert heap[heap[addr(1)][@body]][@kind] == :"Elixir.Csvm.AST.Node.ROOT[0]"
+
     assert heap[heap[addr(1)][@next]][@kind] == :nothing
     assert heap[heap[addr(1)][@parent]][@kind] == :nothing
 
     assert heap[addr(2)][@kind] == :"Elixir.Csvm.AST.Node.ROOT[0]"
-    assert heap[heap[addr(2)][@body]][@kind] == :"Elixir.Csvm.AST.Node.ROOT[0][0]"
+
+    assert heap[heap[addr(2)][@body]][@kind] ==
+             :"Elixir.Csvm.AST.Node.ROOT[0][0]"
+
     assert heap[heap[addr(2)][@next]][@kind] == :"Elixir.Csvm.AST.Node.ROOT[1]"
+
     assert heap[heap[addr(2)][@parent]][@kind] == :"Elixir.Csvm.AST.Node.ROOT"
 
     # AST with more ast in the args and asts in the body
     assert heap[addr(11)][@kind] == :"Elixir.Csvm.AST.Node.ROOT[2][2]"
-    assert heap[heap[addr(11)][@body]][@kind] == :"Elixir.Csvm.AST.Node.ROOT[2][2][0]"
+
+    assert heap[heap[addr(11)][@body]][@kind] ==
+             :"Elixir.Csvm.AST.Node.ROOT[2][2][0]"
+
     assert heap[heap[addr(11)][@next]][@kind] == :nothing
-    assert heap[heap[addr(11)][@parent]][@kind] == :"Elixir.Csvm.AST.Node.ROOT[2][1]"
+
+    assert heap[heap[addr(11)][@parent]][@kind] ==
+             :"Elixir.Csvm.AST.Node.ROOT[2][1]"
 
     assert heap[addr(12)][@kind] == :"Elixir.Csvm.AST.Node.ROOT[2][2][0]"
+
     assert heap[heap[addr(12)][@body]][@kind] == :nothing
     assert heap[heap[addr(12)][@next]][@kind] == :nothing
-    assert heap[heap[addr(12)][@parent]][@kind] == :"Elixir.Csvm.AST.Node.ROOT[2][2]"
+
+    assert heap[heap[addr(12)][@parent]][@kind] ==
+             :"Elixir.Csvm.AST.Node.ROOT[2][2]"
 
     assert heap[addr(13)][@kind] == :"Elixir.Csvm.AST.Node.ROOT[2][-1]"
+
     assert heap[heap[addr(13)][@body]][@kind] == :nothing
     assert heap[heap[addr(13)][@next]][@kind] == :nothing
-    assert heap[heap[addr(13)][@parent]][@kind] == :"Elixir.Csvm.AST.Node.ROOT[2][2]"
+
+    assert heap[heap[addr(13)][@parent]][@kind] ==
+             :"Elixir.Csvm.AST.Node.ROOT[2][2]"
   end
 
   defp addr(num), do: Address.new(num)

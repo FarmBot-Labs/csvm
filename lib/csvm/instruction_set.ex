@@ -1,5 +1,13 @@
 defmodule Csvm.InstructionSet do
-  alias Csvm.{AST, FarmProc, Instruction, InstructionSet, SysCallHandler, Resolver}
+  alias Csvm.{
+    AST,
+    FarmProc,
+    Instruction,
+    InstructionSet,
+    SysCallHandler,
+    Resolver
+  }
+
   import Csvm.Utils
   import Instruction, only: [simple_io_instruction: 1]
   import SysCallHandler, only: [apply_sys_call_fun: 2]
@@ -105,7 +113,11 @@ defmodule Csvm.InstructionSet do
 
   @spec sequence(FarmProc.t()) :: FarmProc.t()
   def sequence(%FarmProc{} = farm_proc) do
-    body_addr = FarmProc.get_body_address(farm_proc, FarmProc.get_pc_ptr(farm_proc))
+    body_addr =
+      FarmProc.get_body_address(
+        farm_proc,
+        FarmProc.get_pc_ptr(farm_proc)
+      )
 
     if FarmProc.is_null_address?(body_addr) do
       Ops.return(farm_proc)
@@ -131,11 +143,17 @@ defmodule Csvm.InstructionSet do
 
     case result do
       {:ok, true} ->
-        FarmProc.set_pc_ptr(farm_proc, FarmProc.get_cell_attr_as_pointer(farm_proc, pc, :___then))
+        FarmProc.set_pc_ptr(
+          farm_proc,
+          FarmProc.get_cell_attr_as_pointer(farm_proc, pc, :___then)
+        )
         |> FarmProc.clear_io_result()
 
       {:ok, false} ->
-        FarmProc.set_pc_ptr(farm_proc, FarmProc.get_cell_attr_as_pointer(farm_proc, pc, :___else))
+        FarmProc.set_pc_ptr(
+          farm_proc,
+          FarmProc.get_cell_attr_as_pointer(farm_proc, pc, :___else)
+        )
         |> FarmProc.clear_io_result()
 
       :ok ->

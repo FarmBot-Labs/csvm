@@ -9,7 +9,13 @@ defmodule Csvm.Instruction do
         case farm_proc.io_result do
           nil ->
             pc = FarmProc.get_pc_ptr(farm_proc)
-            heap = FarmProc.get_heap_by_page_index(farm_proc, pc.page_address)
+
+            heap =
+              FarmProc.get_heap_by_page_index(
+                farm_proc,
+                pc.page_address
+              )
+
             data = AST.unslice(heap, pc.heap_address)
             latch = apply_sys_call_fun(farm_proc.sys_call_fun, data)
 

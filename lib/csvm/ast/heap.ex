@@ -65,7 +65,9 @@ defmodule Csvm.AST.Heap do
   @spec alot(t(), atom) :: t()
   def alot(%Heap{} = heap, kind) do
     here_plus_one = Address.inc(heap.here)
+
     new_entries = Map.put(heap.entries, here_plus_one, %{@kind => kind})
+
     %Heap{heap | here: here_plus_one, entries: new_entries}
   end
 
@@ -91,5 +93,6 @@ defmodule Csvm.AST.Heap do
   # Access behaviour.
   @doc false
   @spec fetch(t, Address.t()) :: {:ok, cell()}
-  def fetch(%Heap{} = heap, %Address{} = adr), do: Map.fetch(Heap.values(heap), adr)
+  def fetch(%Heap{} = heap, %Address{} = adr),
+    do: Map.fetch(Heap.values(heap), adr)
 end

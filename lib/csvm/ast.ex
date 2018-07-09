@@ -48,7 +48,13 @@ defmodule Csvm.AST do
   def decode(%{kind: kind, args: args} = thing) do
     body = thing[:body] || []
     comment = thing[:comment]
-    %__MODULE__{kind: kind, body: decode_body(body), args: decode_args(args), comment: comment}
+
+    %__MODULE__{
+      kind: kind,
+      body: decode_body(body),
+      args: decode_args(args),
+      comment: comment
+    }
   end
 
   # You can give a list of nodes.
@@ -74,7 +80,11 @@ defmodule Csvm.AST do
 
   @spec new(atom, map, [map]) :: t()
   def new(kind, args, body) when is_map(args) and is_list(body) do
-    %__MODULE__{kind: String.to_atom(to_string(kind)), args: args, body: body}
+    %__MODULE__{
+      kind: String.to_atom(to_string(kind)),
+      args: args,
+      body: body
+    }
     |> decode()
   end
 
@@ -82,5 +92,6 @@ defmodule Csvm.AST do
   def slice(%AST{} = ast), do: Slicer.run(ast)
 
   @spec unslice(Heap.t(), Address.t()) :: AST.t()
-  def unslice(%Heap{} = heap, %Address{} = addr), do: Unslicer.run(heap, addr)
+  def unslice(%Heap{} = heap, %Address{} = addr),
+    do: Unslicer.run(heap, addr)
 end

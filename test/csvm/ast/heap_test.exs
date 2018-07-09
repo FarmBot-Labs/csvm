@@ -22,7 +22,10 @@ defmodule Csvm.AST.HeapTest do
       |> Heap.alot("abc")
       |> Heap.put("key", "value")
 
-    assert match?(%{:__kind => "abc", key: "value"}, heap.entries[Address.new(1)])
+    assert match?(
+             %{:__kind => "abc", key: "value"},
+             heap.entries[Address.new(1)]
+           )
   end
 
   test "Puts key/value pairs at arbitrary addresses" do
@@ -33,7 +36,11 @@ defmodule Csvm.AST.HeapTest do
       |> Heap.alot("ghi")
 
     mutated = Heap.put(heap, Address.new(2), "abc_key", "value")
-    assert match?(%{:__kind => "def", abc_key: "value"}, mutated.entries[Address.new(2)])
+
+    assert match?(
+             %{:__kind => "def", abc_key: "value"},
+             mutated.entries[Address.new(2)]
+           )
   end
 
   test "Can't update on bad a address" do

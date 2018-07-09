@@ -38,7 +38,9 @@ defmodule Csvm.AST.Unslicer do
   @spec do_unslice(Heap.t(), Heap.link(), any, acc :: map) :: acc :: map
   defp do_unslice(_heap, @parent, _value, acc), do: acc
   defp do_unslice(_heap, @next, _value, acc), do: acc
-  defp do_unslice(_heap, @kind, value, acc), do: Map.put(acc, "kind", to_string(value))
+
+  defp do_unslice(_heap, @kind, value, acc),
+    do: Map.put(acc, "kind", to_string(value))
 
   defp do_unslice(heap, @body, value, acc) do
     if heap[value][@kind] == :nothing do
@@ -58,7 +60,8 @@ defmodule Csvm.AST.Unslicer do
   end
 
   @spec reduce_body(Heap.cell(), Address.t(), Heap.t(), [pre_ast]) :: [pre_ast]
-  defp reduce_body(%{__kind: :nothing}, _next_addr, _heap, acc), do: acc
+  defp reduce_body(%{__kind: :nothing}, _next_addr, _heap, acc),
+    do: acc
 
   defp reduce_body(%{} = cell, %Address{} = next_addr, heap, acc) do
     item = unslice(heap, next_addr)

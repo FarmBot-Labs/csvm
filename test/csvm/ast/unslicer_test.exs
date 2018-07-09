@@ -8,7 +8,12 @@ defmodule Csvm.AST.UnslicerTest do
     assert ast.kind == :sequence
 
     assert ast.args == %{
-             locals: %Csvm.AST{args: %{}, body: [], comment: nil, kind: :scope_declaration},
+             locals: %Csvm.AST{
+               args: %{},
+               body: [],
+               comment: nil,
+               kind: :scope_declaration
+             },
              version: 20_180_209
            }
 

@@ -56,7 +56,11 @@ defmodule Csvm.FarmProc do
   end
 
   @spec new_page(FarmProc.t(), page, Heap.t()) :: FarmProc.t()
-  def new_page(%FarmProc{} = farm_proc, %Address{} = page_num, %Heap{} = heap_contents) do
+  def new_page(
+        %FarmProc{} = farm_proc,
+        %Address{} = page_num,
+        %Heap{} = heap_contents
+      ) do
     new_heap = Map.put(farm_proc.heap, page_num, heap_contents)
     %FarmProc{farm_proc | heap: new_heap}
   end
@@ -76,7 +80,8 @@ defmodule Csvm.FarmProc do
     raise("Tried to step with crashed process!")
   end
 
-  def step(%FarmProc{reduction_count: c}) when c >= @max_reduction_count do
+  def step(%FarmProc{reduction_count: c})
+      when c >= @max_reduction_count do
     raise("Too many reductions!")
   end
 
@@ -87,7 +92,9 @@ defmodule Csvm.FarmProc do
 
       :complete ->
         FarmProc.set_status(farm_proc, :ok)
-        |> FarmProc.set_io_latch_result(Csvm.SysCallHandler.get_results(farm_proc.io_latch))
+        |> FarmProc.set_io_latch_result(
+          Csvm.SysCallHandler.get_results(farm_proc.io_latch)
+        )
         |> FarmProc.remove_io_latch()
         |> FarmProc.step()
     end
@@ -97,11 +104,16 @@ defmodule Csvm.FarmProc do
     pc_ptr = get_pc_ptr(farm_proc)
     kind = get_kind(farm_proc, pc_ptr)
 
-    unless Code.ensure_loaded?(@instruction_set) and function_exported?(@instruction_set, kind, 1) do
+    unless Code.ensure_loaded?(@instruction_set) and
+             function_exported?(@instruction_set, kind, 1) do
       raise("No implementation for: #{kind}")
     end
 
-    farm_proc = %FarmProc{farm_proc | reduction_count: farm_proc.reduction_count + 1}
+    farm_proc = %FarmProc{
+      farm_proc
+      | reduction_count: farm_proc.reduction_count + 1
+    }
+
     # IO.puts "executing: [#{pc_ptr.page_address}, #{inspect pc_ptr.heap_address}] #{kind}"
     apply(@instruction_set, kind, [farm_proc])
   end
@@ -157,24 +169,39 @@ defmodule Csvm.FarmProc do
   end
 
   @spec get_body_address(FarmProc.t(), Pointer.t()) :: Pointer.t()
-  def get_body_address(%FarmProc{} = farm_proc, %Pointer{} = here_address) do
+  def get_body_address(
+        %FarmProc{} = farm_proc,
+        %Pointer{} = here_address
+      ) do
     get_cell_attr_as_pointer(farm_proc, here_address, Heap.body())
   end
 
   @spec get_next_address(FarmProc.t(), Pointer.t()) :: Pointer.t()
-  def get_next_address(%FarmProc{} = farm_proc, %Pointer{} = here_address) do
+  def get_next_address(
+        %FarmProc{} = farm_proc,
+        %Pointer{} = here_address
+      ) do
     get_cell_attr_as_pointer(farm_proc, here_address, Heap.next())
   end
 
   @spec get_cell_attr(FarmProc.t(), Pointer.t(), atom) ::
           Address.t() | String.t() | number() | boolean() | atom()
-  def get_cell_attr(%FarmProc{} = farm_proc, %Pointer{} = location, field) do
+  def get_cell_attr(
+        %FarmProc{} = farm_proc,
+        %Pointer{} = location,
+        field
+      ) do
     cell = get_cell_by_address(farm_proc, location)
+
     cell[field] || raise("#{inspect(cell)} has no field called: #{field}")
   end
 
   @spec get_cell_attr_as_pointer(FarmProc.t(), Pointer.t(), atom) :: Pointer.t()
-  def get_cell_attr_as_pointer(%FarmProc{} = farm_proc, %Pointer{} = location, field) do
+  def get_cell_attr_as_pointer(
+        %FarmProc{} = farm_proc,
+        %Pointer{} = location,
+        field
+      ) do
     %Address{} = data = get_cell_attr(farm_proc, location, field)
     Pointer.new(location.page_address, data)
   end
@@ -188,8 +215,11 @@ defmodule Csvm.FarmProc do
   @spec pop_rs(FarmProc.t()) :: {Pointer.t(), FarmProc.t()}
   def pop_rs(%FarmProc{rs: rs} = farm_proc) do
     case rs do
-      [hd | new_rs] -> {hd, %FarmProc{farm_proc | rs: new_rs}}
-      [] -> {Pointer.null(FarmProc.get_zero_page(farm_proc)), farm_proc}
+      [hd | new_rs] ->
+        {hd, %FarmProc{farm_proc | rs: new_rs}}
+
+      [] ->
+        {Pointer.null(FarmProc.get_zero_page(farm_proc)), farm_proc}
     end
   end
 
@@ -199,7 +229,8 @@ defmodule Csvm.FarmProc do
   end
 
   @spec set_crash_reason(FarmProc.t(), String.t()) :: FarmProc.t()
-  def set_crash_reason(%FarmProc{} = crashed, reason) when is_binary(reason) do
+  def set_crash_reason(%FarmProc{} = crashed, reason)
+      when is_binary(reason) do
     %FarmProc{crashed | crash_reason: reason}
   end
 
