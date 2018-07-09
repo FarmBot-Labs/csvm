@@ -34,9 +34,11 @@ defmodule CircularList do
     this.items[index]
   end
 
+  @spec reduce(t(), (index, data -> data)) :: t()
   def reduce(this, fun) do
     results = Enum.reduce(this.items, %{}, fun)
-    %{this | items: Map.put(this.items, get_index(this), results)}
+    %{this | items: results}
+    |> rotate()
   end
 
   @spec update_current(t, (data -> data)) :: t
@@ -51,7 +53,6 @@ defmodule CircularList do
     keys = Enum.sort(Map.keys(this.items))
     # Grab first where index > this.current_index, or keys.first
     next_key = Enum.find(keys, List.first(keys), fn key -> key > current end)
-
     %CircularList{this | current_index: next_key}
   end
 

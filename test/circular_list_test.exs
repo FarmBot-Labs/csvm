@@ -51,4 +51,17 @@ defmodule CircularListTest do
     cl1 = CircularList.update_current(cl0, fn old -> old + old end)
     assert CircularList.current(cl1) == 200
   end
+
+  test "reduces over items" do
+    cl0 =
+      CircularList.new()
+      |> CircularList.push(:a)
+      |> CircularList.push(:b)
+      |> CircularList.push(:c)
+
+    cl1 = CircularList.reduce(cl0, fn({index, value}, acc) ->
+      if value == :b, do: Map.put(acc, index, :z), else: Map.put(acc, index, value)
+    end)
+    assert CircularList.current(cl1) == :z
+  end
 end

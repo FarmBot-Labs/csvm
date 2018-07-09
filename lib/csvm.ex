@@ -79,7 +79,7 @@ defmodule Csvm do
       CircularList.reduce(state.procs, fn {index, old}, acc ->
         case FarmProc.get_status(old) do
           :ok -> Map.put(acc, index, old)
-          _ -> acc
+          _ -> Map.put(acc, index, old)
         end
       end)
 
