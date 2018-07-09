@@ -48,6 +48,13 @@ defmodule Csvm.InstructionSetTest do
         FarmProc.step(acc)
       end)
     end)
+    fun2   = fn(_) -> {:error, "whatever"} end
+    proc2  = FarmProc.new(fun2, Address.new(0), heap)
+    result = Enum.reduce(0..1, proc2, fn(num, acc) ->
+      FarmProc.step(acc)
+    end)
+    assert(FarmProc.get_status(result) == :crashed)
+    assert(FarmProc.get_crash_reason(result) == "whatever")
   end
 
   test "execute handles bad interaction layer implementation." do
