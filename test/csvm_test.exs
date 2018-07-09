@@ -5,7 +5,11 @@ defmodule CsvmTest do
 
   setup do
     fun = fn ast ->
-      raise("fixme")
+      case ast.kind do
+        :_if -> {:ok, true}
+        :execute -> {:ok, AST.new(:nothing, %{}, [])}
+        _ -> :ok
+      end
     end
 
     {:ok, csvm} = Csvm.start_link([io_layer: fun], [])
