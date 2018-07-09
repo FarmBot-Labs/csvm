@@ -150,6 +150,7 @@ defmodule Csvm.ResolverTest do
 
   defp do_step(%{status: :ok} = farm_proc), do: farm_proc
   defp do_step(%{status: :done} = farm_proc), do: farm_proc
+
   defp do_step(farm_proc) do
     receive do
       :timeout -> raise("timed out waiting for farm_proc io!")

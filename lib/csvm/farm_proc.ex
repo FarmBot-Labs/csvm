@@ -30,7 +30,7 @@ defmodule Csvm.FarmProc do
   @type page :: Address.t()
 
   @typedoc "Possible values of the status attribute."
-  @type status_enum :: :ok | :crashed | :waiting
+  @type status_enum :: :ok | :done | :crashed | :waiting
 
   @type t :: %FarmProc{
           sys_call_fun: SysCallHandler.sys_call_fun(),

@@ -6,10 +6,14 @@ defmodule CsvmTest do
   setup do
     fun = fn ast ->
       case ast.kind do
-        :_if -> {:ok, true}
+        :_if ->
+          {:ok, true}
+
         :execute ->
           {:ok, AST.new(:sequence, %{}, [])}
-        _ -> :ok
+
+        _ ->
+          :ok
       end
     end
 

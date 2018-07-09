@@ -170,8 +170,9 @@ defmodule Csvm.InstructionSet do
     # pc          = FarmProc.get_pc_ptr(farm_proc)
     # is_whatever = tos == pc
     results = Ops.next_or_return(farm_proc)
-    pc      = FarmProc.get_pc_ptr(results)
-    kind    = FarmProc.get_kind(results, pc)
+    pc = FarmProc.get_pc_ptr(results)
+    kind = FarmProc.get_kind(results, pc)
+
     if kind == :nothing do
       FarmProc.set_status(results, :done)
     else
