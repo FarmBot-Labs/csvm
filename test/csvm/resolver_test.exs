@@ -51,7 +51,7 @@ defmodule Csvm.ResolverTest do
         wait_for_io(acc)
       end)
 
-    assert FarmProc.get_status(farm_proc1) == :ok
+    assert FarmProc.get_status(farm_proc1) == :done
 
     assert_received %Csvm.AST{
       args: %{
@@ -149,7 +149,7 @@ defmodule Csvm.ResolverTest do
   end
 
   defp do_step(%{status: :ok} = farm_proc), do: farm_proc
-
+  defp do_step(%{status: :done} = farm_proc), do: farm_proc
   defp do_step(farm_proc) do
     receive do
       :timeout -> raise("timed out waiting for farm_proc io!")

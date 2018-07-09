@@ -3,7 +3,7 @@ defmodule Csvm do
   alias Csvm.{AST, FarmProc}
   alias AST.Heap
 
-  @tick_timeout 200
+  @tick_timeout 20
 
   defstruct [:procs, :io_layer, :tick_timer]
 
