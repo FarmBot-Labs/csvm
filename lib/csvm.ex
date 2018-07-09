@@ -1,6 +1,6 @@
 defmodule Csvm do
   use GenServer
-  alias Csvm.AST
+  alias Csvm.{AST, FarmProc}
 
   defstruct procs: %{},
             counter: 0,
