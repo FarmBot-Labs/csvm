@@ -1,6 +1,40 @@
+defmodule Csvm.InstructionTest do
+  alias Csvm.{AST, FarmProc}
+
+  defmacro io_test(kind) do
+    kind_atom = String.to_atom(kind)
+
+    quote do
+      test unquote(kind) do
+        pid = self()
+
+        fun = fn ast ->
+          send(pid, ast)
+          :ok
+        end
+
+        heap =
+          AST.new(unquote(kind_atom), %{}, [])
+          |> AST.slice()
+
+        step0 = FarmProc.new(fun, addr(0), heap)
+        step1 = FarmProc.step(step0)
+        assert FarmProc.get_status(step1) == :waiting
+        step2 = FarmProc.step(step1)
+        assert FarmProc.get_status(step2) == :ok
+        step3 = FarmProc.step(step2)
+        assert FarmProc.get_status(step3) == :done
+        assert_received %AST{kind: unquote(kind_atom), args: %{}}
+      end
+    end
+  end
+end
+
 defmodule Csvm.InstructionSetTest do
   use ExUnit.Case
   alias Csvm.{AST, FarmProc}
+  import Csvm.Utils
+  import Csvm.InstructionTest
 
   @fixture AST.decode(%{
              kind: :_if,
@@ -12,6 +46,66 @@ defmodule Csvm.InstructionSetTest do
                _else: %{kind: :nothing, args: %{}}
              }
            })
+
+  io_test("move_relative")
+  io_test("write_pin")
+  io_test("read_pin")
+  io_test("wait")
+  io_test("find_home")
+  io_test("send_message")
+  io_test("read_status")
+  io_test("set_user_env")
+  io_test("sync")
+
+  test "nothing returns or sets status" do
+    seq_1 =
+      AST.new(:sequence, %{}, [
+        AST.new(:execute, %{sequence_id: 2}, []),
+        AST.new(:wait, %{milliseconds: 10}, [])
+      ])
+
+    seq_2 = AST.new(:sequence, %{}, [AST.new(:execute, %{sequence_id: 3}, [])])
+    seq_3 = AST.new(:sequence, %{}, [AST.new(:wait, %{milliseconds: 10}, [])])
+
+    pid = self()
+
+    fun = fn ast ->
+      case ast do
+        %{kind: :execute, args: %{sequence_id: 2}} ->
+          send(pid, {:execute, 2})
+          {:ok, seq_2}
+
+        %{kind: :execute, args: %{sequence_id: 3}} ->
+          send(pid, {:execute, 3})
+          {:ok, seq_3}
+
+        %{kind: :wait} ->
+          send(pid, :wait)
+          :ok
+      end
+    end
+
+    proc0 = FarmProc.new(fun, addr(1), AST.slice(seq_1))
+
+    complete =
+      Enum.reduce(0..100, proc0, fn _, proc ->
+        FarmProc.step(proc)
+      end)
+
+    assert FarmProc.get_status(complete) == :done
+
+    assert_received {:execute, 2}
+    assert_received {:execute, 3}
+
+    # we only want to execute those sequences once.
+    refute_receive {:execute, 2}
+    refute_receive {:execute, 3}
+
+    # Execute wait twice.
+    assert_received :wait
+    assert_received :wait
+    refute_receive :wait
+  end
 
   test "Sets the correct `crash_reason`" do
     fun = fn _ -> {:error, "whatever"} end

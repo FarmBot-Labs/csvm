@@ -64,6 +64,14 @@ defmodule Csvm.InstructionSet do
   end
 
   simple_io_instruction(:move_relative)
+  simple_io_instruction(:write_pin)
+  simple_io_instruction(:read_pin)
+  simple_io_instruction(:wait)
+  simple_io_instruction(:find_home)
+  simple_io_instruction(:send_message)
+  simple_io_instruction(:read_status)
+  simple_io_instruction(:set_user_env)
+  simple_io_instruction(:sync)
 
   def move_absolute(%FarmProc{} = farm_proc) do
     pc = FarmProc.get_pc_ptr(farm_proc)
@@ -104,15 +112,6 @@ defmodule Csvm.InstructionSet do
         raise "Bad return value: #{inspect(other)}"
     end
   end
-
-  simple_io_instruction(:write_pin)
-  simple_io_instruction(:read_pin)
-  simple_io_instruction(:wait)
-  simple_io_instruction(:find_home)
-  simple_io_instruction(:send_message)
-  simple_io_instruction(:read_status)
-  simple_io_instruction(:set_user_env)
-  simple_io_instruction(:sync)
 
   @spec sequence(FarmProc.t()) :: FarmProc.t()
   def sequence(%FarmProc{} = farm_proc) do
@@ -169,18 +168,9 @@ defmodule Csvm.InstructionSet do
 
   @spec nothing(FarmProc.t()) :: FarmProc.t()
   def nothing(%FarmProc{} = farm_proc) do
-    # tos         = List.last(farm_proc.rs)
-    # pc          = FarmProc.get_pc_ptr(farm_proc)
-    # is_whatever = tos == pc
-    results = Ops.next_or_return(farm_proc)
-    pc = FarmProc.get_pc_ptr(results)
-    kind = FarmProc.get_kind(results, pc)
-
-    if kind == :nothing do
-      FarmProc.set_status(results, :done)
-    else
-      results
-    end
+    farm_proc
+    |> Ops.next_or_return()
+    |> FarmProc.set_status(:done)
   end
 
   @spec execute(FarmProc.t()) :: FarmProc.t()

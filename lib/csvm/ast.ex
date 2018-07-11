@@ -34,8 +34,8 @@ defmodule Csvm.AST do
   end
 
   def decode(%{} = thing) do
-    kind = thing["kind"] || thing[:kind] || raise("Bad ast: #{inspect thing}")
-    args = thing["args"] || thing[:args] || raise("Bad ast: #{inspect thing}")
+    kind = thing["kind"] || thing[:kind] || raise("Bad ast: #{inspect(thing)}")
+    args = thing["args"] || thing[:args] || raise("Bad ast: #{inspect(thing)}")
     body = thing["body"] || thing[:body] || []
     comment = thing["comment"] || thing[:comment] || nil
 
