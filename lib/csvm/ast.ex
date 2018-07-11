@@ -33,26 +33,16 @@ defmodule Csvm.AST do
     thing |> Map.from_struct() |> decode
   end
 
-  def decode(%{"kind" => kind, "args" => args} = thing) do
-    body = thing["body"] || []
-    comment = thing["comment"]
+  def decode(%{} = thing) do
+    kind = thing["kind"] || thing[:kind] || raise("Bad ast: #{inspect thing}")
+    args = thing["args"] || thing[:args] || raise("Bad ast: #{inspect thing}")
+    body = thing["body"] || thing[:body] || []
+    comment = thing["comment"] || thing[:comment] || nil
 
     %__MODULE__{
       kind: String.to_atom(to_string(kind)),
       args: decode_args(args),
       body: decode_body(body),
-      comment: comment
-    }
-  end
-
-  def decode(%{kind: kind, args: args} = thing) do
-    body = thing[:body] || []
-    comment = thing[:comment]
-
-    %__MODULE__{
-      kind: kind,
-      body: decode_body(body),
-      args: decode_args(args),
       comment: comment
     }
   end
