@@ -110,6 +110,9 @@ defmodule Csvm.InstructionSet do
   simple_io_instruction(:wait)
   simple_io_instruction(:find_home)
   simple_io_instruction(:send_message)
+  simple_io_instruction(:read_status)
+  simple_io_instruction(:set_user_env)
+  simple_io_instruction(:sync)
 
   @spec sequence(FarmProc.t()) :: FarmProc.t()
   def sequence(%FarmProc{} = farm_proc) do
