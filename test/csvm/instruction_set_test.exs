@@ -47,14 +47,19 @@ defmodule Csvm.InstructionSetTest do
              }
            })
 
+  io_test("emergency_lock")
+  io_test("emergency_unlock")
   io_test("move_relative")
   io_test("write_pin")
   io_test("read_pin")
-  io_test("wait")
+  io_test("toggle_pin")
+  io_test("home")
   io_test("find_home")
-  io_test("send_message")
+
   io_test("read_status")
+  io_test("send_message")
   io_test("set_user_env")
+  io_test("wait")
   io_test("sync")
 
   test "nothing returns or sets status" do

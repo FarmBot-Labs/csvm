@@ -63,14 +63,21 @@ defmodule Csvm.InstructionSet do
     end
   end
 
+  # Firmware
+  simple_io_instruction(:emergency_lock)
+  simple_io_instruction(:emergency_unlock)
   simple_io_instruction(:move_relative)
   simple_io_instruction(:write_pin)
   simple_io_instruction(:read_pin)
-  simple_io_instruction(:wait)
+  simple_io_instruction(:toggle_pin)
+  simple_io_instruction(:home)
   simple_io_instruction(:find_home)
-  simple_io_instruction(:send_message)
+
+  # State interaction
   simple_io_instruction(:read_status)
+  simple_io_instruction(:send_message)
   simple_io_instruction(:set_user_env)
+  simple_io_instruction(:wait)
   simple_io_instruction(:sync)
 
   def move_absolute(%FarmProc{} = farm_proc) do
