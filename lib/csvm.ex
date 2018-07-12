@@ -25,21 +25,30 @@ defmodule Csvm do
   """
   @spec await(GenServer.server(), job_id) :: FarmProc.t()
   def await(pid \\ __MODULE__, job_id) do
-    proc = GenServer.call(pid, {:lookup, job_id})
+    case GenServer.call(pid, {:lookup, job_id}) do
+      %FarmProc{} = proc ->
+        case FarmProc.get_status(proc) do
+          status when status in [:ok, :waiting] ->
+            Process.sleep(@tick_timeout * 2)
+            await(pid, job_id)
 
-    case FarmProc.get_status(proc) do
-      status when status in [:ok, :waiting] ->
-        Process.sleep(@tick_timeout * 2)
-        await(pid, job_id)
+          _ ->
+            proc
+        end
 
       _ ->
-        proc
+        raise("no job by that identifier")
     end
   end
 
   @spec sweep(GenServer.server()) :: :ok
   def sweep(pid \\ __MODULE__) do
     GenServer.call(pid, :sweep)
+  end
+
+  @spec force_cycle(GenServer.server()) :: :ok
+  def force_cycle(pid \\ __MODULE__) do
+    GenServer.call(pid, :force_cycle)
   end
 
   @spec start_link(Keyword.t(), GenServer.options()) :: GenServer.server()
@@ -63,16 +72,17 @@ defmodule Csvm do
   def handle_call({:queue, %Heap{} = heap, page_id}, _from, %Csvm{} = state) do
     proc = FarmProc.new(state.io_layer, Address.new(page_id), heap)
     new_procs = CircularList.push(state.procs, proc)
-
     {:reply, CircularList.get_index(new_procs), %Csvm{state | procs: new_procs}}
   end
 
-  # TODO check for ended or chrashed vms somewhere
-
   def handle_call({:lookup, id}, _from, %Csvm{} = state) do
-    # TODO(Connor) - that message up there ^
-    %FarmProc{} = proc = CircularList.at(state.procs, id)
-    {:reply, proc, state}
+    {:reply, CircularList.at(state.procs, id), state}
+  end
+
+  def handle_call(:force_cycle, _, %Csvm{} = state) do
+    _ = stop_tick(state.tick_timer)
+    new_timer = start_tick(self(), 0)
+    {:reply, :ok, %Csvm{state | tick_timer: new_timer}}
   end
 
   def handle_call(:sweep, _from, %Csvm{} = state) do
@@ -81,7 +91,7 @@ defmodule Csvm do
     new_procs =
       CircularList.reduce(state.procs, fn {index, old}, acc ->
         case FarmProc.get_status(old) do
-          :ok -> Map.put(acc, index, old)
+          :done -> Map.delete(acc, index)
           _ -> Map.put(acc, index, old)
         end
       end)
