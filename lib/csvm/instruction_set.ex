@@ -71,12 +71,6 @@ defmodule Csvm.InstructionSet do
   @doc "Calibrate an axis."
   simple_io_instruction(:calibrate)
 
-  @doc "Lock the bot from executing more commands."
-  crash_instruction(:emergency_lock, "not implemented")
-
-  @doc "Unlock the bot allowing it to execute more commands."
-  crash_instruction(:emergency_unlock, "not implemented")
-
   @doc "Execute `take_photo` Farmware if installed."
   simple_io_instruction(:take_photo)
 
@@ -123,6 +117,17 @@ defmodule Csvm.InstructionSet do
 
   @doc "Create a diagnostic dump of information."
   simple_io_instruction(:dump_info)
+
+  ## TODO Connor - These instructions are more complex:
+  @doc "Lock the bot from executing more commands."
+  crash_instruction(:emergency_lock, "not implemented")
+
+  @doc "Unlock the bot allowing it to execute more commands."
+  crash_instruction(:emergency_unlock, "not implemented")
+
+  crash_instruction(:rpc_request, "not implemented")
+  crash_instruction(:rpc_ok, "not implemented")
+  crash_instruction(:rpc_error, "not implemented")
 
   @doc "Move to a location offset by another location."
   def move_absolute(%FarmProc{} = farm_proc) do
