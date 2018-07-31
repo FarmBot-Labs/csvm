@@ -48,7 +48,7 @@ defmodule Csvm.InstructionSetTest do
     proc = FarmProc.new(fun, Address.new(0), heap)
 
     assert_raise(RuntimeError, "Bad return value: :blah", fn ->
-      Enum.reduce(0..100, proc, fn num, acc ->
+      Enum.reduce(0..100, proc, fn _num, acc ->
         FarmProc.step(acc)
       end)
     end)
@@ -57,7 +57,7 @@ defmodule Csvm.InstructionSetTest do
     proc2 = FarmProc.new(fun2, Address.new(0), heap)
 
     result =
-      Enum.reduce(0..1, proc2, fn num, acc ->
+      Enum.reduce(0..1, proc2, fn _num, acc ->
         FarmProc.step(acc)
       end)
 
