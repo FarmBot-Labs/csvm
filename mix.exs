@@ -15,6 +15,7 @@ defmodule Csvm.MixProject do
       preferred_cli_env: [
         test: :test,
         coveralls: :test,
+        "coveralls.circle": :test,
         "coveralls.detail": :test,
         "coveralls.post": :test,
         "coveralls.html": :test
