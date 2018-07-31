@@ -3,7 +3,6 @@ defmodule Csvm.InstructionSet do
     AST,
     FarmProc,
     Instruction,
-    InstructionSet,
     SysCallHandler,
     Resolver
   }
@@ -12,56 +11,24 @@ defmodule Csvm.InstructionSet do
   import Instruction, only: [simple_io_instruction: 1]
   import SysCallHandler, only: [apply_sys_call_fun: 2]
 
-  defmodule Ops do
-    @spec call(FarmProc.t(), Pointer.t()) :: FarmProc.t()
-    def call(%FarmProc{} = farm_proc, %Pointer{} = address) do
-      current_pc = FarmProc.get_pc_ptr(farm_proc)
-      next_ptr = FarmProc.get_next_address(farm_proc, current_pc)
-
-      farm_proc
-      |> FarmProc.push_rs(next_ptr)
-      |> FarmProc.set_pc_ptr(address)
-    end
-
-    @spec return(FarmProc.t()) :: FarmProc.t()
-    def return(%FarmProc{} = farm_proc) do
-      {value, farm_proc} = FarmProc.pop_rs(farm_proc)
-      FarmProc.set_pc_ptr(farm_proc, value)
-    end
-
-    @spec next(FarmProc.t()) :: FarmProc.t()
-    def next(%FarmProc{} = farm_proc) do
-      current_pc = FarmProc.get_pc_ptr(farm_proc)
-      next_ptr = FarmProc.get_next_address(farm_proc, current_pc)
-      FarmProc.set_pc_ptr(farm_proc, next_ptr)
-    end
-
-    @spec next_or_return(FarmProc.t()) :: FarmProc.t()
-    def next_or_return(farm_proc) do
-      pc_ptr = FarmProc.get_pc_ptr(farm_proc)
-      addr = FarmProc.get_next_address(farm_proc, pc_ptr)
-      farm_proc = FarmProc.clear_io_result(farm_proc)
-
-      if FarmProc.is_null_address?(addr) do
-        Ops.return(farm_proc)
-      else
-        Ops.next(farm_proc)
-      end
-    end
-
-    @spec crash(FarmProc.t(), String.t()) :: FarmProc.t()
-    def crash(farm_proc, reason) do
-      crash_address = FarmProc.get_pc_ptr(farm_proc)
-      # Push PC -> RS
-      farm_proc
-      |> FarmProc.push_rs(crash_address)
-      # set PC to 0,0
-      |> FarmProc.set_pc_ptr(Pointer.null(FarmProc.get_zero_page(farm_proc)))
-      # Set status to crashed, return the farmproc
-      |> FarmProc.set_status(:crashed)
-      |> FarmProc.set_crash_reason(reason)
-    end
-  end
+  import FarmProc,
+    only: [
+      get_pc_ptr: 1,
+      get_next_address: 2,
+      get_body_address: 2,
+      get_cell_attr_as_pointer: 3,
+      pop_rs: 1,
+      push_rs: 2,
+      set_pc_ptr: 2,
+      set_status: 2,
+      set_crash_reason: 2,
+      clear_io_result: 1,
+      set_io_latch: 2,
+      get_heap_by_page_index: 2,
+      new_page: 3,
+      get_zero_page: 1,
+      is_null_address?: 1
+    ]
 
   # Firmware
   simple_io_instruction(:emergency_lock)
@@ -81,39 +48,36 @@ defmodule Csvm.InstructionSet do
   simple_io_instruction(:sync)
 
   def move_absolute(%FarmProc{} = farm_proc) do
-    pc = FarmProc.get_pc_ptr(farm_proc)
-    heap = FarmProc.get_heap_by_page_index(farm_proc, pc.page_address)
+    pc = get_pc_ptr(farm_proc)
+    heap = get_heap_by_page_index(farm_proc, pc.page_address)
     data = AST.unslice(heap, pc.heap_address)
 
     data =
-      if data.args.location.kind == :identifier do
-        Resolver.resolve(farm_proc, pc, data.args.location.args.label)
-      else
-        data
-      end
+      if data.args.location.kind == :identifier,
+        do: Resolver.resolve(farm_proc, pc, data.args.location.args.label),
+        else: data
 
     case farm_proc.io_result do
       nil ->
         latch = apply_sys_call_fun(farm_proc.sys_call_fun, data)
 
-        FarmProc.set_status(farm_proc, :waiting)
-        |> FarmProc.set_io_latch(latch)
+        farm_proc
+        |> set_status(:waiting)
+        |> set_io_latch(latch)
 
       :ok ->
-        InstructionSet.Ops.next_or_return(farm_proc)
+        next_or_return(farm_proc)
 
       {:ok, %AST{} = result} ->
-        latch =
-          apply_sys_call_fun(
-            farm_proc.sys_call_fun,
-            AST.new(:move_absolute, %{location: result}, [])
-          )
+        args = AST.new(:move_absolute, %{location: result}, [])
+        latch = apply_sys_call_fun(farm_proc.sys_call_fun, args)
 
-        FarmProc.set_status(farm_proc, :waiting)
-        |> FarmProc.set_io_latch(latch)
+        farm_proc
+        |> set_status(:waiting)
+        |> set_io_latch(latch)
 
       {:error, reason} ->
-        InstructionSet.Ops.crash(farm_proc, reason)
+        crash(farm_proc, reason)
 
       other ->
         raise "Bad return value: #{inspect(other)}"
@@ -122,109 +86,150 @@ defmodule Csvm.InstructionSet do
 
   @spec sequence(FarmProc.t()) :: FarmProc.t()
   def sequence(%FarmProc{} = farm_proc) do
-    body_addr =
-      FarmProc.get_body_address(
-        farm_proc,
-        FarmProc.get_pc_ptr(farm_proc)
-      )
+    pc_ptr = get_pc_ptr(farm_proc)
+    body_addr = get_body_address(farm_proc, pc_ptr)
 
-    if FarmProc.is_null_address?(body_addr) do
-      Ops.return(farm_proc)
-    else
-      Ops.call(farm_proc, body_addr)
-    end
+    if is_null_address?(body_addr),
+      do: return(farm_proc),
+      else: call(farm_proc, body_addr)
   end
 
   @spec _if(FarmProc.t()) :: FarmProc.t()
   def _if(%FarmProc{io_result: nil} = farm_proc) do
-    pc = FarmProc.get_pc_ptr(farm_proc)
-    heap = FarmProc.get_heap_by_page_index(farm_proc, pc.page_address)
+    pc = get_pc_ptr(farm_proc)
+    heap = get_heap_by_page_index(farm_proc, pc.page_address)
     data = Csvm.AST.Unslicer.run(heap, pc.heap_address)
     latch = apply_sys_call_fun(farm_proc.sys_call_fun, data)
 
     farm_proc
-    |> FarmProc.set_status(:waiting)
-    |> FarmProc.set_io_latch(latch)
+    |> set_status(:waiting)
+    |> set_io_latch(latch)
   end
 
   def _if(%FarmProc{io_result: result} = farm_proc) do
-    pc = FarmProc.get_pc_ptr(farm_proc)
+    pc = get_pc_ptr(farm_proc)
 
     case result do
       {:ok, true} ->
-        FarmProc.set_pc_ptr(
-          farm_proc,
-          FarmProc.get_cell_attr_as_pointer(farm_proc, pc, :___then)
-        )
-        |> FarmProc.clear_io_result()
+        farm_proc
+        |> set_pc_ptr(get_cell_attr_as_pointer(farm_proc, pc, :___then))
+        |> clear_io_result()
 
       {:ok, false} ->
-        FarmProc.set_pc_ptr(
-          farm_proc,
-          FarmProc.get_cell_attr_as_pointer(farm_proc, pc, :___else)
-        )
-        |> FarmProc.clear_io_result()
+        farm_proc
+        |> set_pc_ptr(get_cell_attr_as_pointer(farm_proc, pc, :___else))
+        |> clear_io_result()
 
       :ok ->
         raise("Bad _if implementation.")
 
       {:error, reason} ->
-        Ops.crash(farm_proc, reason)
+        crash(farm_proc, reason)
     end
   end
 
   @spec nothing(FarmProc.t()) :: FarmProc.t()
   def nothing(%FarmProc{} = farm_proc) do
     farm_proc
-    |> Ops.next_or_return()
-    |> FarmProc.set_status(:done)
+    |> next_or_return()
+    |> set_status(:done)
   end
 
   @spec execute(FarmProc.t()) :: FarmProc.t()
   def execute(%FarmProc{io_result: nil} = farm_proc) do
-    pc = FarmProc.get_pc_ptr(farm_proc)
-    heap = FarmProc.get_heap_by_page_index(farm_proc, pc.page_address)
+    pc = get_pc_ptr(farm_proc)
+    heap = get_heap_by_page_index(farm_proc, pc.page_address)
     sequence_id = FarmProc.get_cell_attr(farm_proc, pc, :sequence_id)
-    next_ptr = FarmProc.get_next_address(farm_proc, pc)
+    next_ptr = get_next_address(farm_proc, pc)
 
     if FarmProc.has_page?(farm_proc, addr(sequence_id)) do
       farm_proc
-      |> FarmProc.push_rs(next_ptr)
-      |> FarmProc.set_pc_ptr(ptr(sequence_id, 1))
+      |> push_rs(next_ptr)
+      |> set_pc_ptr(ptr(sequence_id, 1))
     else
       # Step 0: Unslice current address.
       data = AST.unslice(heap, pc.heap_address)
       latch = apply_sys_call_fun(farm_proc.sys_call_fun, data)
 
       farm_proc
-      |> FarmProc.set_status(:waiting)
-      |> FarmProc.set_io_latch(latch)
+      |> set_status(:waiting)
+      |> set_io_latch(latch)
     end
   end
 
   def execute(%FarmProc{io_result: result} = farm_proc) do
-    pc = FarmProc.get_pc_ptr(farm_proc)
+    pc = get_pc_ptr(farm_proc)
     sequence_id = FarmProc.get_cell_attr(farm_proc, pc, :sequence_id)
-    next_ptr = FarmProc.get_next_address(farm_proc, pc)
+    next_ptr = get_next_address(farm_proc, pc)
     # Step 1: Get a copy of the sequence.
     case result do
       {:ok, %AST{} = sequence} ->
         # Step 2: Push PC -> RS
         # Step 3: Slice it
-        new_heap = Csvm.AST.Slicer.run(sequence)
+        new_heap = AST.slice(sequence)
+        seq_addr = addr(sequence_id)
+        seq_ptr = ptr(sequence_id, 1)
 
-        FarmProc.push_rs(farm_proc, next_ptr)
+        push_rs(farm_proc, next_ptr)
         # Step 4: Add the new page.
-        |> FarmProc.new_page(addr(sequence_id), new_heap)
+        |> new_page(seq_addr, new_heap)
         # Step 5: Set PC to Ptr(1, 1)
-        |> FarmProc.set_pc_ptr(ptr(sequence_id, 1))
-        |> FarmProc.clear_io_result()
+        |> set_pc_ptr(seq_ptr)
+        |> clear_io_result()
 
       {:error, reason} ->
-        Ops.crash(farm_proc, reason)
+        crash(farm_proc, reason)
 
       _ ->
         raise("Bad execute implementation.")
     end
+  end
+
+  @spec call(FarmProc.t(), Pointer.t()) :: FarmProc.t()
+  defp call(%FarmProc{} = farm_proc, %Pointer{} = address) do
+    current_pc = get_pc_ptr(farm_proc)
+    next_ptr = get_next_address(farm_proc, current_pc)
+
+    farm_proc
+    |> push_rs(next_ptr)
+    |> set_pc_ptr(address)
+  end
+
+  @spec return(FarmProc.t()) :: FarmProc.t()
+  defp return(%FarmProc{} = farm_proc) do
+    {value, farm_proc} = pop_rs(farm_proc)
+    set_pc_ptr(farm_proc, value)
+  end
+
+  @spec next(FarmProc.t()) :: FarmProc.t()
+  defp next(%FarmProc{} = farm_proc) do
+    current_pc = get_pc_ptr(farm_proc)
+    next_ptr = get_next_address(farm_proc, current_pc)
+    set_pc_ptr(farm_proc, next_ptr)
+  end
+
+  @spec next_or_return(FarmProc.t()) :: FarmProc.t()
+  defp next_or_return(farm_proc) do
+    pc_ptr = get_pc_ptr(farm_proc)
+    addr = get_next_address(farm_proc, pc_ptr)
+    farm_proc = clear_io_result(farm_proc)
+
+    if is_null_address?(addr),
+      do: return(farm_proc),
+      else: next(farm_proc)
+  end
+
+  @spec crash(FarmProc.t(), String.t()) :: FarmProc.t()
+  defp crash(farm_proc, reason) do
+    crash_address = get_pc_ptr(farm_proc)
+    zero_page_ptr = get_zero_page(farm_proc) |> Pointer.null()
+    # Push PC -> RS
+    farm_proc
+    |> push_rs(crash_address)
+    # set PC to 0,0
+    |> set_pc_ptr(zero_page_ptr)
+    # Set status to crashed, return the farmproc
+    |> set_status(:crashed)
+    |> set_crash_reason(reason)
   end
 end
