@@ -5,10 +5,20 @@ defmodule Csvm.MixProject do
     [
       app: :csvm,
       version: "0.1.0",
-      elixir: "~> 1.6",
+      elixir: "~> 1.7",
       start_permanent: Mix.env() == :prod,
       elixirc_paths: elixirc_paths(Mix.env()),
       deps: deps(),
+      # Docs
+      name: "Csvm",
+      source_url: "https://github.com/Farmbot-Labs/csvm",
+      homepage_url: "https://farm.bot",
+      docs: [
+        # The main page in the docs
+        main: "Csvm",
+        logo: "farmbot_logo.png",
+        extras: ["README.md", "docs/all_nodes.md", "docs/celery_script.md"]
+      ],
       elixirc_options: [warnings_as_errors: true],
       dialyzer: [
         flags: [
@@ -45,7 +55,7 @@ defmodule Csvm.MixProject do
     [
       {:excoveralls, "~> 0.9", only: [:test]},
       {:dialyxir, "~> 1.0.0-rc.3", only: [:dev], runtime: false},
-      {:ex_doc, "~> 0.18", only: [:dev], runtime: false},
+      {:ex_doc, "~> 0.19", only: [:dev], runtime: false},
       {:jason, "~> 1.1", only: [:test, :dev]}
     ]
   end

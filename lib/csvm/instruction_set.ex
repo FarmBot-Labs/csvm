@@ -1,4 +1,8 @@
 defmodule Csvm.InstructionSet do
+  @moduledoc """
+  Implementation for each and every executable CeleryScript AST node.
+  """
+
   alias Csvm.{
     AST,
     FarmProc,
@@ -8,7 +12,7 @@ defmodule Csvm.InstructionSet do
   }
 
   import Csvm.Utils
-  import Instruction, only: [simple_io_instruction: 1]
+  import Instruction, only: [simple_io_instruction: 1, crash_instruction: 2]
   import SysCallHandler, only: [apply_sys_call_fun: 2]
 
   import FarmProc,
@@ -30,23 +34,97 @@ defmodule Csvm.InstructionSet do
       is_null_address?: 1
     ]
 
-  # Firmware
-  simple_io_instruction(:emergency_lock)
-  simple_io_instruction(:emergency_unlock)
-  simple_io_instruction(:move_relative)
+  # Command Nodes
+  @doc "Write a pin."
   simple_io_instruction(:write_pin)
+
+  @doc "Read a pin."
   simple_io_instruction(:read_pin)
-  simple_io_instruction(:toggle_pin)
+
+  @doc "Write servo pin value."
+  simple_io_instruction(:set_servo_angle)
+
+  @doc "Send a message."
+  simple_io_instruction(:send_message)
+
+  @doc "move relative to the bot's current position."
+  simple_io_instruction(:move_relative)
+
+  @doc "Move an axis home."
   simple_io_instruction(:home)
+
+  @doc "Find an axis home."
   simple_io_instruction(:find_home)
 
-  # State interaction
-  simple_io_instruction(:read_status)
-  simple_io_instruction(:send_message)
-  simple_io_instruction(:set_user_env)
+  @doc "Wait (block) a number of milliseconds."
   simple_io_instruction(:wait)
+
+  @doc "Toggle a pin atomicly."
+  simple_io_instruction(:toggle_pin)
+
+  @doc "Execute a Farmware."
+  simple_io_instruction(:execute_script)
+
+  @doc "Force axis position to become zero."
+  simple_io_instruction(:zero)
+
+  @doc "Calibrate an axis."
+  simple_io_instruction(:calibrate)
+
+  @doc "Lock the bot from executing more commands."
+  crash_instruction(:emergency_lock, "not implemented")
+
+  @doc "Unlock the bot allowing it to execute more commands."
+  crash_instruction(:emergency_unlock, "not implemented")
+
+  @doc "Execute `take_photo` Farmware if installed."
+  simple_io_instruction(:take_photo)
+
+  # RPC Nodes
+
+  @doc "Update bot or firmware configuration."
+  simple_io_instruction(:config_update)
+
+  @doc "Set environment variables for a Farmware."
+  simple_io_instruction(:set_user_env)
+
+  @doc "(Re)Install Farmware written and developed by Farmbot, Inc."
+  simple_io_instruction(:install_first_party_farmware)
+
+  @doc "Install a Farmware from the web."
+  simple_io_instruction(:install_farmware)
+
+  @doc "Remove a Farmware."
+  simple_io_instruction(:uninstall_farmware)
+
+  @doc "Update a Farmware."
+  simple_io_instruction(:update_farmware)
+
+  @doc "Force the bot's state to be dispatched."
+  simple_io_instruction(:read_status)
+
+  @doc "Sync all resources with the Farmbot Web Application."
   simple_io_instruction(:sync)
 
+  @doc "Power the bot down."
+  simple_io_instruction(:power_off)
+
+  @doc "Reboot the bot."
+  simple_io_instruction(:reboot)
+
+  @doc "Factory reset the bot allowing for reconfiguration."
+  simple_io_instruction(:factory_reset)
+
+  @doc "Factory reset the bot, but supply new credentials without reconfiguration."
+  simple_io_instruction(:change_ownership)
+
+  @doc "Check for OS updates."
+  simple_io_instruction(:check_updates)
+
+  @doc "Create a diagnostic dump of information."
+  simple_io_instruction(:dump_info)
+
+  @doc "Move to a location offset by another location."
   def move_absolute(%FarmProc{} = farm_proc) do
     pc = get_pc_ptr(farm_proc)
     heap = get_heap_by_page_index(farm_proc, pc.page_address)
@@ -84,6 +162,7 @@ defmodule Csvm.InstructionSet do
     end
   end
 
+  @doc "Execute a sequeence."
   @spec sequence(FarmProc.t()) :: FarmProc.t()
   def sequence(%FarmProc{} = farm_proc) do
     pc_ptr = get_pc_ptr(farm_proc)
@@ -94,6 +173,7 @@ defmodule Csvm.InstructionSet do
       else: call(farm_proc, body_addr)
   end
 
+  @doc "Conditionally execute a sequence."
   @spec _if(FarmProc.t()) :: FarmProc.t()
   def _if(%FarmProc{io_result: nil} = farm_proc) do
     pc = get_pc_ptr(farm_proc)
@@ -128,6 +208,7 @@ defmodule Csvm.InstructionSet do
     end
   end
 
+  @doc "Do nothing. Triggers `status` to be set to `done`."
   @spec nothing(FarmProc.t()) :: FarmProc.t()
   def nothing(%FarmProc{} = farm_proc) do
     farm_proc
@@ -135,6 +216,7 @@ defmodule Csvm.InstructionSet do
     |> set_status(:done)
   end
 
+  @doc "Lookup and execute another sequence."
   @spec execute(FarmProc.t()) :: FarmProc.t()
   def execute(%FarmProc{io_result: nil} = farm_proc) do
     pc = get_pc_ptr(farm_proc)
@@ -184,6 +266,8 @@ defmodule Csvm.InstructionSet do
         exception(farm_proc, "Bad execute implementation.")
     end
   end
+
+  ## Private
 
   @spec call(FarmProc.t(), Pointer.t()) :: FarmProc.t()
   defp call(%FarmProc{} = farm_proc, %Pointer{} = address) do
