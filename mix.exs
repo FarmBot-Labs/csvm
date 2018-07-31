@@ -43,10 +43,10 @@ defmodule Csvm.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:excoveralls, "~> 0.8", only: [:test]},
+      {:excoveralls, "~> 0.9", only: [:test]},
       {:dialyxir, "~> 1.0.0-rc.3", only: [:dev], runtime: false},
-      {:ex_doc, "~> 0.16", only: [:dev], runtime: false},
-      {:jason, "~> 1.0", only: [:test, :dev]}
+      {:ex_doc, "~> 0.18", only: [:dev], runtime: false},
+      {:jason, "~> 1.1", only: [:test, :dev]}
     ]
   end
 end

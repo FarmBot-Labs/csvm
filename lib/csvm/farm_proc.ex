@@ -32,16 +32,33 @@ defmodule Csvm.FarmProc do
   @type status_enum :: :ok | :done | :crashed | :waiting
 
   @type t :: %FarmProc{
-          sys_call_fun: SysCallHandler.sys_call_fun(),
-          status: status_enum(),
-          zero_page: page,
+          crash_reason: nil | String.t(),
+          heap: %{Address.t() => Heap.t()},
+          io_latch: nil | pid,
+          io_result: nil | any,
           pc: Pointer.t(),
-          rs: [Pointer.t()],
           reduction_count: pos_integer(),
-          heap: %{page => Heap.t()}
+          rs: [Pointer.t()],
+          status: status_enum(),
+          sys_call_fun: Csvm.SysCallHandler.sys_call_fun(),
+          zero_page: Address.t()
         }
 
-  @spec new(Csvm.SysCallHandler.sys_call_fun(), page, Heap.t()) :: FarmProc.t()
+  @typedoc false
+  @type new :: %Csvm.FarmProc{
+          crash_reason: nil,
+          heap: %{Address.t() => Heap.t()},
+          io_latch: nil,
+          io_result: nil,
+          pc: Pointer.t(),
+          reduction_count: 0,
+          rs: [],
+          status: :ok,
+          sys_call_fun: Csvm.SysCallHandler.sys_call_fun(),
+          zero_page: Address.t()
+        }
+
+  @spec new(Csvm.SysCallHandler.sys_call_fun(), page, Heap.t()) :: new()
   def new(sys_call_fun, %Address{} = page, %Heap{} = heap)
       when is_function(sys_call_fun) do
     pc = Pointer.new(page, addr(1))
@@ -99,8 +116,12 @@ defmodule Csvm.FarmProc do
     pc_ptr = get_pc_ptr(farm_proc)
     kind = get_kind(farm_proc, pc_ptr)
 
-    unless Code.ensure_loaded(InstructionSet) &&
-             function_exported?(InstructionSet, kind, 1) do
+    # TODO Connor 07-31-2018: why do i have to load the module here?
+    available? =
+      Code.ensure_loaded?(InstructionSet) and
+        function_exported?(InstructionSet, kind, 1)
+
+    unless available? do
       exception(farm_proc, "No implementation for: #{kind}")
     end
 
