@@ -97,7 +97,7 @@ defmodule Csvm.ResolverTest do
 
     farm_proc0 = FarmProc.new(io_fun(self()), addr(0), unbound_json)
 
-    assert_raise RuntimeError,
+    assert_raise Csvm.Error,
                  "unbound identifier: var20 from pc: #Pointer<0, 0>",
                  fn ->
                    Enum.reduce(0..120, farm_proc0, fn _num, acc ->
@@ -128,7 +128,7 @@ defmodule Csvm.ResolverTest do
     proc = FarmProc.new(syscall, addr(456), outter)
 
     assert_raise(
-      RuntimeError,
+      Csvm.Error,
       "unbound identifier: x from pc: #Pointer<123, 0>",
       fn ->
         result =

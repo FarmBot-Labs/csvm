@@ -1,5 +1,5 @@
 defmodule Csvm.Resolver do
-  alias Csvm.{FarmProc, AST}
+  alias Csvm.{FarmProc, AST, Error}
 
   @nodes_with_declerations [:sequence]
 
@@ -21,7 +21,12 @@ defmodule Csvm.Resolver do
       )
       when is_binary(label) do
     if FarmProc.is_null_address?(pointer) do
-      raise "unbound identifier: #{label} from pc: #{inspect(pointer)}"
+      error_opts = [
+        farm_proc: farm_proc,
+        message: "unbound identifier: #{label} from pc: #{inspect(pointer)}"
+      ]
+
+      raise Error, error_opts
     end
 
     kind = FarmProc.get_kind(farm_proc, pointer)

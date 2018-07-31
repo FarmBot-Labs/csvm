@@ -32,7 +32,7 @@ end
 
 defmodule Csvm.InstructionSetTest do
   use ExUnit.Case
-  alias Csvm.{AST, FarmProc}
+  alias Csvm.{AST, FarmProc, Error}
   import Csvm.Utils
   import Csvm.InstructionTest
 
@@ -130,7 +130,7 @@ defmodule Csvm.InstructionSetTest do
     heap = AST.slice(@fixture)
     farm_proc = FarmProc.new(fun, Address.new(1), heap)
 
-    assert_raise RuntimeError, "Bad _if implementation.", fn ->
+    assert_raise Error, "Bad _if implementation.", fn ->
       %{status: :waiting} = farm_proc = FarmProc.step(farm_proc)
       FarmProc.step(farm_proc)
     end
@@ -146,7 +146,7 @@ defmodule Csvm.InstructionSetTest do
 
     proc = FarmProc.new(fun, Address.new(0), heap)
 
-    assert_raise(RuntimeError, "Bad return value: :blah", fn ->
+    assert_raise(Error, "Bad return value: :blah", fn ->
       Enum.reduce(0..100, proc, fn _num, acc ->
         FarmProc.step(acc)
       end)
@@ -170,7 +170,7 @@ defmodule Csvm.InstructionSetTest do
     heap = AST.slice(ast)
     farm_proc = FarmProc.new(fun, Address.new(1), heap)
 
-    assert_raise RuntimeError, "Bad execute implementation.", fn ->
+    assert_raise Error, "Bad execute implementation.", fn ->
       %{status: :waiting} = farm_proc = FarmProc.step(farm_proc)
       FarmProc.step(farm_proc)
     end

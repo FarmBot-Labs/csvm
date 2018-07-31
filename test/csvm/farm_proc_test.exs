@@ -1,6 +1,6 @@
 defmodule Csvm.FarmProcTest do
   use ExUnit.Case
-  alias Csvm.{AST, FarmProc}
+  alias Csvm.{AST, FarmProc, Error}
   import Csvm.Utils
 
   test "inspects farm_proc" do
@@ -67,7 +67,7 @@ defmodule Csvm.FarmProcTest do
              Pointer.null(FarmProc.get_zero_page(step1))
   end
 
-  test "io functions bad return values raise runtime exception" do
+  test "io functions bad return values raise Csvm.Error exception" do
     fun = fn _ -> {:eroror, 100} end
 
     heap =
@@ -79,7 +79,7 @@ defmodule Csvm.FarmProcTest do
     assert FarmProc.get_status(step1) == :waiting
     assert Process.alive?(step1.io_latch)
 
-    assert_raise RuntimeError,
+    assert_raise Error,
                  "Bad return value: {:eroror, 100}",
                  fn ->
                    assert Process.alive?(step1.io_latch)
@@ -359,7 +359,7 @@ defmodule Csvm.FarmProcTest do
     assert FarmProc.get_heap_by_page_index(step0, addr(1))
     assert FarmProc.get_status(step0) == :ok
 
-    assert_raise RuntimeError, ~r(page), fn ->
+    assert_raise Error, ~r(page), fn ->
       FarmProc.get_heap_by_page_index(step0, addr(2))
     end
 
@@ -408,7 +408,7 @@ defmodule Csvm.FarmProcTest do
     crashed = FarmProc.step(waiting)
     assert FarmProc.get_status(crashed) == :crashed
 
-    assert_raise RuntimeError,
+    assert_raise Error,
                  "Tried to step with crashed process!",
                  fn ->
                    FarmProc.step(crashed)
@@ -450,7 +450,7 @@ defmodule Csvm.FarmProcTest do
         FarmProc.step(acc)
       end)
 
-    assert_raise RuntimeError, "Too many reductions!", fn ->
+    assert_raise Error, "Too many reductions!", fn ->
       FarmProc.step(step999)
     end
   end
@@ -460,7 +460,7 @@ defmodule Csvm.FarmProcTest do
       AST.new(:sequence, %{}, [AST.new(:fire_laser, %{}, [])])
       |> Csvm.AST.Slicer.run()
 
-    assert_raise RuntimeError,
+    assert_raise Error,
                  "No implementation for: fire_laser",
                  fn ->
                    step_0 = FarmProc.new(fn _ -> :ok end, addr(0), heap)
@@ -572,5 +572,27 @@ defmodule Csvm.FarmProcTest do
     Process.sleep(sleep_time)
     final = FarmProc.step(step2)
     assert FarmProc.get_status(final) == :ok
+  end
+
+  test "get_cell_attr missing attr raises" do
+    fun = fn _ -> :ok end
+    heap = ast(:wait, %{milliseconds: 123}) |> AST.slice()
+    farm_proc = FarmProc.new(fun, addr(1), heap)
+    pc_ptr = FarmProc.get_pc_ptr(farm_proc)
+    assert FarmProc.get_cell_attr(farm_proc, pc_ptr, :milliseconds) == 123
+
+    assert_raise Error, "no field called: macroseconds at #Pointer<1, 1>", fn ->
+      FarmProc.get_cell_attr(farm_proc, pc_ptr, :macroseconds)
+    end
+  end
+
+  test "get_cell_by_address raises if no cell at address" do
+    fun = fn _ -> :ok end
+    heap = ast(:wait, %{milliseconds: 123}) |> AST.slice()
+    farm_proc = FarmProc.new(fun, addr(1), heap)
+
+    assert_raise Error, "bad address", fn ->
+      FarmProc.get_cell_by_address(farm_proc, ptr(1, 200))
+    end
   end
 end

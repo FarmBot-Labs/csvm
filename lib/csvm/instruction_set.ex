@@ -80,7 +80,7 @@ defmodule Csvm.InstructionSet do
         crash(farm_proc, reason)
 
       other ->
-        raise "Bad return value: #{inspect(other)}"
+        exception(farm_proc, "Bad return value: #{inspect(other)}")
     end
   end
 
@@ -121,7 +121,7 @@ defmodule Csvm.InstructionSet do
         |> clear_io_result()
 
       :ok ->
-        raise("Bad _if implementation.")
+        exception(farm_proc, "Bad _if implementation.")
 
       {:error, reason} ->
         crash(farm_proc, reason)
@@ -181,7 +181,7 @@ defmodule Csvm.InstructionSet do
         crash(farm_proc, reason)
 
       _ ->
-        raise("Bad execute implementation.")
+        exception(farm_proc, "Bad execute implementation.")
     end
   end
 

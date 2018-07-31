@@ -23,13 +23,16 @@ defmodule Csvm.Instruction do
             next_or_return(farm_proc)
 
           {:ok, result} ->
-            raise "Cant handle results: #{inspect({:ok, result})}"
+            exception(
+              farm_proc,
+              "Cant handle results: #{inspect({:ok, result})}"
+            )
 
           {:error, reason} ->
             crash(farm_proc, reason)
 
           other ->
-            raise "Bad return value: #{inspect(other)}"
+            exception(farm_proc, "Bad return value: #{inspect(other)}")
         end
       end
     end

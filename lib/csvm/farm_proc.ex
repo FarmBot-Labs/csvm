@@ -9,7 +9,6 @@ defmodule Csvm.FarmProc do
   import Csvm.Utils
   alias AST.Heap
 
-  @instruction_set InstructionSet
   @max_reduction_count 1000
 
   defstruct sys_call_fun: nil,
@@ -45,14 +44,15 @@ defmodule Csvm.FarmProc do
   @spec new(Csvm.SysCallHandler.sys_call_fun(), page, Heap.t()) :: FarmProc.t()
   def new(sys_call_fun, %Address{} = page, %Heap{} = heap)
       when is_function(sys_call_fun) do
-    struct(
-      FarmProc,
+    pc = Pointer.new(page, addr(1))
+
+    %FarmProc{
       status: :ok,
       zero_page: page,
-      pc: Pointer.new(page, addr(1)),
+      pc: pc,
       sys_call_fun: sys_call_fun,
       heap: %{page => heap}
-    )
+    }
   end
 
   @spec new_page(FarmProc.t(), page, Heap.t()) :: FarmProc.t()
@@ -66,37 +66,32 @@ defmodule Csvm.FarmProc do
   end
 
   @spec get_zero_page(FarmProc.t()) :: page
-  def get_zero_page(%FarmProc{} = farm_proc) do
-    farm_proc.zero_page
-  end
+  def get_zero_page(%FarmProc{} = farm_proc),
+    do: farm_proc.zero_page
 
   @spec has_page?(FarmProc.t(), page) :: boolean()
-  def has_page?(%FarmProc{} = farm_proc, %Address{} = page) do
-    Map.has_key?(farm_proc.heap, page)
-  end
+  def has_page?(%FarmProc{} = farm_proc, %Address{} = page),
+    do: Map.has_key?(farm_proc.heap, page)
 
   @spec step(FarmProc.t()) :: FarmProc.t() | no_return
-  def step(%FarmProc{status: :crashed} = _farm_proc) do
-    raise("Tried to step with crashed process!")
-  end
+  def step(%FarmProc{status: :crashed} = farm_proc),
+    do: exception(farm_proc, "Tried to step with crashed process!")
 
-  def step(%FarmProc{reduction_count: c})
-      when c >= @max_reduction_count do
-    raise("Too many reductions!")
-  end
+  def step(%FarmProc{reduction_count: c} = proc) when c >= @max_reduction_count,
+    do: exception(proc, "Too many reductions!")
 
   def step(%FarmProc{status: :waiting} = farm_proc) do
-    case Csvm.SysCallHandler.get_status(farm_proc.io_latch) do
+    case SysCallHandler.get_status(farm_proc.io_latch) do
       :ok ->
         farm_proc
 
       :complete ->
-        FarmProc.set_status(farm_proc, :ok)
-        |> FarmProc.set_io_latch_result(
-          Csvm.SysCallHandler.get_results(farm_proc.io_latch)
-        )
-        |> FarmProc.remove_io_latch()
-        |> FarmProc.step()
+        io_result = SysCallHandler.get_results(farm_proc.io_latch)
+
+        set_status(farm_proc, :ok)
+        |> set_io_latch_result(io_result)
+        |> remove_io_latch()
+        |> step()
     end
   end
 
@@ -104,9 +99,9 @@ defmodule Csvm.FarmProc do
     pc_ptr = get_pc_ptr(farm_proc)
     kind = get_kind(farm_proc, pc_ptr)
 
-    unless Code.ensure_loaded?(@instruction_set) and
-             function_exported?(@instruction_set, kind, 1) do
-      raise("No implementation for: #{kind}")
+    unless Code.ensure_loaded(InstructionSet) &&
+             function_exported?(InstructionSet, kind, 1) do
+      exception(farm_proc, "No implementation for: #{kind}")
     end
 
     farm_proc = %FarmProc{
@@ -115,36 +110,33 @@ defmodule Csvm.FarmProc do
     }
 
     # IO.puts "executing: [#{pc_ptr.page_address}, #{inspect pc_ptr.heap_address}] #{kind}"
-    apply(@instruction_set, kind, [farm_proc])
+    apply(InstructionSet, kind, [farm_proc])
   end
 
   @spec get_pc_ptr(FarmProc.t()) :: Pointer.t()
   def get_pc_ptr(%FarmProc{pc: pc}), do: pc
 
   @spec set_pc_ptr(FarmProc.t(), Pointer.t()) :: FarmProc.t()
-  def set_pc_ptr(%FarmProc{} = farm_proc, %Pointer{} = pc) do
-    %FarmProc{farm_proc | pc: pc}
-  end
+  def set_pc_ptr(%FarmProc{} = farm_proc, %Pointer{} = pc),
+    do: %FarmProc{farm_proc | pc: pc}
 
-  def set_io_latch(%FarmProc{} = farm_proc, pid) when is_pid(pid) do
-    %FarmProc{farm_proc | io_latch: pid}
-  end
+  def set_io_latch(%FarmProc{} = farm_proc, pid) when is_pid(pid),
+    do: %FarmProc{farm_proc | io_latch: pid}
 
-  def set_io_latch_result(%FarmProc{} = farm_proc, result) do
-    %FarmProc{farm_proc | io_result: result}
-  end
+  def set_io_latch_result(%FarmProc{} = farm_proc, result),
+    do: %FarmProc{farm_proc | io_result: result}
 
-  def clear_io_result(%FarmProc{} = farm_proc) do
-    %FarmProc{farm_proc | io_result: nil}
-  end
+  @spec clear_io_result(FarmProc.t()) :: FarmProc.t()
+  def clear_io_result(%FarmProc{} = farm_proc),
+    do: %FarmProc{farm_proc | io_result: nil}
 
-  def remove_io_latch(%FarmProc{} = farm_proc) do
-    %FarmProc{farm_proc | io_latch: nil}
-  end
+  @spec remove_io_latch(FarmProc.t()) :: FarmProc.t()
+  def remove_io_latch(%FarmProc{} = farm_proc),
+    do: %FarmProc{farm_proc | io_latch: nil}
 
   @spec get_heap_by_page_index(FarmProc.t(), page) :: Heap.t() | no_return
-  def get_heap_by_page_index(%FarmProc{heap: heap}, %Address{} = page) do
-    heap[page] || raise("no page")
+  def get_heap_by_page_index(%FarmProc{heap: heap} = proc, %Address{} = page) do
+    heap[page] || exception(proc, "no page: #{inspect(page)}")
   end
 
   @spec get_return_stack(FarmProc.t()) :: [Pointer.t()]
@@ -193,7 +185,8 @@ defmodule Csvm.FarmProc do
       ) do
     cell = get_cell_by_address(farm_proc, location)
 
-    cell[field] || raise("#{inspect(cell)} has no field called: #{field}")
+    cell[field] ||
+      exception(farm_proc, "no field called: #{field} at #{inspect(location)}")
   end
 
   @spec get_cell_attr_as_pointer(FarmProc.t(), Pointer.t(), atom) :: Pointer.t()
@@ -224,9 +217,8 @@ defmodule Csvm.FarmProc do
   end
 
   @spec get_crash_reason(FarmProc.t()) :: String.t() | nil
-  def get_crash_reason(%FarmProc{} = crashed) do
-    crashed.crash_reason
-  end
+  def get_crash_reason(%FarmProc{} = crashed),
+    do: crashed.crash_reason
 
   @spec set_crash_reason(FarmProc.t(), String.t()) :: FarmProc.t()
   def set_crash_reason(%FarmProc{} = crashed, reason)
@@ -248,6 +240,7 @@ defmodule Csvm.FarmProc do
         %FarmProc{} = farm_proc,
         %Pointer{page_address: page, heap_address: %Address{} = ha}
       ) do
-    get_heap_by_page_index(farm_proc, page)[ha] || raise("bad address")
+    get_heap_by_page_index(farm_proc, page)[ha] ||
+      exception(farm_proc, "bad address")
   end
 end
