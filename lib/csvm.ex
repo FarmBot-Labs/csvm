@@ -37,7 +37,7 @@ defmodule Csvm do
     end
   end
 
-  def sequecne(pid \\ __MODULE__, %{} = map, id, fun)
+  def sequence(pid \\ __MODULE__, %{} = map, id, fun)
       when is_function(fun) do
     job = queue(pid, map, id)
 
