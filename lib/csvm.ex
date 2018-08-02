@@ -26,11 +26,12 @@ defmodule Csvm do
     :toggle_pin,
     :zero,
     :calibrate,
-    :sequence,
-    :rpc_request
+
   ]
 
   @kinds_aloud_while_locked [
+    :rpc_request,
+    :sequence,
     :check_updates,
     :config_update,
     :uninstall_farmware,
@@ -128,6 +129,10 @@ defmodule Csvm do
 
       %AST{kind: :rpc_request, body: [%AST{kind: :emergency_unlock}]} ->
         :emergency_unlock = GenServer.call(pid, :emergency_unlock)
+        nil
+
+      # An rpc with an empty list doesn't need to be queued.
+      %AST{kind: :rpc_request, body: []} ->
         nil
 
       %AST{} = ast ->
