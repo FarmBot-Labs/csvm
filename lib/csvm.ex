@@ -12,8 +12,51 @@ defmodule Csvm do
 
   # Frequency of vm ticks.
   @tick_timeout 20
-  @kinds_that_need_fw [:wait]
-  @kinds_aloud_while_locked []
+
+  @kinds_that_need_fw [
+    :config_update,
+    :_if,
+    :write_pin,
+    :read_pin,
+    :move_absolute,
+    :set_servo_angle,
+    :move_relative,
+    :home,
+    :find_home,
+    :toggle_pin,
+    :zero,
+    :calibrate,
+    :sequence,
+    :rpc_request
+  ]
+
+  @kinds_aloud_while_locked [
+    :check_updates,
+    :config_update,
+    :uninstall_farmware,
+    :update_farmware,
+    :rpc_request,
+    :rpc_ok,
+    :rpc_error,
+    :install,
+    :read_status,
+    :sync,
+    :power_off,
+    :reboot,
+    :factory_reset,
+    :set_user_env,
+    :install_first_party_farmware,
+    :change_ownership,
+    :dump_info,
+    :_if,
+    :send_message,
+    :sequence,
+    :wait,
+    :execute,
+    :execute_script,
+    :emergency_lock,
+    :emergency_unlock
+  ]
 
   defstruct [
     :proc_storage,
