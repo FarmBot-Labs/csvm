@@ -31,19 +31,27 @@ defmodule Csvm do
       when is_function(fun) do
     %AST{} = ast = AST.decode(map)
     label = ast.args[:label] || raise(ArgumentError)
-    job = queue(pid, map, -1) |> IO.inspect(label: "JOBID")
-    proc = await(pid, job)
+    job = queue(pid, map, -1)
 
-    case FarmProc.get_status(proc) do
-      :done ->
-        results = ast(:rpc_ok, %{label: label}, [])
-        apply_callback(fun, [results])
+    if job do
+      proc = await(pid, job)
 
-      :crashed ->
-        message = FarmProc.get_crash_reason(proc)
-        explanation = ast(:explanation, %{message: message})
-        results = ast(:rpc_error, %{label: label}, [explanation])
-        apply_callback(fun, [results])
+      case FarmProc.get_status(proc) do
+        :done ->
+          results = ast(:rpc_ok, %{label: label}, [])
+          apply_callback(fun, [results])
+
+        :crashed ->
+          message = FarmProc.get_crash_reason(proc)
+          explanation = ast(:explanation, %{message: message})
+          results = ast(:rpc_error, %{label: label}, [explanation])
+          apply_callback(fun, [results])
+      end
+    else
+      # if no job is returned, this was a hyper function, which
+      # can never fail.
+      results = ast(:rpc_ok, %{label: label}, [])
+      apply_callback(fun, [results])
     end
   end
 
@@ -56,10 +64,10 @@ defmodule Csvm do
 
       case FarmProc.get_status(proc) do
         :done ->
-          apply_callback(fun, :ok)
+          apply_callback(fun, [:ok])
 
         :crashed ->
-          apply_callback(fun, {:error, FarmProc.get_crash_reason(proc)})
+          apply_callback(fun, [{:error, FarmProc.get_crash_reason(proc)}])
       end
     end)
   end
@@ -68,20 +76,16 @@ defmodule Csvm do
   # If kind == :emergency_lock or :emergency_unlock
   # (or this is an rpc request with the first item being one of those.)
   # this ast will immediately execute the `hyper_io_layer` function.
-  @spec queue(GenServer.server(), map, integer) :: job_id
+  @spec queue(GenServer.server(), map, integer) :: job_id | nil
   defp queue(pid, %{} = map, page_id) when is_integer(page_id) do
     case AST.decode(map) do
       %AST{kind: :rpc_request, body: [%AST{kind: :emergency_lock}]} ->
-        GenServer.call(pid, :emergency_lock)
+        :emergency_lock = GenServer.call(pid, :emergency_lock)
+        nil
 
       %AST{kind: :rpc_request, body: [%AST{kind: :emergency_unlock}]} ->
-        GenServer.call(pid, :emergency_unlock)
-
-      %AST{kind: :emergency_lock} ->
-        GenServer.call(pid, :emergency_lock)
-
-      %AST{kind: :emergency_unlock} ->
-        GenServer.call(pid, :emergency_unlock)
+        :emergency_unlock = GenServer.call(pid, :emergency_unlock)
+        nil
 
       %AST{} = ast ->
         %Heap{} = heap = AST.slice(ast)
@@ -149,12 +153,12 @@ defmodule Csvm do
 
   def handle_call(:emergency_lock, _from, %Csvm{} = state) do
     apply_callback(state.hyper_io_layer, [:emergency_lock])
-    {:reply, :ok, %{state | hyper_state: :emergency_lock}}
+    {:reply, :emergency_lock, %{state | hyper_state: :emergency_lock}}
   end
 
   def handle_call(:emergency_unlock, _from, %Csvm{} = state) do
     apply_callback(state.hyper_io_layer, [:emergency_unlock])
-    {:reply, :ok, %{state | hyper_state: nil}}
+    {:reply, :emergency_unlock, %{state | hyper_state: nil}}
   end
 
   def handle_call(_, _from, {:busy, state}) do

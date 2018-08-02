@@ -45,7 +45,16 @@ defmodule Csvm.SysCallHandler do
     {:stop, :normal, results, state}
   end
 
-  def do_apply(pid, fun, ast) do
-    send(pid, {self(), apply(fun, [ast])})
+  def do_apply(pid, fun, %Csvm.AST{} = ast)
+      when is_pid(pid) and is_function(fun) do
+    result =
+      try do
+        apply(fun, [ast])
+      rescue
+        ex ->
+          {:error, Exception.message(ex)}
+      end
+
+    send(pid, {self(), result})
   end
 end
