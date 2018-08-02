@@ -156,6 +156,10 @@ defmodule Csvm.InstructionSet do
     end
   end
 
+  def rpc_request(%FarmProc{} = farm_proc) do
+    sequence(farm_proc)
+  end
+
   @doc "Execute a sequeence."
   @spec sequence(FarmProc.t()) :: FarmProc.t()
   def sequence(%FarmProc{} = farm_proc) do

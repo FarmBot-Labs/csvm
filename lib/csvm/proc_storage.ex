@@ -12,9 +12,15 @@ defmodule Csvm.ProcStorage do
     agent
   end
 
-  @spec insert(proc_storage, FarmProc.t()) :: :ok
+  @spec insert(proc_storage, FarmProc.t()) :: index
   def insert(this, %FarmProc{} = farm_proc) do
-    Agent.update(this, &CircularList.push(&1, farm_proc))
+    Agent.get_and_update(this, fn(cl) ->
+      new_cl = cl
+        |> CircularList.push(farm_proc)
+        |> CircularList.rotate()
+      {CircularList.get_index(new_cl), new_cl}
+    end)
+
   end
 
   @spec current_index(proc_storage) :: index

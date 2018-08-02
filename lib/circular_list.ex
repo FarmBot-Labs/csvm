@@ -50,8 +50,13 @@ defmodule CircularList do
   def update_current(this, fun) do
     index = get_index(this)
     current_value = at(this, index)
-    result = fun.(current_value)
-    %{this | items: Map.put(this.items, index, result)}
+    if current_value do
+      result = fun.(current_value)
+      %{this | items: Map.put(this.items, index, result)}
+    else
+      fun.(:noop)
+      this
+    end
   end
 
   @spec rotate(t) :: t

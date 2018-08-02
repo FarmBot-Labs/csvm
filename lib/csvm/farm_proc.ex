@@ -20,7 +20,8 @@ defmodule Csvm.FarmProc do
             io_result: nil,
             crash_reason: nil,
             status: :ok,
-            heap: %{}
+            heap: %{},
+            ref: nil
 
   @typedoc "Program counter"
   @type heap_address :: Address.t()
@@ -32,6 +33,7 @@ defmodule Csvm.FarmProc do
   @type status_enum :: :ok | :done | :crashed | :waiting
 
   @type t :: %FarmProc{
+          ref: reference(),
           crash_reason: nil | String.t(),
           heap: %{Address.t() => Heap.t()},
           io_latch: nil | pid,
@@ -46,6 +48,7 @@ defmodule Csvm.FarmProc do
 
   @typedoc false
   @type new :: %Csvm.FarmProc{
+          ref: reference(),
           crash_reason: nil,
           heap: %{Address.t() => Heap.t()},
           io_latch: nil,
@@ -64,6 +67,7 @@ defmodule Csvm.FarmProc do
     pc = Pointer.new(page, addr(1))
 
     %FarmProc{
+      ref: make_ref(),
       status: :ok,
       zero_page: page,
       pc: pc,
