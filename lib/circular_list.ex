@@ -50,6 +50,7 @@ defmodule CircularList do
   def update_current(this, fun) do
     index = get_index(this)
     current_value = at(this, index)
+
     if current_value do
       result = fun.(current_value)
       %{this | items: Map.put(this.items, index, result)}
