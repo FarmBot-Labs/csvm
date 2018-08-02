@@ -270,13 +270,11 @@ defmodule Csvm do
 
   # If the proc is crashed or done, don't step.
   def do_step(%FarmProc{status: :crashed} = farm_proc, pid, state) do
-    IO.puts("crash tick.")
     send(pid, state)
     farm_proc
   end
 
   def do_step(%FarmProc{status: :done} = farm_proc, pid, state) do
-    IO.puts("done tick.")
     send(pid, state)
     farm_proc
   end
