@@ -37,7 +37,7 @@ defmodule Csvm.FarmProc do
           io_latch: nil | pid,
           io_result: nil | any,
           pc: Pointer.t(),
-          reduction_count: pos_integer(),
+          reduction_count: 0 | pos_integer(),
           rs: [Pointer.t()],
           status: status_enum(),
           sys_call_fun: Csvm.SysCallHandler.sys_call_fun(),

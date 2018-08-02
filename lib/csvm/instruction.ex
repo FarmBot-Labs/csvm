@@ -2,15 +2,6 @@ defmodule Csvm.Instruction do
   alias Csvm.{AST, FarmProc}
   import Csvm.SysCallHandler, only: [apply_sys_call_fun: 2]
 
-  defmacro crash_instruction(instruction_name, reason) do
-    quote do
-      @spec unquote(instruction_name)(FarmProc.t()) :: FarmProc.t()
-      def unquote(instruction_name)(%FarmProc{} = farm_proc) do
-        crash(farm_proc, "[#{unquote(instruction_name)}] #{unquote(reason)}")
-      end
-    end
-  end
-
   defmacro simple_io_instruction(instruction_name) do
     quote do
       @spec unquote(instruction_name)(FarmProc.t()) :: FarmProc.t()

@@ -19,7 +19,7 @@ defmodule Csvm.MixProject do
         logo: "farmbot_logo.png",
         extras: ["README.md", "docs/all_nodes.md", "docs/celery_script.md"]
       ],
-      elixirc_options: [warnings_as_errors: true],
+      # elixirc_options: [warnings_as_errors: true],
       dialyzer: [
         flags: [
           "-Wunmatched_returns",

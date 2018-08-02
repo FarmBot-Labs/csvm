@@ -12,7 +12,7 @@ defmodule Csvm.InstructionSet do
   }
 
   import Csvm.Utils
-  import Instruction, only: [simple_io_instruction: 1, crash_instruction: 2]
+  import Instruction, only: [simple_io_instruction: 1]
   import SysCallHandler, only: [apply_sys_call_fun: 2]
 
   import FarmProc,
@@ -117,17 +117,6 @@ defmodule Csvm.InstructionSet do
 
   @doc "Create a diagnostic dump of information."
   simple_io_instruction(:dump_info)
-
-  ## TODO Connor - These instructions are more complex:
-  @doc "Lock the bot from executing more commands."
-  crash_instruction(:emergency_lock, "not implemented")
-
-  @doc "Unlock the bot allowing it to execute more commands."
-  crash_instruction(:emergency_unlock, "not implemented")
-
-  crash_instruction(:rpc_request, "not implemented")
-  crash_instruction(:rpc_ok, "not implemented")
-  crash_instruction(:rpc_error, "not implemented")
 
   @doc "Move to a location offset by another location."
   def move_absolute(%FarmProc{} = farm_proc) do
